@@ -25,9 +25,10 @@
 #include <rlgl.h>
 #include <glad.h>
 
-#include "./details/misc/r3d_dds_loader_ext.h"
 #include "./details/misc/r3d_half.h"
+#include "./details/misc/r3d_dds.h"
 
+#include "assets/ibl_brdf_256.dds.h"
 #include "shaders.h"
 #include "assets.h"
 
@@ -1804,40 +1805,10 @@ void r3d_texture_load_ibl_brdf_lut(void)
 {
     // TODO: Review in case 'R3D.support.RG16F.internal' is false
 
-    Image img = { 0 };
-
-    uint32_t width = 0, height = 0;
-    uint32_t special_format_size = 0; // should be 4 or 8 (RG16F or RG32F)
-
-    img.data = r3d_load_dds_from_memory_ext(
-        (unsigned char*)IBL_BRDF_256_DDS, IBL_BRDF_256_DDS_SIZE,
-        &width, &height, &special_format_size
-    );
-
-    img.width = (int)width;
-    img.height = (int)height;
-
-    if (img.data && (special_format_size == 4 || special_format_size == 8)) {
-        GLuint texId;
-        glGenTextures(1, &texId);
-        glBindTexture(GL_TEXTURE_2D, texId);
-
-        GLenum internal_format = (special_format_size == 4) ? GL_RG16F : GL_RG32F;
-        GLenum data_type = (special_format_size == 4) ? GL_HALF_FLOAT : GL_FLOAT;
-
-        glTexImage2D(GL_TEXTURE_2D, 0, internal_format, img.width, img.height, 0, GL_RG, data_type, img.data);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        R3D.texture.iblBrdfLut = texId;
-        RL_FREE(img.data);
-    }
-    else {
-        img = LoadImageFromMemory(".dds", (unsigned char*)IBL_BRDF_256_DDS, IBL_BRDF_256_DDS_SIZE);
-        R3D.texture.iblBrdfLut = rlLoadTexture(img.data, img.width, img.height, img.format, img.mipmaps);
-        UnloadImage(img);
+    uint32_t w, h;
+    R3D.texture.iblBrdfLut = r3d_load_dds_texture_from_memory(IBL_BRDF_256_DDS, &w, &h);
+    if (R3D.texture.iblBrdfLut == 0) {
+        TraceLog(LOG_ERROR, "R3D: Failed to load IBL BRDF LUT");
+        return;
     }
 }
