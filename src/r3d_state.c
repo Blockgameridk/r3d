@@ -28,7 +28,7 @@
 #include "./details/misc/r3d_half.h"
 #include "./details/misc/r3d_dds.h"
 
-#include "assets/ibl_brdf_256.dds.h"
+#include "assets/brdf_lut_512.dds.h"
 #include "shaders.h"
 #include "assets.h"
 
@@ -1806,7 +1806,7 @@ void r3d_texture_load_ibl_brdf_lut(void)
     // TODO: Review in case 'R3D.support.RG16F.internal' is false
 
     uint32_t w, h;
-    R3D.texture.iblBrdfLut = r3d_load_dds_texture_from_memory(IBL_BRDF_256_DDS, &w, &h);
+    R3D.texture.iblBrdfLut = r3d_load_dds_texture_from_memory(BRDF_LUT_512_DDS, &w, &h);
     if (R3D.texture.iblBrdfLut == 0) {
         TraceLog(LOG_ERROR, "R3D: Failed to load IBL BRDF LUT");
         return;
