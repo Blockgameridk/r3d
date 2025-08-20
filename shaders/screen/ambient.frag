@@ -220,12 +220,12 @@ void main()
 
     const float NdotV = 1.0;  // For ambient lighting, assume normal facing the view direction
 
-    vec3 kS = F0 + (1.0 - F0) * SchlickFresnel(NdotV);           // Specular reflection coefficient
-    vec3 kD = (1.0 - kS) * (1.0 - metalness);                    // Diffuse coefficient (non-metallic part)
+    vec3 kS = F0 + (1.0 - F0) * SchlickFresnel(NdotV);          // Specular reflection coefficient
+    vec3 kD = (1.0 - kS) * (1.0 - metalness);                   // Diffuse coefficient (non-metallic part)
 
     /* --- Ambient lighting (diffuse + specular) --- */
 
-    vec3 ambient = uAmbientColor;                                 // Ambient light tint (scene-level)
+    vec3 ambient = uAmbientColor;                               // Ambient light tint (scene-level)
     ambient *= (kD * albedo + kS);                              // Apply material response
     ambient *= occlusion;                                       // Apply ambient occlusion
 
