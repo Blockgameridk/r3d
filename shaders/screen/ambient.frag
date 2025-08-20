@@ -216,7 +216,7 @@ void main()
 
     /* --- PBR surface reflectance model --- */
 
-    vec3 F0 = ComputeF0(metalness, 1.0, albedo);  // Specular reflectance at normal incidence
+    vec3 F0 = ComputeF0(metalness, 0.5, albedo);  // Specular reflectance at normal incidence
 
     const float NdotV = 1.0;  // For ambient lighting, assume normal facing the view direction
 
