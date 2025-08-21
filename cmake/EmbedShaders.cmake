@@ -26,6 +26,7 @@ def process_shader(shader_file, shader_name, output_file, r3d_root):
         os.path.join(r3d_root, 'scripts', 'bin2c.py'),
         '--string', minified_shader,
         '--name', shader_name,
+        '--type', 'char',
         output_file
     ], capture_output=True, text=True)
     

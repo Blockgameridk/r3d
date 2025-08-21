@@ -21,7 +21,7 @@ def to_identifier(name):
     """Convert filename to valid C identifier"""
     return name.upper().replace('.', '_').replace('-', '_')
 
-def write_header_from_file(file_path, out_path):
+def write_header_from_file(file_path, out_path, char_type='unsigned char'):
     """Convert a file into a C header with null termination"""
     name = os.path.basename(file_path)
     guard = to_identifier(name) + '_H'
@@ -30,9 +30,9 @@ def write_header_from_file(file_path, out_path):
     with open(file_path, 'rb') as f:
         data = f.read()
 
-    write_data_to_header(data, out_path, guard, array_name)
+    write_data_to_header(data, out_path, guard, array_name, char_type)
 
-def write_header_from_string(input_string, array_name, out_path):
+def write_header_from_string(input_string, array_name, out_path, char_type='unsigned char'):
     """Convert a string into a C header with null termination"""
     guard = to_identifier(array_name) + '_H'
     array_name = to_identifier(array_name)
@@ -40,9 +40,9 @@ def write_header_from_string(input_string, array_name, out_path):
     # Interpret escape sequences like \n, \t, etc., then encode to bytes
     data = input_string.encode('utf-8').decode('unicode_escape').encode('utf-8')
 
-    write_data_to_header(data, out_path, guard, array_name)
+    write_data_to_header(data, out_path, guard, array_name, char_type)
 
-def write_data_to_header(data, out_path, guard, array_name):
+def write_data_to_header(data, out_path, guard, array_name, char_type='unsigned char'):
     """Write binary data to C header with null termination"""
     # Always ensure there is a null terminator, even if it's duplicated
     # Because some formats will include one by default and others won't  
@@ -55,7 +55,13 @@ def write_data_to_header(data, out_path, guard, array_name):
     with open(out_path, 'w') as f:
         f.write(f"#ifndef {guard}\n")
         f.write(f"#define {guard}\n\n")
-        f.write(f"static const char {array_name}[] = {{\n")
+
+        # Add C++ compatibility guard
+        f.write("#ifdef __cplusplus\n")
+        f.write("extern \"C\" {\n")
+        f.write("#endif\n\n")
+
+        f.write(f"static const {char_type} {array_name}[] = {{\n")
 
         # Write bytes in groups of 16 per line for readability
         for i, byte in enumerate(data):
@@ -72,6 +78,12 @@ def write_data_to_header(data, out_path, guard, array_name):
 
         f.write("};\n\n")
         f.write(f"#define {array_name}_SIZE {data_size}\n\n")
+
+        # Close C++ compatibility guard
+        f.write("#ifdef __cplusplus\n")
+        f.write("}\n")
+        f.write("#endif\n\n")
+
         f.write(f"#endif // {guard}\n")
 
 def main():
@@ -85,6 +97,9 @@ def main():
     input_group.add_argument('-s', '--string', help='String to convert')
 
     parser.add_argument('-n', '--name', help='Array name (required with --string)')
+    parser.add_argument('-t', '--type', choices=['char', 'unsigned char'], 
+                       default='unsigned char', 
+                       help='Character type for the array (default: unsigned char)')
 
     args = parser.parse_args()
 
@@ -92,9 +107,9 @@ def main():
         parser.error("--name is required when using --string")
 
     if args.file:
-        write_header_from_file(args.file, args.output)
+        write_header_from_file(args.file, args.output, args.type)
     elif args.string:
-        write_header_from_string(args.string, args.name, args.output)
+        write_header_from_string(args.string, args.name, args.output, args.type)
 
 if __name__ == "__main__":
     main()
