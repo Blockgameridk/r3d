@@ -1320,12 +1320,14 @@ void r3d_pass_ssao(void)
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
 
-        // Enable stencil test (render on geometry)
+        /* --- Enable stencil test (render on geometry) --- */
+
         if (R3D.state.flags & R3D_FLAG_STENCIL_TEST) {
             r3d_stencil_enable_geometry_test(GL_EQUAL);
         }
 
-        // Render SSAO
+        /* --- Calculate SSAO --- */
+
         r3d_shader_enable(screen.ssao);
         {
             r3d_shader_set_mat4(screen.ssao, uMatInvProj, R3D.state.transform.invProj);
@@ -1360,12 +1362,14 @@ void r3d_pass_ssao(void)
         }
         r3d_shader_disable();
 
-        // Disable stencil test
+        /* --- Disable stencil test --- */
+
         if (R3D.state.flags & R3D_FLAG_STENCIL_TEST) {
             r3d_stencil_disable();
         }
 
-        // Blur SSAO
+        /* --- Blur SSAO --- */
+
         r3d_shader_enable(generate.gaussianBlurDualPass);
         {
             for (int i = 0; i < R3D.env.ssaoIterations; i++)
@@ -1396,18 +1400,21 @@ void r3d_pass_deferred_ambient(void)
         glDepthMask(GL_FALSE);
         glDisable(GL_BLEND);
 
-        // Clear color targets only (diffuse/specular)
+        /* --- Clear color targets only (diffuse/specular) --- */
+
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Enable stencil test (render on geometry)
+        /* --- Enable stencil test (render on geometry) --- */
+
         if (R3D.state.flags & R3D_FLAG_STENCIL_TEST) {
             r3d_stencil_enable_geometry_test(GL_EQUAL);
         }
 
+        /* --- Calculate skybox IBL contribution --- */
+
         if (R3D.env.useSky)
         {
-            // Compute skybox IBL
             r3d_shader_enable(screen.ambientIbl);
             {
                 r3d_shader_bind_sampler2D(screen.ambientIbl, uTexAlbedo, R3D.target.albedo);
@@ -1447,7 +1454,9 @@ void r3d_pass_deferred_ambient(void)
             }
             r3d_shader_disable();
         }
-        // If no skybox is set, we simply render ambient tint on the meshes.
+
+        /* --- If no skybox, calculate simple ambient contribution --- */
+
         else
         {
             // Here we only enable the first attachment (diffuse)
@@ -1482,7 +1491,8 @@ void r3d_pass_deferred_ambient(void)
             rlActiveDrawBuffers(2);
         }
 
-        // Disable stencil test
+        /* --- Disable stencil test --- */
+
         if (R3D.state.flags & R3D_FLAG_STENCIL_TEST) {
             r3d_stencil_disable();
         }
@@ -1494,6 +1504,8 @@ void r3d_pass_deferred_lights(void)
     glBindFramebuffer(GL_FRAMEBUFFER, R3D.framebuffer.deferred);
     {
         glViewport(0, 0, R3D.state.resolution.width, R3D.state.resolution.height);
+
+        /* --- Setup OpenGL pipeline --- */
 
         // Here we disable depth testing and depth writing,
         // and disable face culling for projecting the
@@ -1524,7 +1536,7 @@ void r3d_pass_deferred_lights(void)
             r3d_shader_set_vec3(screen.lighting, uViewPosition, R3D.state.transform.viewPos);
         }
 
-        /* --- Lighting rendering --- */
+        /* --- Calculate lighting contributions --- */
 
         for (int i = 0; i < R3D.container.aLightBatch.count; i++)
         {
@@ -1623,6 +1635,10 @@ void r3d_pass_deferred_lights(void)
             }
         }
 
+        /* --- Disable stencil testing in case it was enabled just before --- */
+
+        r3d_stencil_disable();
+
         /* --- Unbind all textures --- */
 
         r3d_shader_unbind_sampler2D(screen.lighting, uTexAlbedo);
@@ -1633,9 +1649,6 @@ void r3d_pass_deferred_lights(void)
 
         r3d_shader_unbind_samplerCube(screen.lighting, uLight.shadowCubemap);
         r3d_shader_unbind_sampler2D(screen.lighting, uLight.shadowMap);
-
-        // Disable stencil testing in case it was enabled just before
-        r3d_stencil_disable();
     }
 }
 
