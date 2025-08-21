@@ -2121,6 +2121,8 @@ R3DAPI void R3D_GetSkyboxIntensity(float* background, float* ambient, float* ref
  * are close together or in corners.
  *
  * @param enabled Whether to enable or disable SSAO.
+ *
+ * Default: false
  */
 R3DAPI void R3D_SetSSAO(bool enabled);
 
@@ -2141,6 +2143,8 @@ R3DAPI bool R3D_GetSSAO(void);
  * will create sharper and more localized occlusion.
  *
  * @param value The radius value to set for SSAO.
+ *
+ * Default: 0.5
  */
 R3DAPI void R3D_SetSSAORadius(float value);
 
@@ -2161,6 +2165,8 @@ R3DAPI float R3D_GetSSAORadius(void);
  * result in less pronounced ambient occlusion.
  *
  * @param value The bias value for SSAO.
+ *
+ * Default: 0.025
  */
 R3DAPI void R3D_SetSSAOBias(float value);
 
@@ -2182,6 +2188,8 @@ R3DAPI float R3D_GetSSAOBias(void);
  * ambient occlusion but may impact performance.
  *
  * @param value The number of blur iterations for SSAO.
+ *
+ * Default: 1
  */
 R3DAPI void R3D_SetSSAOIterations(int value);
 
@@ -2205,6 +2213,8 @@ R3DAPI int R3D_GetSSAOIterations(void);
  * effect is applied to the rendered scene.
  *
  * @param mode The bloom mode to set.
+ *
+ * Default: R3D_BLOOM_DISABLED
  */
 R3DAPI void R3D_SetBloomMode(R3D_Bloom mode);
 
@@ -2224,6 +2234,8 @@ R3DAPI R3D_Bloom R3D_GetBloomMode(void);
  * in a more intense glow effect on bright areas of the scene.
  *
  * @param value The intensity value for bloom.
+ *
+ * Default: 0.05
  */
 R3DAPI void R3D_SetBloomIntensity(float value);
 
@@ -2245,6 +2257,8 @@ R3DAPI float R3D_GetBloomIntensity(void);
  * the filtering effect, preserving sharp bloom highlights.
  *
  * @param value The radius of the bloom filter (in pixels or arbitrary units depending on implementation).
+ *
+ * Default: 0
  */
  R3DAPI void R3D_SetBloomFilterRadius(int value);
 
@@ -2266,6 +2280,8 @@ R3DAPI float R3D_GetBloomIntensity(void);
  * set threshold the pixel will not be included in the bloom effect.
  *
  * @param value The lowest value to be included the bloom effect (in color value depending on implementation).
+ *
+ * Default: 0.0
  */
 R3DAPI void R3D_SetBloomThreshold(float value);
 
@@ -2288,6 +2304,8 @@ R3DAPI float R3D_GetBloomThreshold(void);
  * softer transition.
  *
  * @param value The value of of the bloom brightness threshold's softness.
+ *
+ * Default: 0.5
  */
 R3DAPI void R3D_SetBloomSoftThreshold(float value);
 
@@ -2311,7 +2329,7 @@ R3DAPI float R3D_GetBloomSoftThreshold(void);
  *
  * @param enabled Set to true to enable SSR, false to disable it.
  *
- * By default, SSR is disabled.
+ * Default: false
  */
 R3DAPI void R3D_SetSSR(bool enabled);
 
@@ -2450,6 +2468,8 @@ R3DAPI void R3D_GetSSRScreenEdgeFade(float* start, float* end);
  * Different modes may provide linear, exponential, or volumetric fog effects.
  *
  * @param mode The fog mode to set.
+ *
+ * Default: R3D_FOG_DISABLED
  */
 R3DAPI void R3D_SetFogMode(R3D_Fog mode);
 
@@ -2469,6 +2489,8 @@ R3DAPI R3D_Fog R3D_GetFogMode(void);
  * The fog color blends with objects as they are affected by fog.
  *
  * @param color The color to set for the fog.
+ *
+ * Default: WHITE
  */
 R3DAPI void R3D_SetFogColor(Color color);
 
@@ -2488,6 +2510,8 @@ R3DAPI Color R3D_GetFogColor(void);
  * Objects closer than this distance will not be affected by fog.
  *
  * @param value The start distance for the fog effect.
+ *
+ * Default: 1.0
  */
 R3DAPI void R3D_SetFogStart(float value);
 
@@ -2507,6 +2531,8 @@ R3DAPI float R3D_GetFogStart(void);
  * Objects beyond this distance will be completely covered by fog.
  *
  * @param value The end distance for the fog effect.
+ *
+ * Default: 50.0
  */
 R3DAPI void R3D_SetFogEnd(float value);
 
@@ -2526,6 +2552,8 @@ R3DAPI float R3D_GetFogEnd(void);
  * denser fog, making objects fade out more quickly.
  *
  * @param value The density of the fog (higher values increase fog thickness).
+ *
+ * Default: 0.05
  */
 R3DAPI void R3D_SetFogDensity(float value);
 
@@ -2546,6 +2574,8 @@ R3DAPI float R3D_GetFogDensity(void);
  *
  * @param value The fog effect on the sky, in the range [0.0f, 1.0f] 
  *              (0 = no effect, 1 = maximum blending).
+ *
+ * Default: 0.5
  */
 R3DAPI void R3D_SetFogSkyAffect(float value);
 
@@ -2559,6 +2589,106 @@ R3DAPI void R3D_SetFogSkyAffect(float value);
 R3DAPI float R3D_GetFogSkyAffect(void);
 
 // --------------------------------------------
+// ENVIRONMENT: Depth of Field (DoF) Functions
+// --------------------------------------------
+
+/**
+ * @brief Enables or disables the depth of field post-process.
+ *
+ * @param mode The depth of field mode to set.
+ *
+ * Default: R3D_DOF_DISABLED
+ */
+R3DAPI void R3D_SetDofMode(R3D_Dof mode);
+
+/**
+ * @brief Gets the current depth of field mode.
+ *
+ * @return The current depth of field mode.
+ */
+R3DAPI R3D_Dof R3D_GetDofMode(void);
+
+/**
+ * @brief Sets the focus point in world space.
+ *
+ * This function defines the distance (in meters) from the camera where
+ * objects will be in perfect focus. Objects closer or farther will be blurred.
+ *
+ * @param value The focus point distance in meters.
+ *
+ * Default: 10.0
+ */
+R3DAPI void R3D_SetDofFocusPoint(float value);
+
+/**
+ * @brief Gets the current focus point.
+ *
+ * @return The focus point distance in meters.
+ */
+R3DAPI float R3D_GetDofFocusPoint(void);
+
+/**
+ * @brief Sets the focus scale.
+ *
+ * This function controls how shallow the depth of field effect is.
+ * Lower values create a shallower depth of field with more blur,
+ * while higher values create a deeper depth of field with less blur.
+ *
+ * @param value The focus scale value.
+ *
+ * Default: 1.0
+ */
+R3DAPI void R3D_SetDofFocusScale(float value);
+
+/**
+ * @brief Gets the current focus scale.
+ *
+ * @return The current focus scale value.
+ */
+R3DAPI float R3D_GetDofFocusScale(void);
+
+/**
+ * @brief Sets the maximum blur size.
+ *
+ * This function controls the maximum amount of blur applied to out-of-focus
+ * areas. This value is similar to the lens aperture size, larger values
+ * create more pronounced blur effects.
+ *
+ * @param value The maximum blur size value.
+ *
+ * Default: 20.0
+ */
+R3DAPI void R3D_SetDofMaxBlurSize(float value);
+
+/**
+ * @brief Gets the current maximum blur size.
+ *
+ * @return The current maximum blur size value.
+ */
+R3DAPI float R3D_GetDofMaxBlurSize(void);
+
+/**
+ * @brief Enables or disables depth-of-field debug mode.
+ *
+ * In debug mode, the scene uses color coding:
+ * - Green: near blur
+ * - Black: sharp areas
+ * - Blue: far blur
+ *
+ * @param enabled true to enable, false to disable.
+ *
+ * Default: false
+ */
+R3DAPI void R3D_SetDofDebugMode(bool enabled);
+
+/**
+ * @brief Gets the current debug mode state.
+ *
+ * @return True if debug mode is enabled, false otherwise.
+ */
+R3DAPI bool R3D_GetDofDebugMode(void);
+
+// --------------------------------------------
 // ENVIRONMENT: Tonemap Config Functions
 // --------------------------------------------
 
@@ -2570,6 +2700,8 @@ R3DAPI float R3D_GetFogSkyAffect(void);
  * scene appearance.
  *
  * @param mode The tonemap mode to set.
+ *
+ * Default: R3D_TONEMAP_LINEAR
  */
 R3DAPI void R3D_SetTonemapMode(R3D_Tonemap mode);
 
@@ -2589,6 +2721,8 @@ R3DAPI R3D_Tonemap R3D_GetTonemapMode(void);
  * the overall brightness of the rendered scene.
  *
  * @param value The exposure value (higher values make the scene brighter).
+ *
+ * Default: 1.0
  */
 R3DAPI void R3D_SetTonemapExposure(float value);
 
@@ -2608,6 +2742,8 @@ R3DAPI float R3D_GetTonemapExposure(void);
  * areas of the scene are mapped to the final output.
  *
  * @param value The white point value.
+ *
+ * Default: 1.0
  */
 R3DAPI void R3D_SetTonemapWhite(float value);
 
@@ -2631,6 +2767,8 @@ R3DAPI float R3D_GetTonemapWhite(void);
  * Higher values make the image brighter, while lower values darken it.
  *
  * @param value The brightness adjustment value.
+ *
+ * Default: 1.0
  */
 R3DAPI void R3D_SetBrightness(float value);
 
@@ -2650,6 +2788,8 @@ R3DAPI float R3D_GetBrightness(void);
  * Higher values increase the difference between dark and bright areas.
  *
  * @param value The contrast adjustment value.
+ *
+ * Default: 1.0
  */
 R3DAPI void R3D_SetContrast(float value);
 
@@ -2669,6 +2809,8 @@ R3DAPI float R3D_GetContrast(void);
  * Higher values make colors more vibrant, while lower values desaturate them.
  *
  * @param value The saturation adjustment value.
+ *
+ * Default: 1.0
  */
 R3DAPI void R3D_SetSaturation(float value);
 
@@ -2680,96 +2822,6 @@ R3DAPI void R3D_SetSaturation(float value);
  * @return The current saturation value.
  */
 R3DAPI float R3D_GetSaturation(void);
-
-// --------------------------------------------
-// ENVIRONMENT: Depth of Field (DoF) Functions
-// --------------------------------------------
-
-/**
- * @brief Enables or disables the depth of field post-process.
- *
- * @param mode The depth of field mode to set.
- */
-R3DAPI void R3D_SetDofMode(R3D_Dof mode);
-
-/**
- * @brief Gets the current depth of field mode.
- *
- * @return The current depth of field mode.
- */
-R3DAPI R3D_Dof R3D_GetDofMode(void);
-
-/**
- * @brief Sets the focus point in world space.
- *
- * This function defines the distance (in meters) from the camera where
- * objects will be in perfect focus. Objects closer or farther will be blurred.
- *
- * @param value The focus point distance in meters.
- */
-R3DAPI void R3D_SetDofFocusPoint(float value);
-
-/**
- * @brief Gets the current focus point.
- *
- * @return The focus point distance in meters.
- */
-R3DAPI float R3D_GetDofFocusPoint(void);
-
-/**
- * @brief Sets the focus scale.
- *
- * This function controls how shallow the depth of field effect is.
- * Lower values create a shallower depth of field with more blur,
- * while higher values create a deeper depth of field with less blur.
- *
- * @param value The focus scale value.
- */
-R3DAPI void R3D_SetDofFocusScale(float value);
-
-/**
- * @brief Gets the current focus scale.
- *
- * @return The current focus scale value.
- */
-R3DAPI float R3D_GetDofFocusScale(void);
-
-/**
- * @brief Sets the maximum blur size.
- *
- * This function controls the maximum amount of blur applied to out-of-focus
- * areas. This value is similar to the lens aperture size, larger values
- * create more pronounced blur effects.
- *
- * @param value The maximum blur size value.
- */
-R3DAPI void R3D_SetDofMaxBlurSize(float value);
-
-/**
- * @brief Gets the current maximum blur size.
- *
- * @return The current maximum blur size value.
- */
-R3DAPI float R3D_GetDofMaxBlurSize(void);
-
-/**
- * @brief Enables or disables depth-of-field debug mode.
- *
- * In debug mode, the scene uses color coding:
- * - Green: near blur
- * - Black: sharp areas
- * - Blue: far blur
- *
- * @param enabled true to enable, false to disable.
- */
-R3DAPI void R3D_SetDofDebugMode(bool enabled);
-
-/**
- * @brief Gets the current debug mode state.
- *
- * @return True if debug mode is enabled, false otherwise.
- */
-R3DAPI bool R3D_GetDofDebugMode(void);
 
 /** @} */ // end of Environment
 
