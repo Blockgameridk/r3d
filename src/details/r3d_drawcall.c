@@ -116,11 +116,6 @@ void r3d_drawcall_raster_depth(const r3d_drawcall_t* call, bool forward, bool sh
     Matrix matMVP = r3d_matrix_multiply(&call->transform, matVP);
     r3d_shader_set_mat4(raster.depth, uMatMVP, matMVP);
 
-    // Set forward material values
-    if (forward) {
-        r3d_shader_set_float(raster.depth, uAlphaCutoff, call->material.alphaCutoff);
-    }
-
     // Set texcoord offset/scale
     r3d_shader_set_vec2(raster.depth, uTexCoordOffset, call->material.uvOffset);
     r3d_shader_set_vec2(raster.depth, uTexCoordScale, call->material.uvScale);
@@ -147,9 +142,17 @@ void r3d_drawcall_raster_depth(const r3d_drawcall_t* call, bool forward, bool sh
         break;
     }
 
-    // Send alpha and bind albedo
-    r3d_shader_set_float(raster.depth, uAlpha, ((float)call->material.albedo.color.a / 255));
-    r3d_shader_bind_sampler2D_opt(raster.depth, uTexAlbedo, call->material.albedo.texture.id, white);
+    // Set forward material data
+    if (forward) {
+        r3d_shader_set_float(raster.depth, uAlphaCutoff, call->material.alphaCutoff);
+        r3d_shader_set_float(raster.depth, uAlpha, ((float)call->material.albedo.color.a / 255));
+        r3d_shader_bind_sampler2D_opt(raster.depth, uTexAlbedo, call->material.albedo.texture.id, white);
+    }
+    else {
+        r3d_shader_set_float(raster.depth, uAlpha, 1.0f);
+        r3d_shader_set_float(raster.depth, uAlphaCutoff, 0.0f);
+        r3d_shader_bind_sampler2D(raster.depth, uTexAlbedo, R3D.texture.white);
+    }
 
     // Applying material parameters that are independent of shaders
     if (shadow) {
@@ -183,11 +186,6 @@ void r3d_drawcall_raster_depth_inst(const r3d_drawcall_t* call, bool forward, bo
         r3d_shader_set_mat4(raster.depthInst, uMatInvView, R3D.state.transform.invView);
     }
 
-    // Set forward material values
-    if (forward) {
-        r3d_shader_set_float(raster.depthInst, uAlphaCutoff, call->material.alphaCutoff);
-    }
-
     // Set texcoord offset/scale
     r3d_shader_set_vec2(raster.depthInst, uTexCoordOffset, call->material.uvOffset);
     r3d_shader_set_vec2(raster.depthInst, uTexCoordScale, call->material.uvScale);
@@ -214,9 +212,17 @@ void r3d_drawcall_raster_depth_inst(const r3d_drawcall_t* call, bool forward, bo
         break;
     }
 
-    // Send alpha and bind albedo
-    r3d_shader_set_float(raster.depthInst, uAlpha, ((float)call->material.albedo.color.a / 255));
-    r3d_shader_bind_sampler2D_opt(raster.depthInst, uTexAlbedo, call->material.albedo.texture.id, white);
+    // Set forward material data
+    if (forward) {
+        r3d_shader_set_float(raster.depthInst, uAlphaCutoff, call->material.alphaCutoff);
+        r3d_shader_set_float(raster.depthInst, uAlpha, ((float)call->material.albedo.color.a / 255));
+        r3d_shader_bind_sampler2D_opt(raster.depthInst, uTexAlbedo, call->material.albedo.texture.id, white);
+    }
+    else {
+        r3d_shader_set_float(raster.depthInst, uAlpha, 1.0f);
+        r3d_shader_set_float(raster.depthInst, uAlphaCutoff, 0.0f);
+        r3d_shader_bind_sampler2D(raster.depthInst, uTexAlbedo, R3D.texture.white);
+    }
 
     // Applying material parameters that are independent of shaders
     if (shadow) {
@@ -247,11 +253,6 @@ void r3d_drawcall_raster_depth_cube(const r3d_drawcall_t* call, bool forward, bo
     r3d_shader_set_mat4(raster.depthCube, uMatModel, call->transform);
     r3d_shader_set_mat4(raster.depthCube, uMatMVP, matMVP);
 
-    // Set forward material values
-    if (forward) {
-        r3d_shader_set_float(raster.depthCube, uAlphaCutoff, call->material.alphaCutoff);
-    }
-
     // Set texcoord offset/scale
     r3d_shader_set_vec2(raster.depthCube, uTexCoordOffset, call->material.uvOffset);
     r3d_shader_set_vec2(raster.depthCube, uTexCoordScale, call->material.uvScale);
@@ -278,17 +279,16 @@ void r3d_drawcall_raster_depth_cube(const r3d_drawcall_t* call, bool forward, bo
         break;
     }
 
-    // Send alpha and bind albedo
-    r3d_shader_set_float(raster.depthCube, uAlpha, ((float)call->material.albedo.color.a / 255));
-    r3d_shader_bind_sampler2D_opt(raster.depthCube, uTexAlbedo, call->material.albedo.texture.id, white);
-
-    // Send bone matrices if necessary
-    if (call->geometry.model.anim != NULL && call->geometry.model.boneOffsets != NULL) {
-        r3d_shader_set_mat4_v(raster.depthCube, uBoneMatrices, call->geometry.model.mesh->boneMatrices, call->geometry.model.mesh->boneCount);
-        r3d_shader_set_int(raster.depthCube, uUseSkinning, true);
+    // Set forward material data
+    if (forward) {
+        r3d_shader_set_float(raster.depthCube, uAlphaCutoff, call->material.alphaCutoff);
+        r3d_shader_set_float(raster.depthCube, uAlpha, ((float)call->material.albedo.color.a / 255));
+        r3d_shader_bind_sampler2D_opt(raster.depthCube, uTexAlbedo, call->material.albedo.texture.id, white);
     }
     else {
-        r3d_shader_set_int(raster.depthCube, uUseSkinning, false);
+        r3d_shader_set_float(raster.depthCube, uAlpha, 1.0f);
+        r3d_shader_set_float(raster.depthCube, uAlphaCutoff, 0.0f);
+        r3d_shader_bind_sampler2D(raster.depthCube, uTexAlbedo, R3D.texture.white);
     }
 
     // Applying material parameters that are independent of shaders
@@ -323,11 +323,6 @@ void r3d_drawcall_raster_depth_cube_inst(const r3d_drawcall_t* call, bool forwar
         r3d_shader_set_mat4(raster.depthCubeInst, uMatInvView, R3D.state.transform.invView);
     }
 
-    // Set forward material values
-    if (forward) {
-        r3d_shader_set_float(raster.depthCubeInst, uAlphaCutoff, call->material.alphaCutoff);
-    }
-
     // Set texcoord offset/scale
     r3d_shader_set_vec2(raster.depthCubeInst, uTexCoordOffset, call->material.uvOffset);
     r3d_shader_set_vec2(raster.depthCubeInst, uTexCoordScale, call->material.uvScale);
@@ -354,9 +349,17 @@ void r3d_drawcall_raster_depth_cube_inst(const r3d_drawcall_t* call, bool forwar
         break;
     }
 
-    // Send alpha and bind albedo
-    r3d_shader_set_float(raster.depthCubeInst, uAlpha, ((float)call->material.albedo.color.a / 255));
-    r3d_shader_bind_sampler2D_opt(raster.depthCubeInst, uTexAlbedo, call->material.albedo.texture.id, white);
+    // Set forward material data
+    if (forward) {
+        r3d_shader_set_float(raster.depthCubeInst, uAlphaCutoff, call->material.alphaCutoff);
+        r3d_shader_set_float(raster.depthCubeInst, uAlpha, ((float)call->material.albedo.color.a / 255));
+        r3d_shader_bind_sampler2D_opt(raster.depthCubeInst, uTexAlbedo, call->material.albedo.texture.id, white);
+    }
+    else {
+        r3d_shader_set_float(raster.depthCubeInst, uAlpha, 1.0f);
+        r3d_shader_set_float(raster.depthCubeInst, uAlphaCutoff, 0.0f);
+        r3d_shader_bind_sampler2D(raster.depthCubeInst, uTexAlbedo, R3D.texture.white);
+    }
 
     // Applying material parameters that are independent of shaders
     if (shadow) {
