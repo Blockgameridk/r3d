@@ -1298,6 +1298,10 @@ void r3d_pass_gbuffer(void)
         }
         r3d_shader_disable();
 
+        /* --- Disable stencil --- */
+
+        r3d_stencil_disable();
+
         /* --- Reset RLGL matrices --- */
 
         rlMatrixMode(RL_PROJECTION);
@@ -1316,12 +1320,9 @@ void r3d_pass_ssao(void)
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
 
-        // Enable gbuffer stencil test (render on geometry)
+        // Enable stencil test (render on geometry)
         if (R3D.state.flags & R3D_FLAG_STENCIL_TEST) {
             r3d_stencil_enable_geometry_test(GL_EQUAL);
-        }
-        else {
-            r3d_stencil_disable();
         }
 
         // Render SSAO
@@ -1359,6 +1360,11 @@ void r3d_pass_ssao(void)
         }
         r3d_shader_disable();
 
+        // Disable stencil test
+        if (R3D.state.flags & R3D_FLAG_STENCIL_TEST) {
+            r3d_stencil_disable();
+        }
+
         // Blur SSAO
         r3d_shader_enable(generate.gaussianBlurDualPass);
         {
@@ -1394,12 +1400,9 @@ void r3d_pass_deferred_ambient(void)
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Enable gbuffer stencil test (render on geometry)
+        // Enable stencil test (render on geometry)
         if (R3D.state.flags & R3D_FLAG_STENCIL_TEST) {
             r3d_stencil_enable_geometry_test(GL_EQUAL);
-        }
-        else {
-            r3d_stencil_disable();
         }
 
         if (R3D.env.useSky)
@@ -1478,6 +1481,11 @@ void r3d_pass_deferred_ambient(void)
             // diffuse and specular, for future writes
             rlActiveDrawBuffers(2);
         }
+
+        // Disable stencil test
+        if (R3D.state.flags & R3D_FLAG_STENCIL_TEST) {
+            r3d_stencil_disable();
+        }
     }
 }
 
@@ -1545,7 +1553,8 @@ void r3d_pass_deferred_lights(void)
                     if (R3D.state.flags & R3D_FLAG_STENCIL_TEST) {
                         // Written only in areas where there is geometry
                         r3d_stencil_enable_effect_write_with_geometry_test(GL_EQUAL, lightEffectID);
-                    } else {
+                    }
+                    else {
                         // Written all over the volume of light
                         r3d_stencil_enable_effect_write(lightEffectID);
                     }
@@ -1559,7 +1568,7 @@ void r3d_pass_deferred_lights(void)
             r3d_shader_enable(screen.lighting);
             {
                 // If light has volume, render only in areas marked with its effect ID
-                if (light->data->type == R3D_LIGHT_DIR) glDisable(GL_STENCIL_TEST);
+                if (light->data->type == R3D_LIGHT_DIR) r3d_stencil_disable();
                 else r3d_stencil_enable_effect_test(GL_EQUAL, lightEffectID);
 
                 // Sending data common to each type of light
@@ -1624,6 +1633,9 @@ void r3d_pass_deferred_lights(void)
 
         r3d_shader_unbind_samplerCube(screen.lighting, uLight.shadowCubemap);
         r3d_shader_unbind_sampler2D(screen.lighting, uLight.shadowMap);
+
+        // Disable stencil testing in case it was enabled just before
+        r3d_stencil_disable();
     }
 }
 
@@ -1635,16 +1647,6 @@ void r3d_pass_scene_background(void)
 
         if (R3D.env.useSky && R3D.env.skyBackgroundIntensity > 0.0f)
         {
-            // Setup projection matrix
-            rlMatrixMode(RL_PROJECTION);
-            rlPushMatrix();
-            rlSetMatrixProjection(R3D.state.transform.proj);
-
-            // Setup view matrix
-            rlMatrixMode(RL_MODELVIEW);
-            rlLoadIdentity();
-            rlMultMatrixf(MatrixToFloat(R3D.state.transform.view));
-
             // Disable backface culling to render the cube from the inside
             // And other pipeline states that are not necessary
             glDisable(GL_DEPTH_TEST);
@@ -1655,28 +1657,17 @@ void r3d_pass_scene_background(void)
             // Render skybox
             r3d_shader_enable(raster.skybox);
             {
-                Matrix matView = rlGetMatrixModelview();
-                Matrix matProj = rlGetMatrixProjection();
-
                 r3d_shader_bind_samplerCube(raster.skybox, uCubeSky, R3D.env.sky.cubemap.id);
                 r3d_shader_set_vec4(raster.skybox, uRotation, R3D.env.quatSky);
                 r3d_shader_set_float(raster.skybox, uSkyIntensity, R3D.env.skyBackgroundIntensity);
-                r3d_shader_set_mat4(raster.skybox, uMatView, matView);
-                r3d_shader_set_mat4(raster.skybox, uMatProj, matProj);
+                r3d_shader_set_mat4(raster.skybox, uMatView, R3D.state.transform.view);
+                r3d_shader_set_mat4(raster.skybox, uMatProj, R3D.state.transform.proj);
 
                 r3d_primitive_bind_and_draw_cube();
 
                 r3d_shader_unbind_samplerCube(raster.skybox, uCubeSky);
             }
             r3d_shader_disable();
-
-            // Reset projection matrix
-            rlMatrixMode(RL_PROJECTION);
-            rlPopMatrix();
-
-            // Reset view matrix
-            rlMatrixMode(RL_MODELVIEW);
-            rlLoadIdentity();
         }
         else
         {
@@ -1931,6 +1922,9 @@ void r3d_pass_scene_forward_depth_prepass(void)
             r3d_shader_disable();
         }
 
+        // Dissable stencil write
+        r3d_stencil_disable();
+
         // Reset projection matrix
         rlMatrixMode(RL_PROJECTION);
         rlPopMatrix();
@@ -1946,10 +1940,10 @@ void r3d_pass_scene_forward(void)
     glBindFramebuffer(GL_FRAMEBUFFER, R3D.framebuffer.scene);
     {
         glViewport(0, 0, R3D.state.resolution.width, R3D.state.resolution.height);
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         glEnable(GL_DEPTH_TEST);
 
         if (R3D.state.flags & R3D_FLAG_DEPTH_PREPASS) {
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
             glDepthFunc(GL_EQUAL);
             glDepthMask(GL_FALSE);
         }
@@ -2064,6 +2058,11 @@ void r3d_pass_scene_forward(void)
                 }
             }
             r3d_shader_disable();
+        }
+
+        // Disable stencil test if it was enabled
+        if (!(R3D.state.flags & R3D_FLAG_DEPTH_PREPASS)) {
+            r3d_stencil_disable();
         }
 
         // Disable material outputs
