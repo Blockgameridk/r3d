@@ -1749,20 +1749,21 @@ void r3d_texture_load_ssao_noise(void)
 {
 #   define R3D_RAND_NOISE_RESOLUTION 4
 
-    r3d_half_t noise[3 * R3D_RAND_NOISE_RESOLUTION * R3D_RAND_NOISE_RESOLUTION] = { 0 };
+    r3d_half_t noise[2 * R3D_RAND_NOISE_RESOLUTION * R3D_RAND_NOISE_RESOLUTION] = { 0 };
 
     for (int i = 0; i < R3D_RAND_NOISE_RESOLUTION * R3D_RAND_NOISE_RESOLUTION; i++) {
-        noise[i * 3 + 0] = r3d_cvt_fh(((float)GetRandomValue(0, INT16_MAX) / INT16_MAX) * 2.0f - 1.0f);
-        noise[i * 3 + 1] = r3d_cvt_fh(((float)GetRandomValue(0, INT16_MAX) / INT16_MAX) * 2.0f - 1.0f);
-        noise[i * 3 + 2] = r3d_cvt_fh((float)GetRandomValue(0, INT16_MAX) / INT16_MAX);
+        noise[i * 2 + 0] = r3d_cvt_fh(((float)GetRandomValue(0, INT16_MAX) / INT16_MAX) * 2.0f - 1.0f);
+        noise[i * 2 + 1] = r3d_cvt_fh(((float)GetRandomValue(0, INT16_MAX) / INT16_MAX) * 2.0f - 1.0f);
     }
 
-    R3D.texture.ssaoNoise = rlLoadTexture(noise,
-        R3D_RAND_NOISE_RESOLUTION,
-        R3D_RAND_NOISE_RESOLUTION,
-        PIXELFORMAT_UNCOMPRESSED_R16G16B16,
-        1
-    );
+    glGenTextures(1, &R3D.texture.ssaoNoise);
+    glBindTexture(GL_TEXTURE_2D, R3D.texture.ssaoNoise);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, R3D_RAND_NOISE_RESOLUTION, R3D_RAND_NOISE_RESOLUTION, 0, GL_RG, GL_HALF_FLOAT, noise);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
 void r3d_texture_load_ssao_kernel(void)
