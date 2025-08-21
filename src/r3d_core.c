@@ -1060,12 +1060,9 @@ void r3d_pass_shadow_maps(void)
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
 
-    // Push new projection matrix
-    rlMatrixMode(RL_PROJECTION);
-    rlPushMatrix();
-
     // Iterate through all lights to render all geometries
-    for (int i = 0; i < R3D.container.aLightBatch.count; i++) {
+    for (int i = 0; i < R3D.container.aLightBatch.count; i++)
+    {
         r3d_light_batched_t* light = r3d_array_at(&R3D.container.aLightBatch, i);
 
         // Skip light if it doesn't produce shadows
@@ -1086,20 +1083,20 @@ void r3d_pass_shadow_maps(void)
         {
             glViewport(0, 0, light->data->shadow.map.resolution, light->data->shadow.map.resolution);
 
-            if (light->data->type == R3D_LIGHT_OMNI) {
-                // Set up projection matrix for omni-directional light
-                rlMatrixMode(RL_PROJECTION);
-                rlSetMatrixProjection(r3d_light_get_matrix_proj_omni(light->data));
+            if (light->data->type == R3D_LIGHT_OMNI)
+            {
+                // Calculate projection matrix for omni-directional light
+                Matrix matProj = r3d_light_get_matrix_proj_omni(light->data);
 
                 // Render geometries for each face of the cubemap
-                for (int j = 0; j < 6; j++) {
+                for (int j = 0; j < 6; j++)
+                {
                     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + j, light->data->shadow.map.depth, 0);
                     glClear(GL_DEPTH_BUFFER_BIT);
 
-                    // Set view matrix for the current cubemap face
-                    rlMatrixMode(RL_MODELVIEW);
-                    rlLoadIdentity();
-                    rlMultMatrixf(MatrixToFloat(r3d_light_get_matrix_view_omni(light->data, j)));
+                    // Calculate view and view/projection matrices for the current cubemap face
+                    Matrix matView = r3d_light_get_matrix_view_omni(light->data, j);
+                    Matrix matVP = r3d_matrix_multiply(&matView, &matProj);
 
                     // Rasterize geometries for depth rendering
                     r3d_shader_enable(raster.depthCubeInst);
@@ -1110,16 +1107,14 @@ void r3d_pass_shadow_maps(void)
                         for (size_t k = 0; k < R3D.container.aDrawDeferredInst.count; k++) {
                             r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawDeferredInst.data + k;
                             if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
-                                r3d_shader_set_float(raster.depthCubeInst, uAlphaCutoff, call->material.alphaCutoff);
-                                r3d_drawcall_raster_depth_cube_inst(call, true);
+                                r3d_drawcall_raster_depth_cube_inst(call, false, true, &matVP);
                             }
                         }
 
                         for (size_t k = 0; k < R3D.container.aDrawForwardInst.count; k++) {
                             r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawForwardInst.data + k;
                             if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
-                                r3d_shader_set_float(raster.depthCubeInst, uAlphaCutoff, call->material.alphaCutoff);
-                                r3d_drawcall_raster_depth_cube_inst(call, true);
+                                r3d_drawcall_raster_depth_cube_inst(call, true, true, &matVP);
                             }
                         }
                     }
@@ -1131,22 +1126,21 @@ void r3d_pass_shadow_maps(void)
                         for (size_t k = 0; k < R3D.container.aDrawDeferred.count; k++) {
                             r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawDeferred.data + k;
                             if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
-                                r3d_shader_set_float(raster.depthCube, uAlphaCutoff, call->material.alphaCutoff);
-                                r3d_drawcall_raster_depth_cube(call, true);
+                                r3d_drawcall_raster_depth_cube(call, false, true, &matVP);
                             }
                         }
 
                         for (size_t k = 0; k < R3D.container.aDrawForward.count; k++) {
                             r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawForward.data + k;
                             if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
-                                r3d_shader_set_float(raster.depthCube, uAlphaCutoff, call->material.alphaCutoff);
-                                r3d_drawcall_raster_depth_cube(call, true);
+                                r3d_drawcall_raster_depth_cube(call, true, true, &matVP);
                             }
                         }
                     }
                 }
             }
-            else {
+            else
+            {
                 // Clear depth buffer for other light types
                 glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -1161,17 +1155,11 @@ void r3d_pass_shadow_maps(void)
                     matProj = r3d_light_get_matrix_proj_spot(light->data);
                 }
 
-                // Store combined view and projection matrix for the shadow map
-                light->data->shadow.matVP = r3d_matrix_multiply(&matView, &matProj);
+                // Calculate view/projection matrix
+                Matrix matVP = r3d_matrix_multiply(&matView, &matProj);
 
-                // Set up projection matrix
-                rlMatrixMode(RL_PROJECTION);
-                rlSetMatrixProjection(matProj);
-
-                // Set up view matrix
-                rlMatrixMode(RL_MODELVIEW);
-                rlLoadIdentity();
-                rlMultMatrixf(MatrixToFloat(matView));
+                // Store view/projection matrix for the shadow map
+                light->data->shadow.matVP = matVP;
 
                 // Rasterize geometry for depth rendering
                 r3d_shader_enable(raster.depthInst);
@@ -1179,15 +1167,13 @@ void r3d_pass_shadow_maps(void)
                     for (size_t j = 0; j < R3D.container.aDrawDeferredInst.count; j++) {
                         r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawDeferredInst.data + j;
                         if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
-                            r3d_shader_set_float(raster.depthInst, uAlphaCutoff, call->material.alphaCutoff);
-                            r3d_drawcall_raster_depth_inst(call, true);
+                            r3d_drawcall_raster_depth_inst(call, false, true, &matVP);
                         }
                     }
                     for (size_t j = 0; j < R3D.container.aDrawForwardInst.count; j++) {
                         r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawForwardInst.data + j;
                         if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
-                            r3d_shader_set_float(raster.depthInst, uAlphaCutoff, call->material.alphaCutoff);
-                            r3d_drawcall_raster_depth_inst(call, true);
+                            r3d_drawcall_raster_depth_inst(call, true, true, &matVP);
                         }
                     }
                 }
@@ -1196,15 +1182,13 @@ void r3d_pass_shadow_maps(void)
                     for (size_t j = 0; j < R3D.container.aDrawDeferred.count; j++) {
                         r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawDeferred.data + j;
                         if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
-                            r3d_shader_set_float(raster.depth, uAlphaCutoff, call->material.alphaCutoff);
-                            r3d_drawcall_raster_depth(call, true);
+                            r3d_drawcall_raster_depth(call, false, true, &matVP);
                         }
                     }
                     for (size_t j = 0; j < R3D.container.aDrawForward.count; j++) {
                         r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawForward.data + j;
                         if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
-                            r3d_shader_set_float(raster.depth, uAlphaCutoff, call->material.alphaCutoff);
-                            r3d_drawcall_raster_depth(call, true);
+                            r3d_drawcall_raster_depth(call, true, true, &matVP);
                         }
                     }
                 }
@@ -1216,14 +1200,6 @@ void r3d_pass_shadow_maps(void)
 
     // Reset face to cull
     rlSetCullFace(RL_CULL_FACE_BACK);
-
-    // Pop projection matrix
-    rlMatrixMode(RL_PROJECTION);
-    rlPopMatrix();
-
-    // Reset model-view matrix
-    rlMatrixMode(RL_MODELVIEW);
-    rlLoadIdentity();
 }
 
 void r3d_clear_gbuffer(bool bindFramebuffer, bool clearColor, bool clearDepth, bool clearStencil)
@@ -1273,28 +1249,18 @@ void r3d_pass_gbuffer(void)
 
         r3d_stencil_enable_geometry_write();
 
-        /* --- Setup RLGL matrices --- */
-
-        rlMatrixMode(RL_PROJECTION);
-        rlPushMatrix();
-        rlSetMatrixProjection(R3D.state.transform.proj);
-
-        rlMatrixMode(RL_MODELVIEW);
-        rlLoadIdentity();
-        rlMultMatrixf(MatrixToFloat(R3D.state.transform.view));
-
         /* --- Draw geometry with the stencil buffer activated --- */
 
         r3d_shader_enable(raster.geometryInst);
         {
             for (size_t i = 0; i < R3D.container.aDrawDeferredInst.count; i++) {
-                r3d_drawcall_raster_geometry_inst((r3d_drawcall_t*)R3D.container.aDrawDeferredInst.data + i);
+                r3d_drawcall_raster_geometry_inst((r3d_drawcall_t*)R3D.container.aDrawDeferredInst.data + i, &R3D.state.transform.viewProj);
             }
         }
         r3d_shader_enable(raster.geometry);
         {
             for (size_t i = 0; i < R3D.container.aDrawDeferred.count; i++) {
-                r3d_drawcall_raster_geometry((r3d_drawcall_t*)R3D.container.aDrawDeferred.data + i);
+                r3d_drawcall_raster_geometry((r3d_drawcall_t*)R3D.container.aDrawDeferred.data + i, &R3D.state.transform.viewProj);
             }
         }
         r3d_shader_disable();
@@ -1302,14 +1268,6 @@ void r3d_pass_gbuffer(void)
         /* --- Disable stencil --- */
 
         r3d_stencil_disable();
-
-        /* --- Reset RLGL matrices --- */
-
-        rlMatrixMode(RL_PROJECTION);
-        rlPopMatrix();
-
-        rlMatrixMode(RL_MODELVIEW);
-        rlLoadIdentity();
     }
 }
 
@@ -1892,37 +1850,31 @@ void r3d_pass_scene_forward_depth_prepass(void)
     {
         glViewport(0, 0, R3D.state.resolution.width, R3D.state.resolution.height);
 
-        // Setup the depth pre-pass
+        /* --- Setup the depth pre-pass --- */
+
         glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
 
-        // Reactivation of geometry drawing in the stencil buffer
+        /* --- Reactivation of geometry drawing in the stencil buffer --- */
+
         r3d_stencil_enable_geometry_write();
 
-        // Setup projection matrix
-        rlMatrixMode(RL_PROJECTION);
-        rlPushMatrix();
-        rlSetMatrixProjection(R3D.state.transform.proj);
+        /* --- Render instanced meshes --- */
 
-        // Setup view matrix
-        rlMatrixMode(RL_MODELVIEW);
-        rlLoadIdentity();
-        rlMultMatrixf(MatrixToFloat(R3D.state.transform.view));
-
-        // Render instanced meshes
         if (R3D.container.aDrawForwardInst.count > 0) {
             r3d_shader_enable(raster.depthInst);
             {
                 for (int i = 0; i < R3D.container.aDrawForwardInst.count; i++) {
                     r3d_drawcall_t* call = r3d_array_at(&R3D.container.aDrawForwardInst, i);
-                    r3d_drawcall_raster_depth_inst(call, false);
+                    r3d_drawcall_raster_depth_inst(call, true, false, &R3D.state.transform.viewProj);
                 }
             }
             r3d_shader_disable();
         }
 
-        // Render non-instanced meshes
+        /* --- Render non-instanced meshes --- */
+
         if (R3D.container.aDrawForward.count > 0) {
             r3d_shader_enable(raster.depth);
             {
@@ -1930,22 +1882,15 @@ void r3d_pass_scene_forward_depth_prepass(void)
                 // objects first, in order to optimize early depth testing.
                 for (int i = (int)R3D.container.aDrawForward.count - 1; i >= 0; i--) {
                     r3d_drawcall_t* call = r3d_array_at(&R3D.container.aDrawForward, i);
-                    r3d_drawcall_raster_depth(call, false);
+                    r3d_drawcall_raster_depth(call, true, false, &R3D.state.transform.viewProj);
                 }
             }
             r3d_shader_disable();
         }
 
-        // Dissable stencil write
+        /* --- Dissable stencil write --- */
+
         r3d_stencil_disable();
-
-        // Reset projection matrix
-        rlMatrixMode(RL_PROJECTION);
-        rlPopMatrix();
-
-        // Reset view matrix
-        rlMatrixMode(RL_MODELVIEW);
-        rlLoadIdentity();
     }
 }
 
@@ -1966,7 +1911,8 @@ void r3d_pass_scene_forward(void)
             glDepthMask(GL_TRUE);
         }
 
-        // Enables output for materials
+        /* --- Enable output for materials --- */
+
         glDrawBuffers(4, (GLenum[]) {
             GL_COLOR_ATTACHMENT0,       //< Scene
             GL_COLOR_ATTACHMENT1,       //< Albedo
@@ -1974,17 +1920,8 @@ void r3d_pass_scene_forward(void)
             GL_COLOR_ATTACHMENT3        //< ORM
         });
 
-        // Setup projection matrix
-        rlMatrixMode(RL_PROJECTION);
-        rlPushMatrix();
-        rlSetMatrixProjection(R3D.state.transform.proj);
+        /* --- Render instanced meshes --- */
 
-        // Setup view matrix
-        rlMatrixMode(RL_MODELVIEW);
-        rlLoadIdentity();
-        rlMultMatrixf(MatrixToFloat(R3D.state.transform.view));
-
-        // Render instanced meshes
         if (R3D.container.aDrawForwardInst.count > 0) {
             r3d_shader_enable(raster.forwardInst);
             {
@@ -2010,7 +1947,7 @@ void r3d_pass_scene_forward(void)
                 for (int i = 0; i < R3D.container.aDrawForwardInst.count; i++) {
                     r3d_drawcall_t* call = r3d_array_at(&R3D.container.aDrawForwardInst, i);
                     r3d_pass_scene_forward_instanced_filter_and_send_lights(call);
-                    r3d_drawcall_raster_forward_inst(call);
+                    r3d_drawcall_raster_forward_inst(call, &R3D.state.transform.viewProj);
                 }
 
                 r3d_shader_unbind_sampler2D(raster.forwardInst, uTexNoise);
@@ -2055,7 +1992,7 @@ void r3d_pass_scene_forward(void)
                 for (int i = 0; i < R3D.container.aDrawForward.count; i++) {
                     r3d_drawcall_t* call = r3d_array_at(&R3D.container.aDrawForward, i);
                     r3d_pass_scene_forward_filter_and_send_lights(call);
-                    r3d_drawcall_raster_forward(call);
+                    r3d_drawcall_raster_forward(call, &R3D.state.transform.viewProj);
                 }
 
                 r3d_shader_unbind_sampler2D(raster.forward, uTexNoise);
@@ -2083,14 +2020,6 @@ void r3d_pass_scene_forward(void)
         glDrawBuffers(1, (GLenum[]) {
             GL_COLOR_ATTACHMENT0        //< Scene
         });
-
-        // Reset projection matrix
-        rlMatrixMode(RL_PROJECTION);
-        rlPopMatrix();
-
-        // Reset view matrix
-        rlMatrixMode(RL_MODELVIEW);
-        rlLoadIdentity();
     }
 }
 

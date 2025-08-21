@@ -46,6 +46,8 @@ uniform mat4 uMatInvView;       ///< Only for billboard modes
 uniform mat4 uMatModel;
 uniform mat4 uMatVP;
 
+uniform vec2 uTexCoordOffset;
+uniform vec2 uTexCoordScale;
 uniform float uAlpha;
 
 uniform lowp int uBillboardMode;
@@ -124,7 +126,7 @@ void main()
     if (uBillboardMode == BILLBOARD_FRONT) BillboardFront(matModel);
     else if (uBillboardMode == BILLBOARD_Y_AXIS) BillboardY(matModel);
 
-    vTexCoord = aTexCoord;
+    vTexCoord = uTexCoordOffset + aTexCoord * uTexCoordScale;
     vAlpha = uAlpha * aColor.a;
 
     gl_Position = uMatVP * (matModel * vec4(skinnedPosition, 1.0));

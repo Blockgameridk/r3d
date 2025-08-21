@@ -34,6 +34,9 @@ layout(location = 6) in vec4 aWeights;
 /* === Uniforms === */
 
 uniform mat4 uMatMVP;
+
+uniform vec2 uTexCoordOffset;
+uniform vec2 uTexCoordScale;
 uniform float uAlpha;
 
 uniform mat4 uBoneMatrices[MAX_BONES];
@@ -61,7 +64,7 @@ void main()
         skinnedPosition = vec3(skinMatrix * vec4(aPosition, 1.0));
     }
 
-    vTexCoord = aTexCoord;
+    vTexCoord = uTexCoordOffset + aTexCoord * uTexCoordScale;
     vAlpha = uAlpha * aColor.a;
 
     gl_Position = uMatMVP * vec4(skinnedPosition, 1.0);

@@ -1394,6 +1394,8 @@ void r3d_shader_load_raster_depth(void)
     r3d_shader_get_location(raster.depth, uBoneMatrices);
     r3d_shader_get_location(raster.depth, uUseSkinning);
     r3d_shader_get_location(raster.depth, uMatMVP);
+    r3d_shader_get_location(raster.depth, uTexCoordOffset);
+    r3d_shader_get_location(raster.depth, uTexCoordScale);
     r3d_shader_get_location(raster.depth, uAlpha);
     r3d_shader_get_location(raster.depth, uTexAlbedo);
     r3d_shader_get_location(raster.depth, uAlphaCutoff);
@@ -1410,6 +1412,8 @@ void r3d_shader_load_raster_depth_inst(void)
     r3d_shader_get_location(raster.depthInst, uMatInvView);
     r3d_shader_get_location(raster.depthInst, uMatModel);
     r3d_shader_get_location(raster.depthInst, uMatVP);
+    r3d_shader_get_location(raster.depthInst, uTexCoordOffset);
+    r3d_shader_get_location(raster.depthInst, uTexCoordScale);
     r3d_shader_get_location(raster.depthInst, uBillboardMode);
     r3d_shader_get_location(raster.depthInst, uAlpha);
     r3d_shader_get_location(raster.depthInst, uTexAlbedo);
@@ -1427,6 +1431,8 @@ void r3d_shader_load_raster_depth_cube(void)
     r3d_shader_get_location(raster.depthCube, uViewPosition);
     r3d_shader_get_location(raster.depthCube, uMatModel);
     r3d_shader_get_location(raster.depthCube, uMatMVP);
+    r3d_shader_get_location(raster.depthCube, uTexCoordOffset);
+    r3d_shader_get_location(raster.depthCube, uTexCoordScale);
     r3d_shader_get_location(raster.depthCube, uFar);
     r3d_shader_get_location(raster.depthCube, uAlpha);
     r3d_shader_get_location(raster.depthCube, uTexAlbedo);
@@ -1445,6 +1451,8 @@ void r3d_shader_load_raster_depth_cube_inst(void)
     r3d_shader_get_location(raster.depthCubeInst, uMatInvView);
     r3d_shader_get_location(raster.depthCubeInst, uMatModel);
     r3d_shader_get_location(raster.depthCubeInst, uMatVP);
+    r3d_shader_get_location(raster.depthCubeInst, uTexCoordOffset);
+    r3d_shader_get_location(raster.depthCubeInst, uTexCoordScale);
     r3d_shader_get_location(raster.depthCubeInst, uFar);
     r3d_shader_get_location(raster.depthCubeInst, uBillboardMode);
     r3d_shader_get_location(raster.depthCubeInst, uAlpha);

@@ -110,20 +110,20 @@ void r3d_drawcall_update_model_animation(const r3d_drawcall_t* call)
     }
 }
 
-void r3d_drawcall_raster_depth(const r3d_drawcall_t* call, bool shadow)
+void r3d_drawcall_raster_depth(const r3d_drawcall_t* call, bool forward, bool shadow, const Matrix* matVP)
 {
-    Matrix matMVP, temp;
-
-    // Calculate MVP
-    temp = rlGetMatrixTransform();
-    matMVP = r3d_matrix_multiply(&call->transform, &temp);
-    temp = rlGetMatrixModelview();
-    matMVP = r3d_matrix_multiply(&matMVP, &temp);
-    temp = rlGetMatrixProjection();
-    matMVP = r3d_matrix_multiply(&matMVP, &temp);
-
-    // Send model view projection matrix
+    // Calculate and send MVP
+    Matrix matMVP = r3d_matrix_multiply(&call->transform, matVP);
     r3d_shader_set_mat4(raster.depth, uMatMVP, matMVP);
+
+    // Set forward material values
+    if (forward) {
+        r3d_shader_set_float(raster.depth, uAlphaCutoff, call->material.alphaCutoff);
+    }
+
+    // Set texcoord offset/scale
+    r3d_shader_set_vec2(raster.depth, uTexCoordOffset, call->material.uvOffset);
+    r3d_shader_set_vec2(raster.depth, uTexCoordScale, call->material.uvScale);
 
     // Setup geometry type related uniforms
     switch (call->geometryType) {
@@ -171,28 +171,26 @@ void r3d_drawcall_raster_depth(const r3d_drawcall_t* call, bool shadow)
     r3d_shader_unbind_sampler2D(raster.depth, uTexAlbedo);
 }
 
-void r3d_drawcall_raster_depth_inst(const r3d_drawcall_t* call, bool shadow)
+void r3d_drawcall_raster_depth_inst(const r3d_drawcall_t* call, bool forward, bool shadow, const Matrix* matVP)
 {
-    Matrix matModel, matVP, temp;
-
-    // Calculate transform
-    temp = rlGetMatrixTransform();
-    matModel = r3d_matrix_multiply(&call->transform, &temp);
-
-    // Calculate view projection
-    matVP = rlGetMatrixModelview();
-    temp = rlGetMatrixProjection();
-    matVP = r3d_matrix_multiply(&matVP, &temp);
-
     // Send matrices
-    r3d_shader_set_mat4(raster.depthInst, uMatModel, matModel);
-    r3d_shader_set_mat4(raster.depthInst, uMatVP, matVP);
+    r3d_shader_set_mat4(raster.depthInst, uMatModel, call->transform);
+    r3d_shader_set_mat4(raster.depthInst, uMatVP, *matVP);
 
     // Send billboard related data
     r3d_shader_set_int(raster.depthInst, uBillboardMode, call->material.billboardMode);
     if (call->material.billboardMode != R3D_BILLBOARD_DISABLED) {
         r3d_shader_set_mat4(raster.depthInst, uMatInvView, R3D.state.transform.invView);
     }
+
+    // Set forward material values
+    if (forward) {
+        r3d_shader_set_float(raster.depthInst, uAlphaCutoff, call->material.alphaCutoff);
+    }
+
+    // Set texcoord offset/scale
+    r3d_shader_set_vec2(raster.depthInst, uTexCoordOffset, call->material.uvOffset);
+    r3d_shader_set_vec2(raster.depthInst, uTexCoordScale, call->material.uvScale);
 
     // Setup geometry type related uniforms
     switch (call->geometryType) {
@@ -240,23 +238,23 @@ void r3d_drawcall_raster_depth_inst(const r3d_drawcall_t* call, bool shadow)
     r3d_shader_unbind_sampler2D(raster.depthInst, uTexAlbedo);
 }
 
-void r3d_drawcall_raster_depth_cube(const r3d_drawcall_t* call, bool shadow)
+void r3d_drawcall_raster_depth_cube(const r3d_drawcall_t* call, bool forward, bool shadow, const Matrix* matVP)
 {
-    Matrix matModel, matMVP, temp;
-
-    // Calculate transform
-    temp = rlGetMatrixTransform();
-    matModel = r3d_matrix_multiply(&call->transform, &temp);
-
     // Calculate MVP
-    temp = rlGetMatrixModelview();
-    matMVP = r3d_matrix_multiply(&matModel, &temp);
-    temp = rlGetMatrixProjection();
-    matMVP = r3d_matrix_multiply(&matMVP, &temp);
+    Matrix matMVP = r3d_matrix_multiply(&call->transform, matVP);
 
     // Send matrices
-    r3d_shader_set_mat4(raster.depthCube, uMatModel, matModel);
+    r3d_shader_set_mat4(raster.depthCube, uMatModel, call->transform);
     r3d_shader_set_mat4(raster.depthCube, uMatMVP, matMVP);
+
+    // Set forward material values
+    if (forward) {
+        r3d_shader_set_float(raster.depthCube, uAlphaCutoff, call->material.alphaCutoff);
+    }
+
+    // Set texcoord offset/scale
+    r3d_shader_set_vec2(raster.depthCube, uTexCoordOffset, call->material.uvOffset);
+    r3d_shader_set_vec2(raster.depthCube, uTexCoordScale, call->material.uvScale);
 
     // Setup geometry type related uniforms
     switch (call->geometryType) {
@@ -313,28 +311,26 @@ void r3d_drawcall_raster_depth_cube(const r3d_drawcall_t* call, bool shadow)
     r3d_shader_unbind_sampler2D(raster.depthCube, uTexAlbedo);
 }
 
-void r3d_drawcall_raster_depth_cube_inst(const r3d_drawcall_t* call, bool shadow)
+void r3d_drawcall_raster_depth_cube_inst(const r3d_drawcall_t* call, bool forward, bool shadow, const Matrix* matVP)
 {
-    Matrix matModel, matVP, temp;
-
-    // Calculate transform
-    temp = rlGetMatrixTransform();
-    matModel = r3d_matrix_multiply(&call->transform, &temp);
-
-    // Calculate view projection
-    matVP = rlGetMatrixModelview();
-    temp = rlGetMatrixProjection();
-    matVP = r3d_matrix_multiply(&matVP, &temp);
-
     // Send matrices
-    r3d_shader_set_mat4(raster.depthCubeInst, uMatModel, matModel);
-    r3d_shader_set_mat4(raster.depthCubeInst, uMatVP, matVP);
+    r3d_shader_set_mat4(raster.depthCubeInst, uMatModel, call->transform);
+    r3d_shader_set_mat4(raster.depthCubeInst, uMatVP, *matVP);
 
     // Send billboard related data
     r3d_shader_set_int(raster.depthCubeInst, uBillboardMode, call->material.billboardMode);
     if (call->material.billboardMode != R3D_BILLBOARD_DISABLED) {
         r3d_shader_set_mat4(raster.depthCubeInst, uMatInvView, R3D.state.transform.invView);
     }
+
+    // Set forward material values
+    if (forward) {
+        r3d_shader_set_float(raster.depthCubeInst, uAlphaCutoff, call->material.alphaCutoff);
+    }
+
+    // Set texcoord offset/scale
+    r3d_shader_set_vec2(raster.depthCubeInst, uTexCoordOffset, call->material.uvOffset);
+    r3d_shader_set_vec2(raster.depthCubeInst, uTexCoordScale, call->material.uvScale);
 
     // Setup geometry type related uniforms
     switch (call->geometryType) {
@@ -382,26 +378,15 @@ void r3d_drawcall_raster_depth_cube_inst(const r3d_drawcall_t* call, bool shadow
     r3d_shader_unbind_sampler2D(raster.depthCubeInst, uTexAlbedo);
 }
 
-void r3d_drawcall_raster_geometry(const r3d_drawcall_t* call)
+void r3d_drawcall_raster_geometry(const r3d_drawcall_t* call, const Matrix* matVP)
 {
-    Matrix matModel, matNormal, matMVP, temp;
-
-    // Calculate transform matrix
-    temp = rlGetMatrixTransform();
-    matModel = r3d_matrix_multiply(&call->transform, &temp);
-
-    // Calculate normal matrix
-    matNormal = r3d_matrix_normal(&matModel);
-
-    // Calculate MVP matrix
-    temp = rlGetMatrixModelview();
-    matMVP = r3d_matrix_multiply(&matModel, &temp);
-    temp = rlGetMatrixProjection();
-    matMVP = r3d_matrix_multiply(&matMVP, &temp);
+    // Calculate normal and MVP matrices
+    Matrix matNormal = r3d_matrix_normal(&call->transform);
+    Matrix matMVP = r3d_matrix_multiply(&call->transform, matVP);
 
     // Set additional matrix uniforms
+    r3d_shader_set_mat4(raster.geometry, uMatModel, call->transform);
     r3d_shader_set_mat4(raster.geometry, uMatNormal, matNormal);
-    r3d_shader_set_mat4(raster.geometry, uMatModel, matModel);
     r3d_shader_set_mat4(raster.geometry, uMatMVP, matMVP);
 
     // Set factor material maps
@@ -460,26 +445,15 @@ void r3d_drawcall_raster_geometry(const r3d_drawcall_t* call)
     r3d_shader_unbind_sampler2D(raster.geometry, uTexORM);
 }
 
-void r3d_drawcall_raster_geometry_inst(const r3d_drawcall_t* call)
+void r3d_drawcall_raster_geometry_inst(const r3d_drawcall_t* call, const Matrix* matVP)
 {
     if (call->instanced.count == 0 || call->instanced.transforms == NULL) {
         return;
     }
 
-    Matrix matModel, matVP, temp;
-
-    // Calculate transform
-    temp = rlGetMatrixTransform();
-    matModel = r3d_matrix_multiply(&call->transform, &temp);
-
-    // Calculate view projection
-    matVP = rlGetMatrixModelview();
-    temp = rlGetMatrixProjection();
-    matVP = r3d_matrix_multiply(&matVP, &temp);
-
     // Set additional matrix uniforms
-    r3d_shader_set_mat4(raster.geometryInst, uMatModel, matModel);
-    r3d_shader_set_mat4(raster.geometryInst, uMatVP, matVP);
+    r3d_shader_set_mat4(raster.geometryInst, uMatModel, call->transform);
+    r3d_shader_set_mat4(raster.geometryInst, uMatVP, *matVP);
 
     // Set factor material maps
     r3d_shader_set_float(raster.geometryInst, uEmissionEnergy, call->material.emission.energy);
@@ -543,26 +517,15 @@ void r3d_drawcall_raster_geometry_inst(const r3d_drawcall_t* call)
     r3d_shader_unbind_sampler2D(raster.geometryInst, uTexORM);
 }
 
-void r3d_drawcall_raster_forward(const r3d_drawcall_t* call)
+void r3d_drawcall_raster_forward(const r3d_drawcall_t* call, const Matrix* matVP)
 {
-    Matrix matModel, matNormal, matMVP, temp;
-
-    // Calculate transform matrix
-    temp = rlGetMatrixTransform();
-    matModel = r3d_matrix_multiply(&call->transform, &temp);
-
-    // Calculate normal matrix
-    matNormal = r3d_matrix_normal(&matModel);
-
-    // Calculate MVP matrix
-    temp = rlGetMatrixModelview();
-    matMVP = r3d_matrix_multiply(&matModel, &temp);
-    temp = rlGetMatrixProjection();
-    matMVP = r3d_matrix_multiply(&matMVP, &temp);
+    // Calculate normal and MVP matrices
+    Matrix matNormal = r3d_matrix_normal(&call->transform);
+    Matrix matMVP = r3d_matrix_multiply(&call->transform, matVP);
 
     // Set additional matrix uniforms
+    r3d_shader_set_mat4(raster.forward, uMatModel, call->transform);
     r3d_shader_set_mat4(raster.forward, uMatNormal, matNormal);
-    r3d_shader_set_mat4(raster.forward, uMatModel, matModel);
     r3d_shader_set_mat4(raster.forward, uMatMVP, matMVP);
 
     // Set factor material maps
@@ -625,26 +588,15 @@ void r3d_drawcall_raster_forward(const r3d_drawcall_t* call)
     r3d_shader_unbind_sampler2D(raster.forward, uTexORM);
 }
 
-void r3d_drawcall_raster_forward_inst(const r3d_drawcall_t* call)
+void r3d_drawcall_raster_forward_inst(const r3d_drawcall_t* call, const Matrix* matVP)
 {
     if (call->instanced.count == 0 || call->instanced.transforms == NULL) {
         return;
     }
 
-    Matrix matModel, matVP, temp;
-
-    // Calculate transform
-    temp = rlGetMatrixTransform();
-    matModel = r3d_matrix_multiply(&call->transform, &temp);
-
-    // Calculate view projection
-    matVP = rlGetMatrixModelview();
-    temp = rlGetMatrixProjection();
-    matVP = r3d_matrix_multiply(&matVP, &temp);
-
     // Set additional matrix uniforms
-    r3d_shader_set_mat4(raster.forwardInst, uMatModel, matModel);
-    r3d_shader_set_mat4(raster.forwardInst, uMatVP, matVP);
+    r3d_shader_set_mat4(raster.forwardInst, uMatModel, call->transform);
+    r3d_shader_set_mat4(raster.forwardInst, uMatVP, *matVP);
 
     // Set factor material maps
     r3d_shader_set_float(raster.forwardInst, uEmissionEnergy, call->material.emission.energy);

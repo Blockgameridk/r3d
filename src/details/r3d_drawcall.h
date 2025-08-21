@@ -20,12 +20,9 @@
 #ifndef R3D_DETAILS_DRAWCALL_H
 #define R3D_DETAILS_DRAWCALL_H
 
-#include "r3d.h"
-
-#include "./containers/r3d_array.h"
-
-#include <raylib.h>
 #include <stddef.h>
+#include <raylib.h>
+#include <r3d.h>
 
 /* === Types === */
 
@@ -84,16 +81,16 @@ bool r3d_drawcall_instanced_geometry_is_visible(const r3d_drawcall_t* call);
 
 void r3d_drawcall_update_model_animation(const r3d_drawcall_t* call);
 
-void r3d_drawcall_raster_depth(const r3d_drawcall_t* call, bool shadow);
-void r3d_drawcall_raster_depth_inst(const r3d_drawcall_t* call, bool shadow);
+void r3d_drawcall_raster_depth(const r3d_drawcall_t* call, bool forward, bool shadow, const Matrix* matVP);
+void r3d_drawcall_raster_depth_inst(const r3d_drawcall_t* call, bool forward, bool shadow, const Matrix* matVP);
 
-void r3d_drawcall_raster_depth_cube(const r3d_drawcall_t* call, bool shadow);
-void r3d_drawcall_raster_depth_cube_inst(const r3d_drawcall_t* call, bool shadow);
+void r3d_drawcall_raster_depth_cube(const r3d_drawcall_t* call, bool forward, bool shadow, const Matrix* matVP);
+void r3d_drawcall_raster_depth_cube_inst(const r3d_drawcall_t* call, bool forward, bool shadow, const Matrix* matVP);
 
-void r3d_drawcall_raster_geometry(const r3d_drawcall_t* call);
-void r3d_drawcall_raster_geometry_inst(const r3d_drawcall_t* call);
+void r3d_drawcall_raster_geometry(const r3d_drawcall_t* call, const Matrix* matVP);
+void r3d_drawcall_raster_geometry_inst(const r3d_drawcall_t* call, const Matrix* matVP);
 
-void r3d_drawcall_raster_forward(const r3d_drawcall_t* call);
-void r3d_drawcall_raster_forward_inst(const r3d_drawcall_t* call);
+void r3d_drawcall_raster_forward(const r3d_drawcall_t* call, const Matrix* matVP);
+void r3d_drawcall_raster_forward_inst(const r3d_drawcall_t* call, const Matrix* matVP);
 
 #endif // R3D_DETAILS_DRAWCALL_H

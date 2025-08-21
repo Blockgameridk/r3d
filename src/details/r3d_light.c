@@ -436,6 +436,7 @@ void r3d_light_get_matrix_vp_dir(r3d_light_t* light, BoundingBox sceneBounds, Ma
 
     light->near = -maxZ;    // Save near plane (can be used in shaders)
     light->far = -minZ;     // Save far plane (can be used in shaders)
+
     *proj = MatrixOrtho(minX, maxX, minY, maxY, light->near, light->far);
 }
 
