@@ -13,7 +13,7 @@ static R3D_Material material = { 0 };
 static Texture2D texture = { 0 };
 static R3D_Sprite sprite = { 0 };
 
-static Matrix transforms[512] = { 0 };
+static Matrix transforms[64] = { 0 };
 
 /* === Examples === */
 
@@ -30,29 +30,40 @@ const char* Init(void)
 
     /* --- Generate a large plane to act as the ground --- */
 
-    plane = R3D_GenMeshPlane(1000, 1000, 1, 1, true);
+    plane = R3D_GenMeshPlane(200, 200, 1, 1, true);
     material = R3D_GetDefaultMaterial();
     material.albedo.color = GREEN;
 
     /* --- Load a texture and create a sprite --- */
 
     texture = LoadTexture(RESOURCES_PATH "tree.png");
+
     sprite = R3D_LoadSprite(texture, 1, 1);
+    sprite.material.shadowCastMode = R3D_SHADOW_CAST_ALL_FACES;
 
     /* --- Create multiple transforms for instanced sprites with random positions and scales --- */
 
     for (int i = 0; i < sizeof(transforms) / sizeof(*transforms); i++) {
-        float scaleFactor = GetRandomValue(50, 100) / 10.0f;
+        float scaleFactor = GetRandomValue(25, 50) / 10.0f;
         Matrix scale = MatrixScale(scaleFactor, scaleFactor, 1.0f);
-        Matrix translate = MatrixTranslate(GetRandomValue(-500, 500), scaleFactor, GetRandomValue(-500, 500));
+        Matrix translate = MatrixTranslate(GetRandomValue(-100, 100), scaleFactor, GetRandomValue(-100, 100));
         transforms[i] = MatrixMultiply(scale, translate);
     }
 
     /* --- Setup the scene lighting --- */
 
-    R3D_Light light = R3D_CreateLight(R3D_LIGHT_OMNI);
+    R3D_SetSceneBounds(
+        (BoundingBox) {
+            .min = { -100, -10, -100 },
+            .max = { +100, +10, +100 }
+        }
+    );
+
+    R3D_Light light = R3D_CreateLight(R3D_LIGHT_DIR);
     {
-        R3D_SetLightPosition(light, (Vector3) { 0, 10, 10 });
+        R3D_SetLightDirection(light, (Vector3) { -1, -1, -1 });
+        R3D_EnableShadow(light, 4096);
+        R3D_SetShadowBias(light, 0.0025f);
         R3D_SetLightActive(light, true);
     }
 
