@@ -208,9 +208,8 @@ vec3 Adjustments(vec3 color, float brightness, float contrast, float saturation)
 
 vec3 Debanding(vec3 color)
 {
-    const float ditherStrength = 255.0; // lower is stronger
-    color += vec3((1.0 / ditherStrength) * GradientNoise(vTexCoord * uResolution) - (0.5 / ditherStrength));
-    return color;
+    float ditherStrength = 255.0; // lower is stronger
+    return color + vec3((GradientNoise(gl_FragCoord.xy) - 0.5) / ditherStrength);
 }
 
 vec3 LinearToSRGB(vec3 color)
