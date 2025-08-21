@@ -201,9 +201,19 @@ void main()
         return;
     }
 
-    /* --- Calculation of reflection --- */
+    /* --- Reflection sampling and hotspot filtering --- */
 
     vec3 reflectionColor = TraceReflectionRay(worldPos, reflectionDir);
+
+    float reflectionLuminance = dot(reflectionColor, vec3(0.299, 0.587, 0.114));
+    float sceneLuminance = dot(sceneColor, vec3(0.299, 0.587, 0.114));
+    float maxReflectionLuminance = sceneLuminance * 4.0;
+
+    if (reflectionLuminance > maxReflectionLuminance) {
+        reflectionColor *= maxReflectionLuminance / reflectionLuminance;
+    }
+
+    /* --- Calculate specular reflection --- */
 
     float cNdotV = max(0.0, dot(worldNormal, -viewDir));
     vec3 F0 = ComputeF0(metallic, 0.5, albedo);
@@ -214,7 +224,9 @@ void main()
     // NOTE: Ideally, we should blur according to the roughness, but this
     //       would be expensive for some platforms, so we only attenuate
 
-    specular *= (1.0 - roughness);
+    float attenuation = 1.0 - roughness;
+    attenuation *= attenuation;
+    specular *= attenuation;
 
     /* --- Final mix --- */
 
