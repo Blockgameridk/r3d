@@ -53,6 +53,7 @@ const char* Init(void)
 
     /* --- Loads the main model of the scene --- */
 
+    R3D_SetModelImportScale(0.1f);
     model = R3D_LoadModel(RESOURCES_PATH "emission.glb");
 
     /* --- Generates a mesh for the ground and load a material for it --- */
@@ -74,7 +75,7 @@ const char* Init(void)
     /* --- Setup the camera --- */
 
     camera = (Camera3D) {
-        .position = (Vector3) { -10.0f, 17.5f, 17.5f },
+        .position = (Vector3) { -1.0f, 1.75f, 1.75f },
         .target = (Vector3) { 0, 0.5f, 0 },
         .up = (Vector3) { 0, 1, 0 },
         .fovy = 60,
