@@ -38,7 +38,7 @@ layout(location = 6) in vec4 aWeights;
 
 /* === Instanced attributes === */
 
-layout(location = 10) in mat4 aInstanceModel;
+layout(location = 10) in mat4 iMatModel;
 
 /* === Uniforms === */
 
@@ -120,7 +120,7 @@ void main()
         skinnedPosition = vec3(skinMatrix * vec4(aPosition, 1.0));
     }
 
-    mat4 matModel = uMatModel * transpose(aInstanceModel);
+    mat4 matModel = uMatModel * transpose(iMatModel);
 
     if (uBillboardMode == BILLBOARD_FRONT) BillboardFront(matModel);
     else if (uBillboardMode == BILLBOARD_Y_AXIS) BillboardY(matModel);
