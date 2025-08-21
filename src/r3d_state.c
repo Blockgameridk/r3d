@@ -1740,9 +1740,14 @@ void r3d_texture_load_normal(void)
 
 void r3d_texture_load_blue_noise(void)
 {
-    Image image = LoadImageFromMemory(".png", (unsigned char*)BLUE_NOISE_128_PNG, BLUE_NOISE_128_PNG_SIZE);
-    R3D.texture.blueNoise = rlLoadTexture(image.data, image.width, image.height, image.format, 1);
-    UnloadImage(image);
+    glGenTextures(1, &R3D.texture.blueNoise);
+    glBindTexture(GL_TEXTURE_2D, R3D.texture.blueNoise);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, 64, 64, 0, GL_RED, GL_UNSIGNED_BYTE, BLUE_NOISE_64_RAW);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
 void r3d_texture_load_ssao_noise(void)
