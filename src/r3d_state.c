@@ -28,7 +28,6 @@
 #include "./details/misc/r3d_half.h"
 #include "./details/misc/r3d_dds.h"
 
-#include "assets/brdf_lut_512.dds.h"
 #include "shaders.h"
 #include "assets.h"
 
