@@ -1671,6 +1671,7 @@ void r3d_shader_load_screen_fog(void)
     r3d_shader_get_location(screen.fog, uFogStart);
     r3d_shader_get_location(screen.fog, uFogEnd);
     r3d_shader_get_location(screen.fog, uFogDensity);
+    r3d_shader_get_location(screen.fog, uSkyAffect);
 
     r3d_shader_enable(screen.fog);
     r3d_shader_set_sampler2D_slot(screen.fog, uTexColor, 0);

@@ -245,6 +245,7 @@ extern struct R3D_State {
         float fogStart;                 // (post pass)
         float fogEnd;                   // (post pass)
         float fogDensity;               // (post pass)
+        float fogSkyAffect;             // (post pass)
                                         
         R3D_Tonemap tonemapMode;        // (post pass)
         float tonemapExposure;          // (post pass)

@@ -2538,6 +2538,26 @@ R3DAPI void R3D_SetFogDensity(float value);
  */
 R3DAPI float R3D_GetFogDensity(void);
 
+/**
+ * @brief Sets how much the fog affects the sky.
+ *
+ * This function controls the influence of fog on the sky color and visibility. 
+ * A higher value makes the fog blend more strongly with the sky, reducing its clarity.
+ *
+ * @param value The fog effect on the sky, in the range [0.0f, 1.0f] 
+ *              (0 = no effect, 1 = maximum blending).
+ */
+R3DAPI void R3D_SetFogSkyAffect(float value);
+
+/**
+ * @brief Gets the current fog effect on the sky.
+ *
+ * This function retrieves the current influence of fog on the sky.
+ *
+ * @return The current fog-sky affect value, in the range [0.0f, 1.0f].
+ */
+R3DAPI float R3D_GetFogSkyAffect(void);
+
 // --------------------------------------------
 // ENVIRONMENT: Tonemap Config Functions
 // --------------------------------------------

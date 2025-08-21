@@ -430,6 +430,7 @@ typedef struct {
     r3d_shader_uniform_float_t uFogStart;
     r3d_shader_uniform_float_t uFogEnd;
     r3d_shader_uniform_float_t uFogDensity;
+    r3d_shader_uniform_float_t uSkyAffect;
 } r3d_shader_screen_fog_t;
 
 typedef struct {

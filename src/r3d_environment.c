@@ -345,6 +345,16 @@ float R3D_GetFogDensity(void)
 	return R3D.env.fogDensity;
 }
 
+void R3D_SetFogSkyAffect(float value)
+{
+	R3D.env.fogSkyAffect = value;
+}
+
+float R3D_GetFogSkyAffect(void)
+{
+	return R3D.env.fogSkyAffect;
+}
+
 void R3D_SetTonemapMode(R3D_Tonemap mode)
 {
 	R3D.env.tonemapMode = mode;

@@ -132,6 +132,7 @@ void R3D_Init(int resWidth, int resHeight, unsigned int flags)
     R3D.env.fogStart = 1.0f;
     R3D.env.fogEnd = 50.0f;
     R3D.env.fogDensity = 0.05f;
+    R3D.env.fogSkyAffect = 0.5f;
     R3D.env.dofMode = R3D_DOF_DISABLED;
     R3D.env.dofFocusPoint = 10.0f;
     R3D.env.dofFocusScale = 1.0f;
@@ -2165,6 +2166,7 @@ void r3d_pass_post_fog(void)
             r3d_shader_set_float(screen.fog, uFogStart, R3D.env.fogStart);
             r3d_shader_set_float(screen.fog, uFogEnd, R3D.env.fogEnd);
             r3d_shader_set_float(screen.fog, uFogDensity, R3D.env.fogDensity);
+            r3d_shader_set_float(screen.fog, uSkyAffect, R3D.env.fogSkyAffect);
 
             r3d_primitive_bind_and_draw_screen();
         }

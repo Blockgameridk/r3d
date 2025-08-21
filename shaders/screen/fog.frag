@@ -43,6 +43,7 @@ uniform vec3 uFogColor;
 uniform float uFogStart;
 uniform float uFogEnd;
 uniform float uFogDensity;
+uniform float uSkyAffect;
 
 /* === Fragments === */
 
@@ -93,6 +94,7 @@ void main()
 
     // Applying the fog factor to the resulting color
     float fogFactor = FogFactor(depth, uFogMode, uFogDensity, uFogStart, uFogEnd);
+    fogFactor *= uSkyAffect * step(depth, uFar);
     result = mix(result, uFogColor, fogFactor);
 
     // Final color output
