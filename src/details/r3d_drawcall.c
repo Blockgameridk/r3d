@@ -112,10 +112,6 @@ void r3d_drawcall_update_model_animation(const r3d_drawcall_t* call)
 
 void r3d_drawcall_raster_depth(const r3d_drawcall_t* call, bool shadow)
 {
-    if (call->geometryType != R3D_DRAWCALL_GEOMETRY_MODEL) {
-        return;
-    }
-
     Matrix matMVP, temp;
 
     // Calculate MVP
@@ -177,10 +173,6 @@ void r3d_drawcall_raster_depth(const r3d_drawcall_t* call, bool shadow)
 
 void r3d_drawcall_raster_depth_inst(const r3d_drawcall_t* call, bool shadow)
 {
-    if (call->geometryType != R3D_DRAWCALL_GEOMETRY_MODEL) {
-        return;
-    }
-
     Matrix matModel, matVP, temp;
 
     // Calculate transform
@@ -250,10 +242,6 @@ void r3d_drawcall_raster_depth_inst(const r3d_drawcall_t* call, bool shadow)
 
 void r3d_drawcall_raster_depth_cube(const r3d_drawcall_t* call, bool shadow)
 {
-    if (call->geometryType != R3D_DRAWCALL_GEOMETRY_MODEL) {
-        return;
-    }
-
     Matrix matModel, matMVP, temp;
 
     // Calculate transform
@@ -327,10 +315,6 @@ void r3d_drawcall_raster_depth_cube(const r3d_drawcall_t* call, bool shadow)
 
 void r3d_drawcall_raster_depth_cube_inst(const r3d_drawcall_t* call, bool shadow)
 {
-    if (call->geometryType != R3D_DRAWCALL_GEOMETRY_MODEL) {
-        return;
-    }
-
     Matrix matModel, matVP, temp;
 
     // Calculate transform
