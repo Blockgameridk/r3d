@@ -51,7 +51,7 @@
 
 *Note: v0.7 features are still incomplete.*
 
-## **v0.7**
+## **v0.8**
 
 * [ ] **Support for OpenGL ES**
   Likely add support for OpenGL ES.
