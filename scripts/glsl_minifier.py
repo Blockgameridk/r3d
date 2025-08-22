@@ -23,7 +23,9 @@ glsl_keywords = {
 
     # Data types
     'void', 'bool', 'uint', 'int', 'float',
-    'ivec2', 'uvec2', 'vec2', 'ivec3', 'uvec3', 'vec3', 'ivec4', 'uvec4', 'vec4',
+    'bvec2', 'ivec2', 'uvec2', 'vec2',
+    'bvec3', 'ivec3', 'uvec3', 'vec3',
+    'bvec4', 'ivec4', 'uvec4', 'vec4',
     'mat2', 'mat3', 'mat4', 'struct', 'double', 'dvec2', 'dvec3', 'dvec4',
     'dmat2', 'dmat3', 'dmat4',
 
@@ -73,7 +75,7 @@ glsl_keywords = {
     'gl_WorkGroupSize', 'gl_NumWorkGroups', 'gl_InvocationID', 'gl_PrimitiveID',
     'gl_TessCoord', 'gl_FragCoord', 'gl_FrontFacing', 'gl_SampleID', 'gl_SamplePosition',
     'gl_FragDepth', 'gl_FragStencilRef', 'gl_TexCoord', 'gl_VertexID', 'gl_InstanceID',
-    'gl_BaseInstance',
+    'gl_BaseInstance', 'gl_DrawID',
 
     # Tessellation and compute shaders
     'tessellation', 'subpass', 'workgroup',
