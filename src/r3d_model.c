@@ -3044,6 +3044,36 @@ void r3d_calculate_animation_global_transforms(
     }
 }
 
+void r3d_calculate_animation_local_transforms(
+    const struct aiNode* node, const struct aiAnimation* aiAnim, float time,
+    Transform* globalTransforms,
+    const BoneInfo* bones, int totalBones)
+{
+    /* --- Get the node's local transform at the specified time --- */
+
+    Matrix localTransform;
+    if (!r3d_get_node_transform_at_time(&localTransform, aiAnim, node->mName.data, time)) {
+        // Use default transformation if no animation is found for this node
+        localTransform = r3d_matrix_from_ai_matrix(&node->mTransformation);
+    }
+    for (int i = 0; i < totalBones; i++) {
+        if (strcmp(node->mName.data, bones[i].name) == 0) {
+
+            MatrixDecompose(localTransform,&globalTransforms[i].translation,&globalTransforms[i].rotation,&globalTransforms[i].scale);
+            break;
+        }
+    }
+
+    /* --- Recursively compute global transforms for all child nodes --- */
+
+    for (unsigned int i = 0; i < node->mNumChildren; i++) {
+        r3d_calculate_animation_local_transforms(
+            node->mChildren[i], aiAnim, time, 
+            globalTransforms, 
+            bones, totalBones);
+    }
+}
+
 bool r3d_process_animation(R3D_ModelAnimation* animation, const struct aiScene* scene, const struct aiAnimation* aiAnim, int targetFrameRate)
 {
     /* --- Validate input --- */
@@ -3167,6 +3197,144 @@ bool r3d_process_animation(R3D_ModelAnimation* animation, const struct aiScene* 
         r3d_calculate_animation_global_transforms(
             scene->mRootNode, aiAnim, timeInTicks,
             R3D_MATRIX_IDENTITY, animation->framePoses[frame],
+            animation->bones, animation->boneCount
+        );
+    }
+
+    /* --- Final success log --- */
+
+    TraceLog(LOG_INFO, "R3D: Successfully processed animation '%s' with %d bones and %d frames", 
+             animation->name, animation->boneCount, animation->frameCount);
+
+    return true;
+}
+
+
+bool r3d_process_local_animation(R3D_ModelLocalAnimation* animation, const struct aiScene* scene, const struct aiAnimation* aiAnim, int targetFrameRate)
+{
+    /* --- Validate input --- */
+
+    if (!animation || !scene || !aiAnim) {
+        return false;
+    }
+
+    /* --- Initialize animation name --- */
+
+    strncpy(animation->name, aiAnim->mName.data, 31);
+    animation->name[31] = '\0';
+
+    /* --- Compute duration in frames based on ticks per second --- */
+
+    float ticksPerSecond = aiAnim->mTicksPerSecond ? aiAnim->mTicksPerSecond : 25.0f;
+    float durationInSeconds = (float)aiAnim->mDuration / ticksPerSecond;
+    animation->frameCount = (int)(durationInSeconds * targetFrameRate + 0.5f);
+
+    TraceLog(LOG_INFO, "R3D: Animation '%s' - Duration: %.2fs, Frames: %d", 
+             animation->name, durationInSeconds, animation->frameCount);
+
+    /* --- Count unique bones used across all meshes --- */
+
+    int boneCounter = 0;
+    for (unsigned int meshIndex = 0; meshIndex < scene->mNumMeshes; meshIndex++) {
+        const struct aiMesh* mesh = scene->mMeshes[meshIndex];
+
+        for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; boneIndex++) {
+            const struct aiBone* bone = mesh->mBones[boneIndex];
+            bool boneExists = false;
+
+            // Check in previous meshes
+            for (unsigned int prevMeshIndex = 0; prevMeshIndex < meshIndex && !boneExists; prevMeshIndex++) {
+                const struct aiMesh* prevMesh = scene->mMeshes[prevMeshIndex];
+                for (unsigned int prevBoneIndex = 0; prevBoneIndex < prevMesh->mNumBones && !boneExists; prevBoneIndex++) {
+                    boneExists = (strcmp(bone->mName.data, prevMesh->mBones[prevBoneIndex]->mName.data) == 0);
+                }
+            }
+
+            // Check in previous bones of the same mesh
+            if (!boneExists) {
+                for (unsigned int prevBoneIndex = 0; prevBoneIndex < boneIndex && !boneExists; prevBoneIndex++) {
+                    boneExists = (strcmp(bone->mName.data, mesh->mBones[prevBoneIndex]->mName.data) == 0);
+                }
+            }
+
+            if (!boneExists) boneCounter++;
+        }
+    }
+
+    /* --- Abort if no bones found --- */
+
+    if (boneCounter == 0) {
+        TraceLog(LOG_WARNING, "R3D: No bones found for animation '%s'", animation->name);
+        return false;
+    }
+
+    animation->boneCount = boneCounter;
+
+    /* --- Allocate memory for bones and frame poses --- */
+
+    animation->bones = RL_CALLOC(animation->boneCount, sizeof(BoneInfo));
+    animation->framePoses = RL_CALLOC(animation->frameCount, sizeof(Transform*));
+
+    if (!animation->bones || !animation->framePoses) {
+        TraceLog(LOG_ERROR, "R3D: Failed to allocate memory for animation data");
+        RL_FREE(animation->framePoses);
+        RL_FREE(animation->bones);
+        return false;
+    }
+
+    /* --- Collect unique bone names --- */
+
+    boneCounter = 0;
+    for (unsigned int meshIndex = 0; meshIndex < scene->mNumMeshes; meshIndex++) {
+        const struct aiMesh* mesh = scene->mMeshes[meshIndex];
+
+        for (unsigned int boneIndex = 0; boneIndex < mesh->mNumBones; boneIndex++) {
+            const struct aiBone* bone = mesh->mBones[boneIndex];
+            bool boneExists = false;
+
+            for (int i = 0; i < boneCounter && !boneExists; i++) {
+                boneExists = (strcmp(bone->mName.data, animation->bones[i].name) == 0);
+            }
+
+            if (!boneExists) {
+                strncpy(animation->bones[boneCounter].name, bone->mName.data, 31);
+                animation->bones[boneCounter].name[31] = '\0';
+                animation->bones[boneCounter].parent = -1;
+                boneCounter++;
+            }
+        }
+    }
+
+    /* --- Allocate matrices for each animation frame --- */
+
+    for (int frame = 0; frame < animation->frameCount; frame++) {
+        animation->framePoses[frame] = RL_CALLOC(animation->boneCount, sizeof(Transform));
+        if (!animation->framePoses[frame]) {
+            TraceLog(LOG_ERROR, "R3D: Failed to allocate memory for frame %d", frame);
+            for (int i = 0; i < frame; i++) RL_FREE(animation->framePoses[i]);
+            RL_FREE(animation->framePoses);
+            RL_FREE(animation->bones);
+            return false;
+        }
+    }
+
+    /* --- Compute global bone transforms for each frame --- */
+
+    for (int frame = 0; frame < animation->frameCount; frame++) {
+        float timeInTicks = fminf(
+            ((float)frame / targetFrameRate) * ticksPerSecond,
+            (float)aiAnim->mDuration);
+
+        // Initialize all bones to identity before calculating
+        for (int i = 0; i < animation->boneCount; i++) {
+            animation->framePoses[frame][i].scale = Vector3One();
+            animation->framePoses[frame][i].translation = Vector3Zero();
+            animation->framePoses[frame][i].rotation = QuaternionIdentity();
+        }
+
+        r3d_calculate_animation_local_transforms(
+            scene->mRootNode, aiAnim, timeInTicks,
+            animation->framePoses[frame],
             animation->bones, animation->boneCount
         );
     }
@@ -3325,6 +3493,60 @@ static R3D_ModelAnimation* r3d_process_animations_from_scene(const struct aiScen
     return animations;
 }
 
+
+static R3D_ModelLocalAnimation* r3d_process_local_animations_from_scene(const struct aiScene* scene, int* animCount, int targetFrameRate, const char* sourceName)
+{
+    *animCount = 0;
+
+    /* --- Check if there are animations --- */
+
+    if (scene->mNumAnimations == 0) {
+        TraceLog(LOG_INFO, "R3D: No animations found in '%s'", sourceName ? sourceName : "memory");
+        return NULL;
+    }
+
+    TraceLog(LOG_INFO, "R3D: Found %d animations in '%s'", scene->mNumAnimations, sourceName ? sourceName : "memory");
+
+    /* --- Allocate animations array --- */
+
+    R3D_ModelLocalAnimation* animations = RL_CALLOC(scene->mNumAnimations, sizeof(R3D_ModelLocalAnimation));
+    if (!animations) {
+        TraceLog(LOG_ERROR, "R3D: Unable to allocate memory for animations");
+        return NULL;
+    }
+
+    /* --- Process each animation --- */
+
+    int successCount = 0;
+    for (unsigned int i = 0; i < scene->mNumAnimations; i++) {
+        const struct aiAnimation* aiAnim = scene->mAnimations[i];
+        if (r3d_process_local_animation(&animations[successCount], scene, aiAnim, targetFrameRate)) {
+            successCount++;
+        } else {
+            TraceLog(LOG_ERROR, "R3D: Failed to process animation %d", i);
+        }
+    }
+
+    /* --- Handle results --- */
+
+    if (successCount == 0) {
+        TraceLog(LOG_ERROR, "R3D: No animations were successfully loaded");
+        RL_FREE(animations);
+        return NULL;
+    }
+
+    if (successCount < (int)scene->mNumAnimations) {
+        TraceLog(LOG_WARNING, "R3D: Only %d out of %d animations were successfully loaded", successCount, scene->mNumAnimations);
+        R3D_ModelLocalAnimation* resizedAnims = RL_REALLOC(animations, successCount * sizeof(R3D_ModelLocalAnimation));
+        if (resizedAnims) animations = resizedAnims;
+    }
+
+    *animCount = successCount;
+    TraceLog(LOG_INFO, "R3D: Successfully loaded %d animations", successCount);
+
+    return animations;
+}
+
 /* === Public Model Functions === */
 
 R3D_Model R3D_LoadModel(const char* filePath)
@@ -3465,6 +3687,29 @@ R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount
 
     return animations;
 }
+
+
+R3D_ModelLocalAnimation* R3D_LoadModelLocalAnimations(const char* fileName, int* animCount, int targetFrameRate)
+{
+    /* --- Import scene using Assimp --- */
+
+    const struct aiScene* scene = r3d_load_scene_from_file(fileName);
+    if (!scene) {
+        *animCount = 0;
+        return NULL;
+    }
+
+    /* --- Process animations from scene --- */
+
+    R3D_ModelLocalAnimation* animations = r3d_process_local_animations_from_scene(scene, animCount, targetFrameRate, fileName);
+
+    /* --- Clean up and return --- */
+
+    aiReleaseImport(scene);
+
+    return animations;
+}
+
 
 R3D_ModelAnimation* R3D_LoadModelAnimationsFromMemory(const char* fileType, const void* data, unsigned int size, int* animCount, int targetFrameRate)
 {

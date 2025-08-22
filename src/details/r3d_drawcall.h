@@ -50,6 +50,7 @@ typedef struct {
             const R3D_Mesh* mesh;               //< Mesh to render
             const R3D_ModelAnimation* anim;     //< Animation to apply to the mesh (can be NULL)
             const Matrix* boneOffsets;          //< Bone offset matrices from the R3D_Model
+            const Matrix* boneOverride;         //< Bone override matrices for user supplied animation logic  
             int frame;                          //< Animation frame to apply to the mesh
         } model;
 
