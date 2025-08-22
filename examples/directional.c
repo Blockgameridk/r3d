@@ -1,5 +1,6 @@
 #include "./common.h"
 #include "r3d.h"
+#include <raylib.h>
 
 /* === Resources === */
 
@@ -38,13 +39,18 @@ const char* Init(void)
 
     /* --- Setup the scene lighting --- */
 
+    R3D_SetSceneBounds(
+        (BoundingBox) {
+            .min = { -100, -1, -100 },
+            .max = { +100, +1, +100 }
+        }
+    );
+
     R3D_Light light = R3D_CreateLight(R3D_LIGHT_DIR);
     {
         R3D_SetLightDirection(light, (Vector3) { 0, -1, -1 });
         R3D_SetShadowUpdateMode(light, R3D_SHADOW_UPDATE_MANUAL);
-        R3D_SetShadowBias(light, 0.005f);
         R3D_EnableShadow(light, 4096);
-
         R3D_SetLightActive(light, true);
     }
 

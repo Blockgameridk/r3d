@@ -44,7 +44,8 @@ typedef struct {
     r3d_shadow_map_t map;
     Matrix matVP;
     float softness;
-    float bias;
+    float depthBias;
+    float slopeBias;
     bool enabled;
 } r3d_shadow_t;
 

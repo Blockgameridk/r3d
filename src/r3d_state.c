@@ -1267,7 +1267,8 @@ void r3d_shader_load_raster_forward(void)
         shader->uLights[i].outerCutOff.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].outerCutOff", i));
         shader->uLights[i].shadowSoftness.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowSoftness", i));
         shader->uLights[i].shadowMapTxlSz.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowMapTxlSz", i));
-        shader->uLights[i].shadowBias.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowBias", i));
+        shader->uLights[i].shadowDepthBias.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowDepthBias", i));
+        shader->uLights[i].shadowSlopeBias.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowSlopeBias", i));
         shader->uLights[i].type.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].type", i));
         shader->uLights[i].enabled.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].enabled", i));
         shader->uLights[i].shadow.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadow", i));
@@ -1347,7 +1348,8 @@ void r3d_shader_load_raster_forward_inst(void)
         shader->uLights[i].outerCutOff.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].outerCutOff", i));
         shader->uLights[i].shadowSoftness.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowSoftness", i));
         shader->uLights[i].shadowMapTxlSz.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowMapTxlSz", i));
-        shader->uLights[i].shadowBias.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowBias", i));
+        shader->uLights[i].shadowDepthBias.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowDepthBias", i));
+        shader->uLights[i].shadowSlopeBias.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowSlopeBias", i));
         shader->uLights[i].type.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].type", i));
         shader->uLights[i].enabled.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].enabled", i));
         shader->uLights[i].shadow.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadow", i));
@@ -1576,7 +1578,8 @@ void r3d_shader_load_screen_lighting(void)
     r3d_shader_get_location(screen.lighting, uLight.outerCutOff);
     r3d_shader_get_location(screen.lighting, uLight.shadowSoftness);
     r3d_shader_get_location(screen.lighting, uLight.shadowMapTxlSz);
-    r3d_shader_get_location(screen.lighting, uLight.shadowBias);
+    r3d_shader_get_location(screen.lighting, uLight.shadowDepthBias);
+    r3d_shader_get_location(screen.lighting, uLight.shadowSlopeBias);
     r3d_shader_get_location(screen.lighting, uLight.type);
     r3d_shader_get_location(screen.lighting, uLight.shadow);
 
