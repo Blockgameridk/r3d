@@ -336,16 +336,28 @@ void R3D_SetShadowSoftness(R3D_Light id, float softness)
     light->shadow.softness = softness;
 }
 
-float R3D_GetShadowBias(R3D_Light id)
+float R3D_GetShadowDepthBias(R3D_Light id)
 {
     r3d_get_and_check_light(light, id, 0);
-    return light->shadow.bias;
+    return light->shadow.depthBias;
 }
 
-void R3D_SetShadowBias(R3D_Light id, float value)
+void R3D_SetShadowDepthBias(R3D_Light id, float value)
 {
     r3d_get_and_check_light(light, id);
-    light->shadow.bias = value;
+    light->shadow.depthBias = value;
+}
+
+float R3D_GetShadowSlopeBias(R3D_Light id)
+{
+    r3d_get_and_check_light(light, id, 0);
+    return light->shadow.slopeBias;
+}
+
+void R3D_SetShadowSlopeBias(R3D_Light id, float value)
+{
+    r3d_get_and_check_light(light, id);
+    light->shadow.slopeBias = value;
 }
 
 BoundingBox R3D_GetLightBoundingBox(R3D_Light id)

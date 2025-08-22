@@ -20,7 +20,7 @@
   Currently, occlusion (from ORM or SSAO) only affects ambient light (simulated or IBL). Add a factor to control how much direct lighting is influenced too. While this is less physically accurate, it allows better artistic control.
   *Note: Consider splitting this into two separate factors: one per material and another for SSAO globally.*
 
-* [ ] **Better Shadow Quality and Performance**
+* [x] **Better Shadow Quality and Performance**
   Shadow rendering can currently be easily simplified and improved
 
 ## **v0.6**

@@ -1753,26 +1753,33 @@ R3DAPI float R3D_GetShadowSoftness(R3D_Light id);
 R3DAPI void R3D_SetShadowSoftness(R3D_Light id, float softness);
 
 /**
- * @brief Gets the shadow bias of a light.
- *
- * This function retrieves the shadow bias value for the specified light. The shadow bias helps prevent shadow artifacts,
- * such as shadow acne, by slightly offsetting the depth comparisons used in shadow mapping.
- *
- * @param id The ID of the light.
- * @return The shadow bias value.
+ * @brief Gets the shadow depth bias value.
  */
-R3DAPI float R3D_GetShadowBias(R3D_Light id);
+R3DAPI float R3D_GetShadowDepthBias(R3D_Light id);
 
 /**
- * @brief Sets the shadow bias of a light.
+ * @brief Sets the shadow depth bias value.
  *
- * This function sets the shadow bias value for the specified light. Adjusting the shadow bias can help avoid shadow
- * artifacts such as shadow acne by modifying the depth comparisons used in shadow mapping.
- *
- * @param id The ID of the light.
- * @param value The shadow bias value to set.
+ * A higher bias helps reduce "shadow acne" artifacts
+ * (shadows flickering or appearing misaligned on surfaces).
+ * Be careful: too large values may cause shadows to look detached
+ * or floating away from objects.
  */
-R3DAPI void R3D_SetShadowBias(R3D_Light id, float value);
+R3DAPI void R3D_SetShadowDepthBias(R3D_Light id, float value);
+
+/**
+ * @brief Gets the shadow slope bias value.
+ */
+R3DAPI float R3D_GetShadowSlopeBias(R3D_Light id);
+
+/**
+ * @brief Sets the shadow slope bias value.
+ *
+ * This bias mainly compensates artifacts on surfaces angled
+ * relative to the light. It helps prevent shadows from
+ * incorrectly appearing or disappearing along object edges.
+ */
+R3DAPI void R3D_SetShadowSlopeBias(R3D_Light id, float value);
 
 // --------------------------------------------
 // LIGHTING: Light Helper Functions

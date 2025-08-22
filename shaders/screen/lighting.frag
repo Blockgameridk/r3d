@@ -21,7 +21,8 @@
 
 /* === Defines === */
 
-#define PI 3.1415926535897932384626433832795028
+#define PI  3.1415926535897931
+#define TAU 6.2831853071795862
 
 #define DIRLIGHT    0
 #define SPOTLIGHT   1
@@ -48,7 +49,8 @@ struct Light
     float outerCutOff;              //< Spot light outer cutoff angle
     float shadowSoftness;           //< Softness factor to simulate a penumbra
     float shadowMapTxlSz;           //< Size of a texel in the 2D shadow map
-    float shadowBias;               //< Depth bias for shadow projection (used to reduce acne)
+    float shadowDepthBias;          //< Constant depth bias applied to shadow mapping to reduce shadow acne
+    float shadowSlopeBias;          //< Additional bias scaled by surface slope to reduce artifacts on angled geometry
     lowp int type;                  //< Light type (dir/spot/omni)
     bool shadow;                    //< Indicates whether the light generates shadows
 };
@@ -72,10 +74,6 @@ uniform vec3 uViewPosition;
 uniform mat4 uMatInvProj;
 uniform mat4 uMatInvView;
 
-/* === Constants === */
-
-const int TEX_NOISE_SIZE = 128;
-
 /* === Fragments === */
 
 layout(location = 0) out vec4 FragDiffuse;
@@ -83,23 +81,17 @@ layout(location = 1) out vec4 FragSpecular;
 
 /* === Constants === */
 
-const vec2 POISSON_DISK[16] = vec2[](
-    vec2(-0.94201624, -0.39906216),
-    vec2(0.94558609, -0.76890725),
-    vec2(-0.094184101, -0.92938870),
-    vec2(0.34495938, 0.29387760),
-    vec2(-0.91588581, 0.45771432),
-    vec2(-0.81544232, -0.87912464),
-    vec2(-0.38277543, 0.27676845),
-    vec2(0.97484398, 0.75648379),
-    vec2(0.44323325, -0.97511554),
-    vec2(0.53742981, -0.47373420),
-    vec2(-0.26496911, -0.41893023),
-    vec2(0.79197514, 0.19090188),
-    vec2(-0.24188840, 0.99706507),
-    vec2(-0.81409955, 0.91437590),
-    vec2(0.19984126, 0.78641367),
-    vec2(0.14383161, -0.14100790)
+#define TEX_NOISE_SIZE 64
+#define SHADOW_SAMPLES 12
+
+const vec2 POISSON_DISK[SHADOW_SAMPLES] = vec2[]
+(
+    vec2(-0.94201624, -0.39906216), vec2(0.94558609, -0.76890725),
+    vec2(-0.094184101, -0.92938870), vec2(0.34495938, 0.29387760),
+    vec2(-0.91588581, 0.45771432), vec2(-0.81544232, -0.87912464),
+    vec2(-0.38277543, 0.27676845), vec2(0.97484398, 0.75648379),
+    vec2(0.44323325, -0.97511554), vec2(0.53742981, -0.47373420),
+    vec2(-0.26496911, -0.41893023), vec2(0.79197514, 0.19090188)
 );
 
 /* === PBR functions === */
@@ -166,128 +158,106 @@ vec3 Specular(vec3 F0, float cLdotH, float cNdotH, float cNdotV, float cNdotL, f
 
 /* === Shadow functions === */
 
+vec2 Rotate2D(vec2 v, float c, float s)
+{
+    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
+
 float ShadowOmni(vec3 position, float cNdotL)
 {
-    /* --- Calculate vector and distance from light to fragment --- */
+    /* --- Light Vector and Distance Calculation --- */
 
     vec3 lightToFrag = position - uLight.position;
     float currentDepth = length(lightToFrag);
     vec3 direction = normalize(lightToFrag);
 
-    /* --- Calculate bias to avoid shadow acne based on surface normal --- */
+    /* --- Shadow Bias and Depth Adjustment --- */
 
-    float bias = max(uLight.shadowBias * (1.0 - cNdotL), 0.05);
+    float bias = uLight.shadowSlopeBias * (1.0 - cNdotL * 0.5);
+    bias = max(bias, uLight.shadowDepthBias * currentDepth);
     currentDepth -= bias;
 
-    /* --- Calculate adaptive sampling radius based on distance --- */
+    /* --- Adaptive Softness Based on Distance --- */
 
-    float adaptiveRadius = uLight.shadowSoftness / max(currentDepth, 0.1);
+    float adaptiveRadius = uLight.shadowSoftness * sqrt(currentDepth / uLight.far);
 
-    /* --- Build tangent and bitangent vectors for sampling pattern --- */
+    /* --- Tangent Space Construction for Sampling --- */
 
-    vec3 tangent, bitangent;
-    if (abs(direction.y) < 0.99) {
-        tangent = normalize(cross(vec3(0.0, 1.0, 0.0), direction));
-    } else {
-        tangent = normalize(cross(vec3(1.0, 0.0, 0.0), direction));
-    }
-    bitangent = normalize(cross(direction, tangent));
+    vec3 up = abs(direction.y) > 0.99 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0);
+    vec3 tangent = normalize(cross(up, direction));
+    vec3 bitangent = cross(direction, tangent);
 
-    /* --- Generate random rotation to reduce banding artifacts --- */
+    /* --- Blue Noise Rotation for Sample Distribution --- */
 
-    vec4 noiseTexel = texture(uTexNoise, fract(gl_FragCoord.xy / float(TEX_NOISE_SIZE)));
-    float rotationAngle = noiseTexel.r * 2.0 * PI;
-    float cosRot = cos(rotationAngle);
-    float sinRot = sin(rotationAngle);
+    float rotationAngle = texture(uTexNoise, gl_FragCoord.xy * (1.0/float(TEX_NOISE_SIZE))).r * TAU;
+    float rc = cos(rotationAngle);
+    float rs = sin(rotationAngle);
 
-    float shadow = 0.0;
-
-    /* --- Sample central depth from cubemap --- */
+    /* --- Central Shadow Sample --- */
 
     float centerDepth = texture(uLight.shadowCubemap, direction).r * uLight.far;
-    shadow += step(currentDepth, centerDepth);
+    float shadow = step(currentDepth, centerDepth);
 
-    /* --- Sample surrounding depths using Poisson Disk pattern --- */
+    /* --- Poisson Disk PCF Sampling --- */
 
-    for (int i = 0; i < 16; ++i)
+    for (int i = 0; i < SHADOW_SAMPLES; ++i)
     {
-        vec2 rotatedOffset = vec2(
-            POISSON_DISK[i].x * cosRot - POISSON_DISK[i].y * sinRot,
-            POISSON_DISK[i].x * sinRot + POISSON_DISK[i].y * cosRot
-        );
-
-        /* Convert 2D offset to 3D offset in tangent space */
-    
-        vec3 sampleDir = direction + (tangent * rotatedOffset.x + bitangent * rotatedOffset.y) * adaptiveRadius;
-        sampleDir = normalize(sampleDir);
-
-        float closestDepth = texture(uLight.shadowCubemap, sampleDir).r * uLight.far;
-        shadow += step(currentDepth, closestDepth);
+        vec2 rotatedOffset = Rotate2D(POISSON_DISK[i], rc, rs);
+        vec3 sampleDir = normalize(direction + (tangent * rotatedOffset.x + bitangent * rotatedOffset.y) * adaptiveRadius);
+        
+        float sampleDepth = texture(uLight.shadowCubemap, sampleDir).r * uLight.far;
+        shadow += step(currentDepth, sampleDepth);
     }
 
-    /* --- Average the shadow samples --- */
+    /* --- Final Shadow Value --- */
 
-    return shadow / 17.0;
+    return shadow / float(SHADOW_SAMPLES + 1);
 }
 
 float Shadow(vec3 position, float cNdotL)
 {
-    /* --- Project world position into light clip space --- */
+    /* --- Light Space Projection --- */
 
-    vec4 p = uLight.matVP * vec4(position, 1.0);
+    vec4 projPos = uLight.matVP * vec4(position, 1.0);
+    vec3 projCoords = projPos.xyz / projPos.w * 0.5 + 0.5;
 
-    /* --- Convert to normalized device coordinates [0,1] --- */
+    /* --- Shadow Map Bounds Check --- */
 
-    vec3 projCoords = p.xyz / p.w;
-    projCoords = projCoords * 0.5 + 0.5;
-
-    /* --- Check if fragment is inside the shadow map bounds --- */
-
-    float inside = float(
-        all(greaterThanEqual(projCoords, vec3(0.0))) &&
-        all(lessThanEqual(projCoords, vec3(1.0)))
-    );
-
-    /* --- Calculate bias to prevent shadow acne --- */
-
-    float bias = max(uLight.shadowBias * (1.0 - cNdotL), 0.00002);
-    float currentDepth = projCoords.z - bias;
-
-    /* --- Calculate adaptive radius for soft shadows --- */
-
-    float adaptiveRadius = uLight.shadowSoftness / max(projCoords.z, 0.1);
-
-    /* --- Generate random rotation angle for sample offsets --- */
-
-    vec4 noiseTexel = texture(uTexNoise, fract(gl_FragCoord.xy / float(TEX_NOISE_SIZE)));
-    float rotationAngle = noiseTexel.r * 2.0 * PI;
-    float cosRot = cos(rotationAngle);
-    float sinRot = sin(rotationAngle);
-
-    float shadow = 0.0;
-
-    /* --- Sample shadow map at center --- */
-
-    shadow += step(currentDepth, texture(uLight.shadowMap, projCoords.xy).r);
-
-    /* --- Sample shadow map with Poisson Disk offsets --- */
-
-    for (int i = 0; i < 16; ++i)
-    {
-        vec2 rotatedOffset = vec2(
-            POISSON_DISK[i].x * cosRot - POISSON_DISK[i].y * sinRot,
-            POISSON_DISK[i].x * sinRot + POISSON_DISK[i].y * cosRot
-        ) * adaptiveRadius;
-
-        float closestDepth = texture(uLight.shadowMap, projCoords.xy + rotatedOffset).r;
-        shadow += step(currentDepth, closestDepth);
+    if (!all(lessThanEqual(projCoords, vec3(1.0)) && greaterThanEqual(projCoords, vec3(0.0)))) {
+        return 1.0;
     }
 
-    /* --- Average samples and apply mask for fragments outside bounds --- */
+    /* --- Shadow Bias and Depth Adjustment --- */
 
-    shadow /= 17.0;
+    float bias = uLight.shadowSlopeBias * (1.0 - cNdotL);
+    bias = max(bias, uLight.shadowDepthBias * projCoords.z);
+    float currentDepth = projCoords.z - bias;
 
-    return mix(1.0, shadow, inside);
+    /* --- Distance-Based Adaptive Softness --- */
+
+    float adaptiveRadius = uLight.shadowSoftness * sqrt(projCoords.z);
+
+    /* --- Blue Noise Rotation for Sample Distribution --- */
+
+    float rotationAngle = texture(uTexNoise, gl_FragCoord.xy * (1.0/float(TEX_NOISE_SIZE))).r * TAU;
+    float rc = cos(rotationAngle);
+    float rs = sin(rotationAngle);
+
+    /* --- Central Shadow Sample --- */
+
+    float shadow = step(currentDepth, texture(uLight.shadowMap, projCoords.xy).r);
+
+    /* --- Poisson Disk PCF Sampling --- */
+
+    for (int i = 0; i < SHADOW_SAMPLES; ++i)
+    {
+        vec2 offset = Rotate2D(POISSON_DISK[i], rc, rs) * adaptiveRadius;
+        shadow += step(currentDepth, texture(uLight.shadowMap, projCoords.xy + offset).r);
+    }
+
+    /* --- Final Shadow Value --- */
+
+    return shadow / float(SHADOW_SAMPLES + 1);
 }
 
 /* === Misc functions === */

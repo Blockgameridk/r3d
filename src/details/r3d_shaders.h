@@ -221,7 +221,8 @@ typedef struct {
         r3d_shader_uniform_float_t outerCutOff;
         r3d_shader_uniform_float_t shadowSoftness;
         r3d_shader_uniform_float_t shadowMapTxlSz;
-        r3d_shader_uniform_float_t shadowBias;
+        r3d_shader_uniform_float_t shadowDepthBias;
+        r3d_shader_uniform_float_t shadowSlopeBias;
         r3d_shader_uniform_int_t type;
         r3d_shader_uniform_int_t enabled;
         r3d_shader_uniform_int_t shadow;
@@ -276,7 +277,8 @@ typedef struct {
         r3d_shader_uniform_float_t outerCutOff;
         r3d_shader_uniform_float_t shadowSoftness;
         r3d_shader_uniform_float_t shadowMapTxlSz;
-        r3d_shader_uniform_float_t shadowBias;
+        r3d_shader_uniform_float_t shadowDepthBias;
+        r3d_shader_uniform_float_t shadowSlopeBias;
         r3d_shader_uniform_int_t type;
         r3d_shader_uniform_int_t enabled;
         r3d_shader_uniform_int_t shadow;
@@ -376,7 +378,8 @@ typedef struct {
         r3d_shader_uniform_float_t outerCutOff;
         r3d_shader_uniform_float_t shadowSoftness;
         r3d_shader_uniform_float_t shadowMapTxlSz;
-        r3d_shader_uniform_float_t shadowBias;
+        r3d_shader_uniform_float_t shadowDepthBias;
+        r3d_shader_uniform_float_t shadowSlopeBias;
         r3d_shader_uniform_int_t type;
         r3d_shader_uniform_int_t shadow;
     } uLight;

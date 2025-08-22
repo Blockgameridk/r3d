@@ -149,15 +149,18 @@ void r3d_light_init(r3d_light_t* light, R3D_LightType type)
     switch (type) {
     case R3D_LIGHT_DIR:
         light->shadow.softness = 0.0005f;
-        light->shadow.bias = 0.02f;
+        light->shadow.depthBias = 0.0002f;
+        light->shadow.slopeBias = 0.002f;
         break;
     case R3D_LIGHT_SPOT:
         light->shadow.softness = 0.001f;
-        light->shadow.bias = 0.0002f;
+        light->shadow.depthBias = 0.00002f;
+        light->shadow.slopeBias = 0.0002f;
         break;
     case R3D_LIGHT_OMNI:
-        light->shadow.softness = 0.025f;
-        light->shadow.bias = 0.05f;
+        light->shadow.softness = 0.0025f;
+        light->shadow.depthBias = 0.01f;
+        light->shadow.slopeBias = 0.02f;
         break;
     }
 }
