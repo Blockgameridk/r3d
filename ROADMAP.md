@@ -1,22 +1,5 @@
 # R3D Roadmap
 
-## **v0.4**
-
-- [x] **Load Animations From Memory**  
-  Currently, only models can be loaded from memory, animations still need to be loaded from an external file. This should be improved with `R3D_LoadModelAnimationsFromMemory`.
-
-* [x] **Add Skybox Intensity Factor**
-  Introduce a control factor for the skybox intensity. This factor should be applied both when rendering the skybox and when computing IBL for objects.
-
-* [x] **Add Texture Coordinate Scale & Offset in `R3D_Material`**
-  Add texture coordinate `scale` and `offset` parameters to `R3D_Material` (currently only available for `R3D_Sprite`). This may also require reworking how sprite animations are handled.
-
-* [x] **Add 3D Model Animation Support for Instanced Rendering**
-  Add support for animated 3D models in instanced rendering. Initially, all instances will share the same animation frame.
-
-* [x] **Implement Screen Space Reflections (SSR)**
-  Add SSR support with an example.
-
 ## **v0.5**
 
 * [ ] **Create Shader Include System**
