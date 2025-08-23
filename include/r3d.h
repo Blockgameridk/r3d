@@ -223,22 +223,22 @@ typedef struct R3D_Vertex {
  */
 typedef struct R3D_Mesh {
 
-    R3D_Vertex* vertices;   /**< Pointer to the array of vertices. */
-    unsigned int* indices;  /**< Pointer to the array of indices. */
-
-    int vertexCount;        /**< Number of vertices. */
-    int indexCount;         /**< Number of indices. */
-
-    unsigned int vbo;       /**< Vertex Buffer Object (GPU handle). */
-    unsigned int ebo;       /**< Element Buffer Object (GPU handle). */
-    unsigned int vao;       /**< Vertex Array Object (GPU handle). */
-
-    Matrix* boneMatrices;   /**< Cached animation matrices for all passes. */
-    int boneCount;          /**< Number of bones (and matrices) that affect the mesh. */
+    R3D_Vertex* vertices;                 /**< Pointer to the array of vertices. */
+    unsigned int* indices;                /**< Pointer to the array of indices. */
+                                          
+    int vertexCount;                      /**< Number of vertices. */
+    int indexCount;                       /**< Number of indices. */
+                                          
+    unsigned int vbo;                     /**< Vertex Buffer Object (GPU handle). */
+    unsigned int ebo;                     /**< Element Buffer Object (GPU handle). */
+    unsigned int vao;                     /**< Vertex Array Object (GPU handle). */
+                                          
+    Matrix* boneMatrices;                 /**< Cached animation matrices for all passes. */
+    int boneCount;                        /**< Number of bones (and matrices) that affect the mesh. */
 
     R3D_ShadowCastMode shadowCastMode;    /**< Shadow casting mode for the mesh. */
 
-    BoundingBox aabb;       /**< Axis-Aligned Bounding Box in local space. */
+    BoundingBox aabb;                     /**< Axis-Aligned Bounding Box in local space. */
 
     bool skipRender;		/** disables rendering of a specific mesh if set */
 

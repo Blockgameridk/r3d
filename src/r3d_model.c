@@ -1900,7 +1900,6 @@ R3D_Material R3D_GetDefaultMaterial(void)
     // Misc
     material.blendMode = R3D_BLEND_OPAQUE;
     material.cullMode = R3D_CULL_BACK;
-    material.shadowCastMode = R3D_SHADOW_CAST_FRONT_FACES;
     material.billboardMode = R3D_BILLBOARD_DISABLED;
     material.uvOffset = (Vector2) { 0.0f, 0.0f };
     material.uvScale = (Vector2) { 1.0f, 1.0f };

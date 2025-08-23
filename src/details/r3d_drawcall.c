@@ -160,7 +160,7 @@ void r3d_drawcall_raster_depth(const r3d_drawcall_t* call, bool forward, bool sh
 
     // Applying material parameters that are independent of shaders
     if (shadow) {
-        r3d_drawcall_apply_shadow_cast_mode(call->material.shadowCastMode);
+        r3d_drawcall_apply_shadow_cast_mode(call->shadowCastMode);
     }
     else {
         r3d_drawcall_apply_cull_mode(call->material.cullMode);
