@@ -441,11 +441,11 @@ void R3D_End(void)
 
 void R3D_DrawMesh(const R3D_Mesh* mesh, const R3D_Material* material, Matrix transform)
 {
-    r3d_drawcall_t drawCall = { 0 };
-
     if (mesh == NULL || mesh->skipRender) {
         return;
     }
+
+    r3d_drawcall_t drawCall = { 0 };
 
     switch (material->billboardMode) {
     case R3D_BILLBOARD_FRONT:
@@ -490,11 +490,11 @@ void R3D_DrawMeshInstancedPro(const R3D_Mesh* mesh, const R3D_Material* material
                               const Color* instanceColors, int colorsStride,
                               int instanceCount)
 {
-    r3d_drawcall_t drawCall = { 0 };
-
     if (mesh == NULL || mesh->skipRender || instanceCount == 0 || instanceTransforms == NULL) {
         return;
     }
+
+    r3d_drawcall_t drawCall = { 0 };
 
     drawCall.transform = globalTransform;
     drawCall.material = material ? *material : R3D_GetDefaultMaterial();
