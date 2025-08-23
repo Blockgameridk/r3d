@@ -39,7 +39,7 @@ const char* Init(void)
     texture = LoadTexture(RESOURCES_PATH "tree.png");
 
     sprite = R3D_LoadSprite(texture, 1, 1);
-    sprite.material.shadowCastMode = R3D_SHADOW_CAST_ALL_FACES;
+    sprite.shadowCastMode = R3D_SHADOW_CAST_ALL_FACES;
 
     /* --- Create multiple transforms for instanced sprites with random positions and scales --- */
 
