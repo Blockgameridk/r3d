@@ -553,10 +553,10 @@ void R3D_DrawModelPro(const R3D_Model* model, Matrix transform)
 
     for (int i = 0; i < model->meshCount; i++)
     {
-        r3d_drawcall_t drawCall = { 0 };
-
         const R3D_Mesh* mesh = &model->meshes[i];
         if (mesh->skipRender) continue;
+
+        r3d_drawcall_t drawCall = { 0 };
 
         const R3D_Material* material = &model->materials[model->meshMaterials[i]];
 
@@ -634,10 +634,10 @@ void R3D_DrawModelInstancedPro(const R3D_Model* model,
 
     for (int i = 0; i < model->meshCount; i++)
     {
-        r3d_drawcall_t drawCall = { 0 };
-
         const R3D_Mesh* mesh = &model->meshes[i];
         if (mesh->skipRender) continue;
+
+        r3d_drawcall_t drawCall = { 0 };
 
         const R3D_Material* material = &model->materials[model->meshMaterials[i]];
 
@@ -762,11 +762,11 @@ void R3D_DrawSpriteInstancedPro(const R3D_Sprite* sprite, const BoundingBox* glo
                                 const Color* instanceColors, int colorsStride,
                                 int instanceCount)
 {
-    r3d_drawcall_t drawCall = { 0 };
-
     if (sprite == NULL || instanceCount == 0 || instanceTransforms == NULL) {
         return;
     }
+
+    r3d_drawcall_t drawCall = { 0 };
 
     drawCall.transform = globalTransform;
     drawCall.material = sprite->material;
