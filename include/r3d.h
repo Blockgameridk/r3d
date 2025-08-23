@@ -195,7 +195,6 @@ typedef enum R3D_Dof {
  * Controls wether to allow external animation matrices
  */
 
-
 typedef enum R3D_AnimMode {
     R3D_ANIM_INTERNAL,         ///< default animation solution
     R3D_ANIM_CUSTOM,           ///< user supplied matrices 
@@ -304,28 +303,16 @@ typedef struct R3D_ModelAnimation {
     int frameCount;         /**< Total number of frames in the animation sequence. */
 
     BoneInfo* bones;        /**< Array of bone metadata (name, parent index, etc.) that defines the skeleton hierarchy. */
-    Matrix** framePoses;    /**< 2D array of transformation matrices: [frame][bone].
-                                 Each matrix represents the pose of a bone in a specific frame, typically in local space. */
+    union 
+    {
+        Matrix** framePoses;    /**< 2D array of transformation matrices: [frame][bone].
+                                     Each matrix represents the pose of a bone in a specific frame, typically in local space. */
+        Transform** frameTransforms;    /**< 2D array of transformation transforms: [frame][bone]. in local space */
+    };
 
     char name[32];          /**< Name identifier for the animation (e.g., "Walk", "Jump", etc.). */
 
 } R3D_ModelAnimation;
-
-/**
- * @brief Represents a skeletal animation for a model. using local transforms 
- *
- * This structure holds the animation data for a skinned model,
- * including per-frame bone transformation poses.
- */
-typedef struct R3D_ModelLocalAnimation {
-
-    int boneCount;          /**< Number of bones in the skeleton affected by this animation. */
-    int frameCount;         /**< Total number of frames in the animation sequence. */
-
-    BoneInfo* bones;        /**< Array of bone metadata (name, parent index, etc.) that defines the skeleton hierarchy. */
-    Transform** framePoses;    /**< 2D array of transformation transforms: [frame][bone]. in local space */
-    char name[32];          /**< Name identifier for the animation (e.g., "Walk", "Jump", etc.). */
-} R3D_ModelLocalAnimation;
 
 /**
  * @brief Represents a complete 3D model with meshes and materials.
@@ -1280,7 +1267,7 @@ R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* an
  * Note this is to assist with custom animation should you need LOCAL POSE information instead of RAW Matrices
  *
  */
-R3DAPI R3D_ModelLocalAnimation* R3D_LoadModelLocalAnimations(const char* fileName, int* animCount, int targetFrameRate);
+R3DAPI R3D_ModelAnimation* R3D_LoadModelLocalAnimations(const char* fileName, int* animCount, int targetFrameRate);
 
 /**
  * @brief Loads model animations from memory data in a supported format (e.g., GLTF, IQM).

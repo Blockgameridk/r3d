@@ -3210,7 +3210,7 @@ bool r3d_process_animation(R3D_ModelAnimation* animation, const struct aiScene* 
 }
 
 
-bool r3d_process_local_animation(R3D_ModelLocalAnimation* animation, const struct aiScene* scene, const struct aiAnimation* aiAnim, int targetFrameRate)
+bool r3d_process_local_animation(R3D_ModelAnimation* animation, const struct aiScene* scene, const struct aiAnimation* aiAnim, int targetFrameRate)
 {
     /* --- Validate input --- */
 
@@ -3327,14 +3327,14 @@ bool r3d_process_local_animation(R3D_ModelLocalAnimation* animation, const struc
 
         // Initialize all bones to identity before calculating
         for (int i = 0; i < animation->boneCount; i++) {
-            animation->framePoses[frame][i].scale = Vector3One();
-            animation->framePoses[frame][i].translation = Vector3Zero();
-            animation->framePoses[frame][i].rotation = QuaternionIdentity();
+            animation->frameTransforms[frame][i].scale = Vector3One();
+            animation->frameTransforms[frame][i].translation = Vector3Zero();
+            animation->frameTransforms[frame][i].rotation = QuaternionIdentity();
         }
 
         r3d_calculate_animation_local_transforms(
             scene->mRootNode, aiAnim, timeInTicks,
-            animation->framePoses[frame],
+            animation->frameTransforms[frame],
             animation->bones, animation->boneCount
         );
     }
@@ -3440,7 +3440,7 @@ static bool r3d_process_model_from_scene(R3D_Model* model, const struct aiScene*
     return true;
 }
 
-static R3D_ModelAnimation* r3d_process_animations_from_scene(const struct aiScene* scene, int* animCount, int targetFrameRate, const char* sourceName)
+static R3D_ModelAnimation* r3d_process_animations_from_scene(const struct aiScene* scene, int* animCount, int targetFrameRate, const char* sourceName, bool localPoses)
 {
     *animCount = 0;
 
@@ -3466,10 +3466,21 @@ static R3D_ModelAnimation* r3d_process_animations_from_scene(const struct aiScen
     int successCount = 0;
     for (unsigned int i = 0; i < scene->mNumAnimations; i++) {
         const struct aiAnimation* aiAnim = scene->mAnimations[i];
-        if (r3d_process_animation(&animations[successCount], scene, aiAnim, targetFrameRate)) {
-            successCount++;
-        } else {
-            TraceLog(LOG_ERROR, "R3D: Failed to process animation %d", i);
+        if (localPoses==false)
+        {
+            if (r3d_process_animation(&animations[successCount], scene, aiAnim, targetFrameRate)) {
+                successCount++;
+            } else {
+                TraceLog(LOG_ERROR, "R3D: Failed to process animation %d", i);
+            }
+        }
+        else 
+        {
+            if (r3d_process_local_animation(&animations[successCount], scene, aiAnim, targetFrameRate)) {
+                successCount++;
+            } else {
+                TraceLog(LOG_ERROR, "R3D: Failed to process animation %d", i);
+            }
         }
     }
 
@@ -3493,7 +3504,7 @@ static R3D_ModelAnimation* r3d_process_animations_from_scene(const struct aiScen
     return animations;
 }
 
-
+#if 0
 static R3D_ModelLocalAnimation* r3d_process_local_animations_from_scene(const struct aiScene* scene, int* animCount, int targetFrameRate, const char* sourceName)
 {
     *animCount = 0;
@@ -3546,7 +3557,7 @@ static R3D_ModelLocalAnimation* r3d_process_local_animations_from_scene(const st
 
     return animations;
 }
-
+#endif
 /* === Public Model Functions === */
 
 R3D_Model R3D_LoadModel(const char* filePath)
@@ -3679,7 +3690,7 @@ R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount
 
     /* --- Process animations from scene --- */
 
-    R3D_ModelAnimation* animations = r3d_process_animations_from_scene(scene, animCount, targetFrameRate, fileName);
+    R3D_ModelAnimation* animations = r3d_process_animations_from_scene(scene, animCount, targetFrameRate, fileName, false);
 
     /* --- Clean up and return --- */
 
@@ -3689,7 +3700,7 @@ R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount
 }
 
 
-R3D_ModelLocalAnimation* R3D_LoadModelLocalAnimations(const char* fileName, int* animCount, int targetFrameRate)
+R3D_ModelAnimation* R3D_LoadModelLocalAnimations(const char* fileName, int* animCount, int targetFrameRate)
 {
     /* --- Import scene using Assimp --- */
 
@@ -3701,7 +3712,7 @@ R3D_ModelLocalAnimation* R3D_LoadModelLocalAnimations(const char* fileName, int*
 
     /* --- Process animations from scene --- */
 
-    R3D_ModelLocalAnimation* animations = r3d_process_local_animations_from_scene(scene, animCount, targetFrameRate, fileName);
+    R3D_ModelAnimation* animations = r3d_process_animations_from_scene(scene, animCount, targetFrameRate, fileName, true);
 
     /* --- Clean up and return --- */
 
@@ -3723,7 +3734,7 @@ R3D_ModelAnimation* R3D_LoadModelAnimationsFromMemory(const char* fileType, cons
 
     /* --- Process animations from scene --- */
 
-    R3D_ModelAnimation* animations = r3d_process_animations_from_scene(scene, animCount, targetFrameRate, NULL);
+    R3D_ModelAnimation* animations = r3d_process_animations_from_scene(scene, animCount, targetFrameRate, NULL,false);
 
     /* --- Clean up and return --- */
 
