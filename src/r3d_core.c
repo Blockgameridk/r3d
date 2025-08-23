@@ -443,8 +443,9 @@ void R3D_DrawMesh(const R3D_Mesh* mesh, const R3D_Material* material, Matrix tra
 {
     r3d_drawcall_t drawCall = { 0 };
 
-    if (mesh == NULL) return;
-    if (mesh->skipRender==true) return;
+    if (mesh == NULL || mesh->skipRender) {
+        return;
+    }
 
     switch (material->billboardMode) {
     case R3D_BILLBOARD_FRONT:
@@ -491,7 +492,7 @@ void R3D_DrawMeshInstancedPro(const R3D_Mesh* mesh, const R3D_Material* material
 {
     r3d_drawcall_t drawCall = { 0 };
 
-    if (mesh == NULL || instanceCount == 0 || instanceTransforms == NULL) {
+    if (mesh == NULL || mesh->skipRender || instanceCount == 0 || instanceTransforms == NULL) {
         return;
     }
 
@@ -552,48 +553,46 @@ void R3D_DrawModelPro(const R3D_Model* model, Matrix transform)
 
     for (int i = 0; i < model->meshCount; i++)
     {
-        const R3D_Material* material = &model->materials[model->meshMaterials[i]];
-        const R3D_Mesh* mesh = &model->meshes[i];
-
         r3d_drawcall_t drawCall = { 0 };
 
-        if (mesh == NULL) return;
-        if (mesh->skipRender==false)
-        {
-            switch (material->billboardMode) {
-            case R3D_BILLBOARD_FRONT:
-                r3d_transform_to_billboard_front(&transform, &R3D.state.transform.invView);
-                break;
-            case R3D_BILLBOARD_Y_AXIS:
-                r3d_transform_to_billboard_y(&transform, &R3D.state.transform.invView);
-                break;
-            default:
-                break;
-            }
+        const R3D_Mesh* mesh = &model->meshes[i];
+        if (mesh->skipRender) continue;
 
-            drawCall.transform = transform;
-            drawCall.material = material ? *material : R3D_GetDefaultMaterial();
-            drawCall.shadowCastMode = mesh->shadowCastMode;
-            drawCall.geometry.model.mesh = mesh;
-            drawCall.geometryType = R3D_DRAWCALL_GEOMETRY_MODEL;
-            drawCall.renderMode = R3D_DRAWCALL_RENDER_DEFERRED;
+        const R3D_Material* material = &model->materials[model->meshMaterials[i]];
 
-            drawCall.geometry.model.anim = model->anim;
-            drawCall.geometry.model.frame = model->animFrame;
-            drawCall.geometry.model.boneOffsets = model->boneOffsets;
-            if (model->animationMode == R3D_ANIM_CUSTOM)
-                drawCall.geometry.model.boneOverride = model->boneOverride;
-            else
-                drawCall.geometry.model.boneOverride = NULL;
-
-            r3d_array_t* arr = &R3D.container.aDrawDeferred;
-            if (material->blendMode != R3D_BLEND_OPAQUE || R3D.state.flags & R3D_FLAG_FORCE_FORWARD) {
-                drawCall.renderMode = R3D_DRAWCALL_RENDER_FORWARD;
-                arr = &R3D.container.aDrawForward;
-            }
-
-            r3d_array_push_back(arr, &drawCall);
+        switch (material->billboardMode) {
+        case R3D_BILLBOARD_FRONT:
+            r3d_transform_to_billboard_front(&transform, &R3D.state.transform.invView);
+            break;
+        case R3D_BILLBOARD_Y_AXIS:
+            r3d_transform_to_billboard_y(&transform, &R3D.state.transform.invView);
+            break;
+        default:
+            break;
         }
+
+        drawCall.transform = transform;
+        drawCall.material = material ? *material : R3D_GetDefaultMaterial();
+        drawCall.shadowCastMode = mesh->shadowCastMode;
+        drawCall.geometry.model.mesh = mesh;
+        drawCall.geometryType = R3D_DRAWCALL_GEOMETRY_MODEL;
+        drawCall.renderMode = R3D_DRAWCALL_RENDER_DEFERRED;
+
+        drawCall.geometry.model.anim = model->anim;
+        drawCall.geometry.model.frame = model->animFrame;
+        drawCall.geometry.model.boneOffsets = model->boneOffsets;
+        if (model->animationMode == R3D_ANIM_CUSTOM)
+            drawCall.geometry.model.boneOverride = model->boneOverride;
+        else
+            drawCall.geometry.model.boneOverride = NULL;
+
+        r3d_array_t* arr = &R3D.container.aDrawDeferred;
+        if (material->blendMode != R3D_BLEND_OPAQUE || R3D.state.flags & R3D_FLAG_FORCE_FORWARD) {
+            drawCall.renderMode = R3D_DRAWCALL_RENDER_FORWARD;
+            arr = &R3D.container.aDrawForward;
+        }
+
+        r3d_array_push_back(arr, &drawCall);
     }
 }
 
@@ -635,10 +634,12 @@ void R3D_DrawModelInstancedPro(const R3D_Model* model,
 
     for (int i = 0; i < model->meshCount; i++)
     {
-        const R3D_Mesh* mesh = &model->meshes[i];
-        const R3D_Material* material = &model->materials[model->meshMaterials[i]];
-
         r3d_drawcall_t drawCall = { 0 };
+
+        const R3D_Mesh* mesh = &model->meshes[i];
+        if (mesh->skipRender) continue;
+
+        const R3D_Material* material = &model->materials[model->meshMaterials[i]];
 
         drawCall.transform = globalTransform;
         drawCall.material = *material;

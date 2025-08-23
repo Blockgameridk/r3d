@@ -3467,23 +3467,16 @@ static R3D_ModelAnimation* r3d_process_animations_from_scene(const struct aiScen
     /* --- Process each animation --- */
 
     int successCount = 0;
+
+    bool (*processFunc)(R3D_ModelAnimation*, const struct aiScene*, const struct aiAnimation*, int) =
+        asLocalTransforms ? r3d_process_local_animation : r3d_process_animation;
+
     for (unsigned int i = 0; i < scene->mNumAnimations; i++) {
         const struct aiAnimation* aiAnim = scene->mAnimations[i];
-        if (asLocalTransforms==false)
-        {
-            if (r3d_process_animation(&animations[successCount], scene, aiAnim, targetFrameRate)) {
-                successCount++;
-            } else {
-                TraceLog(LOG_ERROR, "R3D: Failed to process animation %d", i);
-            }
-        }
-        else 
-        {
-            if (r3d_process_local_animation(&animations[successCount], scene, aiAnim, targetFrameRate)) {
-                successCount++;
-            } else {
-                TraceLog(LOG_ERROR, "R3D: Failed to process animation %d", i);
-            }
+        if (processFunc(&animations[successCount], scene, aiAnim, targetFrameRate)) {
+            successCount++;
+        } else {
+            TraceLog(LOG_ERROR, "R3D: Failed to process animation %d", i);
         }
     }
 
@@ -3561,6 +3554,7 @@ static R3D_ModelLocalAnimation* r3d_process_local_animations_from_scene(const st
     return animations;
 }
 #endif
+
 /* === Public Model Functions === */
 
 R3D_Model R3D_LoadModel(const char* filePath)
