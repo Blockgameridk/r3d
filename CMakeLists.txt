@@ -23,8 +23,8 @@ endif()
 option(R3D_BUILD_DOCS "Build the doxygen doc" ${R3D_IS_MAIN})
 option(R3D_BUILD_EXAMPLES "Build the examples" ${R3D_IS_MAIN})
 
-option(R3D_RAYLIB_VENDORED "Use vendored raylib from submodule" ON)
-option(R3D_ASSIMP_VENDORED "Use vendored assimp from submodule" ON)
+option(R3D_RAYLIB_VENDORED "Use vendored raylib from submodule" OFF)
+option(R3D_ASSIMP_VENDORED "Use vendored assimp from submodule" OFF)
 
 # Set the cmake module path
 
