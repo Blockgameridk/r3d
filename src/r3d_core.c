@@ -552,12 +552,12 @@ void R3D_DrawModelPro(const R3D_Model* model, Matrix transform)
     {
         const R3D_Material* material = &model->materials[model->meshMaterials[i]];
         const R3D_Mesh* mesh = &model->meshes[i];
+
+        r3d_drawcall_t drawCall = { 0 };
+
+        if (mesh == NULL) return;
         if (mesh->skipRender==false)
         {
-            r3d_drawcall_t drawCall = { 0 };
-
-            if (mesh == NULL) return;
-
             switch (material->billboardMode) {
             case R3D_BILLBOARD_FRONT:
                 r3d_transform_to_billboard_front(&transform, &R3D.state.transform.invView);
@@ -571,6 +571,7 @@ void R3D_DrawModelPro(const R3D_Model* model, Matrix transform)
 
             drawCall.transform = transform;
             drawCall.material = material ? *material : R3D_GetDefaultMaterial();
+            drawCall.shadowCastMode = mesh->shadowCastMode;
             drawCall.geometry.model.mesh = mesh;
             drawCall.geometryType = R3D_DRAWCALL_GEOMETRY_MODEL;
             drawCall.renderMode = R3D_DRAWCALL_RENDER_DEFERRED;
@@ -578,7 +579,6 @@ void R3D_DrawModelPro(const R3D_Model* model, Matrix transform)
             drawCall.geometry.model.anim = model->anim;
             drawCall.geometry.model.frame = model->animFrame;
             drawCall.geometry.model.boneOffsets = model->boneOffsets;
-
             if (model->animationMode == R3D_ANIM_CUSTOM)
                 drawCall.geometry.model.boneOverride = model->boneOverride;
             else

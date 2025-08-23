@@ -98,10 +98,10 @@ typedef enum R3D_CullMode {
  * performance and visual accuracy depending on the rendering technique used.
  */
 typedef enum R3D_ShadowCastMode {
-    R3D_SHADOW_CAST_DISABLED,     ///< The object does not cast shadows.
     R3D_SHADOW_CAST_FRONT_FACES,  ///< Only front-facing polygons cast shadows.
     R3D_SHADOW_CAST_BACK_FACES,   ///< Only back-facing polygons cast shadows.
-    R3D_SHADOW_CAST_ALL_FACES     ///< Both front and back-facing polygons cast shadows.
+    R3D_SHADOW_CAST_ALL_FACES,    ///< Both front and back-facing polygons cast shadows.
+    R3D_SHADOW_CAST_DISABLED      ///< The object does not cast shadows.
 } R3D_ShadowCastMode;
 
 /**
@@ -236,6 +236,8 @@ typedef struct R3D_Mesh {
     Matrix* boneMatrices;   /**< Cached animation matrices for all passes. */
     int boneCount;          /**< Number of bones (and matrices) that affect the mesh. */
 
+    R3D_ShadowCastMode shadowCastMode;    /**< Shadow casting mode for the mesh. */
+
     BoundingBox aabb;       /**< Axis-Aligned Bounding Box in local space. */
 
     bool skipRender;		/** disables rendering of a specific mesh if set */
@@ -275,7 +277,6 @@ typedef struct R3D_Material {
     R3D_BlendMode blendMode;              /**< Blend mode used for rendering the material. */
     R3D_CullMode cullMode;                /**< Face culling mode used for the material. */
 
-    R3D_ShadowCastMode shadowCastMode;    /**< Shadow casting mode for the object. */
     R3D_BillboardMode billboardMode;      /**< Billboard mode applied to the object. */
 
     Vector2 uvOffset;                     /**< UV offset applied to the texture coordinates.
@@ -371,11 +372,12 @@ typedef struct R3D_Skybox {
  * potentially causing undesired visual artifacts for semi-transparent sprites.
  */
 typedef struct R3D_Sprite {
-    R3D_Material material;  ///< The material used for rendering the sprite, including its texture and shading properties.
-    float currentFrame;     ///< The current animation frame, represented as a floating-point value to allow smooth interpolation.
-    Vector2 frameSize;      ///< The size of a single animation frame, in texture coordinates (width and height).
-    int xFrameCount;        ///< The number of frames along the horizontal (X) axis of the texture.
-    int yFrameCount;        ///< The number of frames along the vertical (Y) axis of the texture.
+    R3D_Material material;                 ///< The material used for rendering the sprite, including its texture and shading properties.
+    R3D_ShadowCastMode shadowCastMode;     ///< The shadow casting mode for the sprite.
+    float currentFrame;                    ///< The current animation frame, represented as a floating-point value to allow smooth interpolation.
+    Vector2 frameSize;                     ///< The size of a single animation frame, in texture coordinates (width and height).
+    int xFrameCount;                       ///< The number of frames along the horizontal (X) axis of the texture.
+    int yFrameCount;                       ///< The number of frames along the vertical (Y) axis of the texture.
 } R3D_Sprite;
 
 /**

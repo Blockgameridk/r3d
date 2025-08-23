@@ -234,7 +234,7 @@ void r3d_drawcall_raster_depth_inst(const r3d_drawcall_t* call, bool forward, bo
 
     // Applying material parameters that are independent of shaders
     if (shadow) {
-        r3d_drawcall_apply_shadow_cast_mode(call->material.shadowCastMode);
+        r3d_drawcall_apply_shadow_cast_mode(call->shadowCastMode);
     }
     else {
         r3d_drawcall_apply_cull_mode(call->material.cullMode);
@@ -305,7 +305,7 @@ void r3d_drawcall_raster_depth_cube(const r3d_drawcall_t* call, bool forward, bo
 
     // Applying material parameters that are independent of shaders
     if (shadow) {
-        r3d_drawcall_apply_shadow_cast_mode(call->material.shadowCastMode);
+        r3d_drawcall_apply_shadow_cast_mode(call->shadowCastMode);
     }
     else {
         r3d_drawcall_apply_cull_mode(call->material.cullMode);
@@ -378,7 +378,7 @@ void r3d_drawcall_raster_depth_cube_inst(const r3d_drawcall_t* call, bool forwar
 
     // Applying material parameters that are independent of shaders
     if (shadow) {
-        r3d_drawcall_apply_shadow_cast_mode(call->material.shadowCastMode);
+        r3d_drawcall_apply_shadow_cast_mode(call->shadowCastMode);
     }
     else {
         r3d_drawcall_apply_cull_mode(call->material.cullMode);
