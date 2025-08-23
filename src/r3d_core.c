@@ -458,6 +458,7 @@ void R3D_DrawMesh(const R3D_Mesh* mesh, const R3D_Material* material, Matrix tra
 
     drawCall.transform = transform;
     drawCall.material = material ? *material : R3D_GetDefaultMaterial();
+    drawCall.shadowCastMode = mesh->shadowCastMode;
     drawCall.geometry.model.mesh = mesh;
     drawCall.geometryType = R3D_DRAWCALL_GEOMETRY_MODEL;
     drawCall.renderMode = R3D_DRAWCALL_RENDER_DEFERRED;
@@ -495,6 +496,7 @@ void R3D_DrawMeshInstancedPro(const R3D_Mesh* mesh, const R3D_Material* material
 
     drawCall.transform = globalTransform;
     drawCall.material = material ? *material : R3D_GetDefaultMaterial();
+    drawCall.shadowCastMode = mesh->shadowCastMode;
     drawCall.geometry.model.mesh = mesh;
     drawCall.geometryType = R3D_DRAWCALL_GEOMETRY_MODEL;
     drawCall.renderMode = R3D_DRAWCALL_RENDER_DEFERRED;
@@ -569,6 +571,7 @@ void R3D_DrawModelPro(const R3D_Model* model, Matrix transform)
 
         drawCall.transform = transform;
         drawCall.material = material ? *material : R3D_GetDefaultMaterial();
+        drawCall.shadowCastMode = mesh->shadowCastMode;
         drawCall.geometry.model.mesh = mesh;
         drawCall.geometryType = R3D_DRAWCALL_GEOMETRY_MODEL;
         drawCall.renderMode = R3D_DRAWCALL_RENDER_DEFERRED;
@@ -759,6 +762,7 @@ void R3D_DrawSpriteInstancedPro(const R3D_Sprite* sprite, const BoundingBox* glo
 
     drawCall.transform = globalTransform;
     drawCall.material = sprite->material;
+    drawCall.shadowCastMode = sprite->shadowCastMode;
     drawCall.geometryType = R3D_DRAWCALL_GEOMETRY_SPRITE;
     drawCall.renderMode = R3D_DRAWCALL_RENDER_DEFERRED;
 
@@ -1106,14 +1110,14 @@ void r3d_pass_shadow_maps(void)
 
                         for (size_t k = 0; k < R3D.container.aDrawDeferredInst.count; k++) {
                             r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawDeferredInst.data + k;
-                            if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
+                            if (call->shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
                                 r3d_drawcall_raster_depth_cube_inst(call, false, true, &matVP);
                             }
                         }
 
                         for (size_t k = 0; k < R3D.container.aDrawForwardInst.count; k++) {
                             r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawForwardInst.data + k;
-                            if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
+                            if (call->shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
                                 r3d_drawcall_raster_depth_cube_inst(call, true, true, &matVP);
                             }
                         }
@@ -1125,14 +1129,14 @@ void r3d_pass_shadow_maps(void)
 
                         for (size_t k = 0; k < R3D.container.aDrawDeferred.count; k++) {
                             r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawDeferred.data + k;
-                            if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
+                            if (call->shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
                                 r3d_drawcall_raster_depth_cube(call, false, true, &matVP);
                             }
                         }
 
                         for (size_t k = 0; k < R3D.container.aDrawForward.count; k++) {
                             r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawForward.data + k;
-                            if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
+                            if (call->shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
                                 r3d_drawcall_raster_depth_cube(call, true, true, &matVP);
                             }
                         }
@@ -1166,13 +1170,13 @@ void r3d_pass_shadow_maps(void)
                 {
                     for (size_t j = 0; j < R3D.container.aDrawDeferredInst.count; j++) {
                         r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawDeferredInst.data + j;
-                        if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
+                        if (call->shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
                             r3d_drawcall_raster_depth_inst(call, false, true, &matVP);
                         }
                     }
                     for (size_t j = 0; j < R3D.container.aDrawForwardInst.count; j++) {
                         r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawForwardInst.data + j;
-                        if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
+                        if (call->shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
                             r3d_drawcall_raster_depth_inst(call, true, true, &matVP);
                         }
                     }
@@ -1181,13 +1185,13 @@ void r3d_pass_shadow_maps(void)
                 {
                     for (size_t j = 0; j < R3D.container.aDrawDeferred.count; j++) {
                         r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawDeferred.data + j;
-                        if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
+                        if (call->shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
                             r3d_drawcall_raster_depth(call, false, true, &matVP);
                         }
                     }
                     for (size_t j = 0; j < R3D.container.aDrawForward.count; j++) {
                         r3d_drawcall_t* call = (r3d_drawcall_t*)R3D.container.aDrawForward.data + j;
-                        if (call->material.shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
+                        if (call->shadowCastMode != R3D_SHADOW_CAST_DISABLED) {
                             r3d_drawcall_raster_depth(call, true, true, &matVP);
                         }
                     }

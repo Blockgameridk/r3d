@@ -40,6 +40,7 @@ typedef struct {
 
     Matrix transform;
     R3D_Material material;
+    R3D_ShadowCastMode shadowCastMode;
 
     r3d_drawcall_geometry_e geometryType;
     r3d_drawcall_render_mode_e renderMode;
