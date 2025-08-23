@@ -1993,6 +1993,11 @@ static bool r3d_process_assimp_mesh(R3D_Model* model, Matrix modelMatrix, int me
 
     /* --- Validate input parameters --- */
 
+    /*
+    * Jed for debugging
+    TraceLog(LOG_INFO, "%d %s", meshIndex,aiMesh->mName.data);
+    */
+
     if (!aiMesh || !model) {
         TraceLog(LOG_ERROR, "R3D: Invalid parameters for process_assimp_mesh");
         return false;
@@ -2254,7 +2259,6 @@ static bool r3d_process_assimp_meshes(const struct aiScene *scene, R3D_Model *mo
         if (scene->mMeshes[node->mMeshes[i]]->mNumBones != 0) {
             meshTransform = R3D_MATRIX_IDENTITY;
         }
-
         if (!r3d_process_assimp_mesh(model, meshTransform, node->mMeshes[i], scene->mMeshes[node->mMeshes[i]], scene, true)) {
             TraceLog(LOG_ERROR, "R3D: Unable to load mesh [%d]; The model will be invalid", node->mMeshes[i]);
             return false;
@@ -3440,7 +3444,7 @@ static bool r3d_process_model_from_scene(R3D_Model* model, const struct aiScene*
     return true;
 }
 
-static R3D_ModelAnimation* r3d_process_animations_from_scene(const struct aiScene* scene, int* animCount, int targetFrameRate, const char* sourceName, bool localPoses)
+static R3D_ModelAnimation* r3d_process_animations_from_scene(const struct aiScene* scene, int* animCount, int targetFrameRate, const char* sourceName, bool asLocalTransforms)
 {
     *animCount = 0;
 
@@ -3466,7 +3470,7 @@ static R3D_ModelAnimation* r3d_process_animations_from_scene(const struct aiScen
     int successCount = 0;
     for (unsigned int i = 0; i < scene->mNumAnimations; i++) {
         const struct aiAnimation* aiAnim = scene->mAnimations[i];
-        if (localPoses==false)
+        if (asLocalTransforms==false)
         {
             if (r3d_process_animation(&animations[successCount], scene, aiAnim, targetFrameRate)) {
                 successCount++;
@@ -3678,7 +3682,7 @@ void R3D_UpdateModelBoundingBox(R3D_Model* model, bool updateMeshBoundingBoxes)
     model->aabb.max = maxVertex;
 }
 
-R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount, int targetFrameRate)
+R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount, int targetFrameRate, bool asLocalTransforms)
 {
     /* --- Import scene using Assimp --- */
 
@@ -3690,7 +3694,7 @@ R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount
 
     /* --- Process animations from scene --- */
 
-    R3D_ModelAnimation* animations = r3d_process_animations_from_scene(scene, animCount, targetFrameRate, fileName, false);
+    R3D_ModelAnimation* animations = r3d_process_animations_from_scene(scene, animCount, targetFrameRate, fileName, asLocalTransforms);
 
     /* --- Clean up and return --- */
 
@@ -3699,30 +3703,7 @@ R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount
     return animations;
 }
 
-
-R3D_ModelAnimation* R3D_LoadModelLocalAnimations(const char* fileName, int* animCount, int targetFrameRate)
-{
-    /* --- Import scene using Assimp --- */
-
-    const struct aiScene* scene = r3d_load_scene_from_file(fileName);
-    if (!scene) {
-        *animCount = 0;
-        return NULL;
-    }
-
-    /* --- Process animations from scene --- */
-
-    R3D_ModelAnimation* animations = r3d_process_animations_from_scene(scene, animCount, targetFrameRate, fileName, true);
-
-    /* --- Clean up and return --- */
-
-    aiReleaseImport(scene);
-
-    return animations;
-}
-
-
-R3D_ModelAnimation* R3D_LoadModelAnimationsFromMemory(const char* fileType, const void* data, unsigned int size, int* animCount, int targetFrameRate)
+R3D_ModelAnimation* R3D_LoadModelAnimationsFromMemory(const char* fileType, const void* data, unsigned int size, int* animCount, int targetFrameRate, bool asLocalTransforms)
 {
     /* --- Import scene using Assimp --- */
 
@@ -3734,7 +3715,7 @@ R3D_ModelAnimation* R3D_LoadModelAnimationsFromMemory(const char* fileType, cons
 
     /* --- Process animations from scene --- */
 
-    R3D_ModelAnimation* animations = r3d_process_animations_from_scene(scene, animCount, targetFrameRate, NULL,false);
+    R3D_ModelAnimation* animations = r3d_process_animations_from_scene(scene, animCount, targetFrameRate, NULL, asLocalTransforms);
 
     /* --- Clean up and return --- */
 

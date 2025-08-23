@@ -223,7 +223,6 @@ typedef struct R3D_Vertex {
  */
 typedef struct R3D_Mesh {
 
-    bool skipRender;		/** disables rendering of a specific mesh if set */
     R3D_Vertex* vertices;   /**< Pointer to the array of vertices. */
     unsigned int* indices;  /**< Pointer to the array of indices. */
 
@@ -238,6 +237,8 @@ typedef struct R3D_Mesh {
     int boneCount;          /**< Number of bones (and matrices) that affect the mesh. */
 
     BoundingBox aabb;       /**< Axis-Aligned Bounding Box in local space. */
+
+    bool skipRender;		/** disables rendering of a specific mesh if set */
 
 } R3D_Mesh;
 
@@ -306,12 +307,10 @@ typedef struct R3D_ModelAnimation {
     union 
     {
         Matrix** framePoses;    /**< 2D array of transformation matrices: [frame][bone].
-                                     Each matrix represents the pose of a bone in a specific frame, typically in local space. */
+                                     Each matrix represents the pose of a bone in a specific frame, typically in global space. */
         Transform** frameTransforms;    /**< 2D array of transformation transforms: [frame][bone]. in local space */
     };
-
     char name[32];          /**< Name identifier for the animation (e.g., "Walk", "Jump", etc.). */
-
 } R3D_ModelAnimation;
 
 /**
@@ -1249,25 +1248,10 @@ R3DAPI void R3D_UpdateModelBoundingBox(R3D_Model* model, bool updateMeshBounding
  * @param fileName Path to the model file containing animation(s).
  * @param animCount Pointer to an integer that will receive the number of animations loaded.
  * @param targetFrameRate Desired frame rate (FPS) to sample the animation at. For example, 30 or 60.
+ * @param asLocalTransforms result is Local Transforms vs Matrices ( ONLY FOR CUSTOM ANIMATION )
  * @return Pointer to a dynamically allocated array of R3D_ModelAnimation. NULL on failure.
  */
-R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount, int targetFrameRate);
-/**
- * @brief Loads model animations from a supported file format (e.g., GLTF, IQM).
- *
- * This function parses animation data from the given model file and returns an array
- * of R3D_ModelLocalAnimation structs. The caller is responsible for freeing the returned data
- * using R3D_UnloadModelAnimations().
- *
- * @param fileName Path to the model file containing animation(s).
- * @param animCount Pointer to an integer that will receive the number of animations loaded.
- * @param targetFrameRate Desired frame rate (FPS) to sample the animation at. For example, 30 or 60.
- * @return Pointer to a dynamically allocated array of R3D_ModelAnimation. NULL on failure.
- * 
- * Note this is to assist with custom animation should you need LOCAL POSE information instead of RAW Matrices
- *
- */
-R3DAPI R3D_ModelAnimation* R3D_LoadModelLocalAnimations(const char* fileName, int* animCount, int targetFrameRate);
+R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount, int targetFrameRate, bool asLocalTransforms);
 
 /**
  * @brief Loads model animations from memory data in a supported format (e.g., GLTF, IQM).
@@ -1281,9 +1265,10 @@ R3DAPI R3D_ModelAnimation* R3D_LoadModelLocalAnimations(const char* fileName, in
  * @param size Size of the data buffer in bytes.
  * @param animCount Pointer to an integer that will receive the number of animations loaded.
  * @param targetFrameRate Desired frame rate (FPS) to sample the animation at. For example, 30 or 60.
+ * @param asLocalTransforms result is Local Transforms vs Matrices ( ONLY FOR CUSTOM ANIMATION )
  * @return Pointer to a dynamically allocated array of R3D_ModelAnimation. NULL on failure.
  */
-R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimationsFromMemory(const char* fileType, const void* data, unsigned int size, int* animCount, int targetFrameRate);
+R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimationsFromMemory(const char* fileType, const void* data, unsigned int size, int* animCount, int targetFrameRate, bool asLocalTransforms);
 
 /**
  * @brief Frees memory allocated for model animations.
