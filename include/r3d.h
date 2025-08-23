@@ -189,6 +189,16 @@ typedef enum R3D_Dof {
     R3D_DOF_ENABLED,  ///< Depth of field effect is enabled.
 } R3D_Dof;
 
+/**
+ * @brief Animation Update modes.
+ *
+ * Controls wether to allow external animation matrices
+ */
+
+typedef enum R3D_AnimMode {
+    R3D_ANIM_INTERNAL,         ///< default animation solution
+    R3D_ANIM_CUSTOM,           ///< user supplied matrices 
+} R3D_AnimMode;
 // --------------------------------------------
 //                   TYPES
 // --------------------------------------------
@@ -229,6 +239,8 @@ typedef struct R3D_Mesh {
     R3D_ShadowCastMode shadowCastMode;    /**< Shadow casting mode for the mesh. */
 
     BoundingBox aabb;                     /**< Axis-Aligned Bounding Box in local space. */
+
+    bool skipRender;		/** disables rendering of a specific mesh if set */
 
 } R3D_Mesh;
 
@@ -293,11 +305,13 @@ typedef struct R3D_ModelAnimation {
     int frameCount;         /**< Total number of frames in the animation sequence. */
 
     BoneInfo* bones;        /**< Array of bone metadata (name, parent index, etc.) that defines the skeleton hierarchy. */
-    Matrix** framePoses;    /**< 2D array of transformation matrices: [frame][bone].
-                                 Each matrix represents the pose of a bone in a specific frame, typically in local space. */
-
+    union 
+    {
+        Matrix** framePoses;    /**< 2D array of transformation matrices: [frame][bone].
+                                     Each matrix represents the pose of a bone in a specific frame, typically in global space. */
+        Transform** frameTransforms;    /**< 2D array of transformation transforms: [frame][bone]. in local space */
+    };
     char name[32];          /**< Name identifier for the animation (e.g., "Walk", "Jump", etc.). */
-
 } R3D_ModelAnimation;
 
 /**
@@ -318,6 +332,9 @@ typedef struct R3D_Model {
 
     Matrix* boneOffsets;            /**< Array of offset (inverse bind) matrices, one per bone.
                                          Transforms mesh-space vertices to bone space. Used in skinning. */
+    R3D_AnimMode animationMode;
+    Matrix* boneOverride;            /**< Array of Matrices we'll use if we have it instead of internal calculations, Used in skinning. */
+
     BoneInfo* bones;                /**< Bones information (skeleton). Defines the hierarchy and names of bones. */
     int boneCount;                  /**< Number of bones. */
 
@@ -1233,9 +1250,10 @@ R3DAPI void R3D_UpdateModelBoundingBox(R3D_Model* model, bool updateMeshBounding
  * @param fileName Path to the model file containing animation(s).
  * @param animCount Pointer to an integer that will receive the number of animations loaded.
  * @param targetFrameRate Desired frame rate (FPS) to sample the animation at. For example, 30 or 60.
+ * @param asLocalTransforms result is Local Transforms vs Matrices ( ONLY FOR CUSTOM ANIMATION )
  * @return Pointer to a dynamically allocated array of R3D_ModelAnimation. NULL on failure.
  */
-R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount, int targetFrameRate);
+R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount, int targetFrameRate, bool asLocalTransforms);
 
 /**
  * @brief Loads model animations from memory data in a supported format (e.g., GLTF, IQM).
@@ -1249,9 +1267,10 @@ R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* an
  * @param size Size of the data buffer in bytes.
  * @param animCount Pointer to an integer that will receive the number of animations loaded.
  * @param targetFrameRate Desired frame rate (FPS) to sample the animation at. For example, 30 or 60.
+ * @param asLocalTransforms result is Local Transforms vs Matrices ( ONLY FOR CUSTOM ANIMATION )
  * @return Pointer to a dynamically allocated array of R3D_ModelAnimation. NULL on failure.
  */
-R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimationsFromMemory(const char* fileType, const void* data, unsigned int size, int* animCount, int targetFrameRate);
+R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimationsFromMemory(const char* fileType, const void* data, unsigned int size, int* animCount, int targetFrameRate, bool asLocalTransforms);
 
 /**
  * @brief Frees memory allocated for model animations.
