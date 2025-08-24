@@ -121,10 +121,15 @@ typedef enum R3D_BlendMode {
     R3D_BLEND_MULTIPLY         ///< Multiply blending: source color is multiplied with the destination, darkening the image.
 } R3D_BlendMode;
 
+/**
+ * @brief Face culling modes for a mesh.
+ *
+ * Specifies which faces of a geometry are discarded during rendering based on their winding order.
+ */
 typedef enum R3D_CullMode {
-    R3D_CULL_NONE,
-    R3D_CULL_BACK,
-    R3D_CULL_FRONT
+    R3D_CULL_NONE,   ///< No culling; all faces are rendered.
+    R3D_CULL_BACK,   ///< Cull back-facing polygons (faces with clockwise winding order).
+    R3D_CULL_FRONT   ///< Cull front-facing polygons (faces with counter-clockwise winding order).
 } R3D_CullMode;
 
 /**
