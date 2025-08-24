@@ -38,7 +38,7 @@
 // Functions applying OpenGL states defined by the material but unrelated to shaders
 static void r3d_drawcall_apply_cull_mode(R3D_CullMode mode);
 static void r3d_drawcall_apply_blend_mode(R3D_BlendMode mode);
-static void r3d_drawcall_apply_shadow_cast_mode(R3D_ShadowCastMode mode);
+static void r3d_drawcall_apply_shadow_cast_mode(R3D_ShadowCastMode castMode, R3D_CullMode cullMode);
 
 // This function supports instanced rendering when necessary
 static void r3d_drawcall(const r3d_drawcall_t* call);
@@ -160,7 +160,7 @@ void r3d_drawcall_raster_depth(const r3d_drawcall_t* call, bool forward, bool sh
 
     // Applying material parameters that are independent of shaders
     if (shadow) {
-        r3d_drawcall_apply_shadow_cast_mode(call->shadowCastMode);
+        r3d_drawcall_apply_shadow_cast_mode(call->shadowCastMode, call->material.cullMode);
     }
     else {
         r3d_drawcall_apply_cull_mode(call->material.cullMode);
@@ -234,7 +234,7 @@ void r3d_drawcall_raster_depth_inst(const r3d_drawcall_t* call, bool forward, bo
 
     // Applying material parameters that are independent of shaders
     if (shadow) {
-        r3d_drawcall_apply_shadow_cast_mode(call->shadowCastMode);
+        r3d_drawcall_apply_shadow_cast_mode(call->shadowCastMode, call->material.cullMode);
     }
     else {
         r3d_drawcall_apply_cull_mode(call->material.cullMode);
@@ -305,7 +305,7 @@ void r3d_drawcall_raster_depth_cube(const r3d_drawcall_t* call, bool forward, bo
 
     // Applying material parameters that are independent of shaders
     if (shadow) {
-        r3d_drawcall_apply_shadow_cast_mode(call->shadowCastMode);
+        r3d_drawcall_apply_shadow_cast_mode(call->shadowCastMode, call->material.cullMode);
     }
     else {
         r3d_drawcall_apply_cull_mode(call->material.cullMode);
@@ -378,7 +378,7 @@ void r3d_drawcall_raster_depth_cube_inst(const r3d_drawcall_t* call, bool forwar
 
     // Applying material parameters that are independent of shaders
     if (shadow) {
-        r3d_drawcall_apply_shadow_cast_mode(call->shadowCastMode);
+        r3d_drawcall_apply_shadow_cast_mode(call->shadowCastMode, call->material.cullMode);
     }
     else {
         r3d_drawcall_apply_cull_mode(call->material.cullMode);
@@ -742,22 +742,17 @@ void r3d_drawcall_apply_blend_mode(R3D_BlendMode mode)
     }
 }
 
-static void r3d_drawcall_apply_shadow_cast_mode(R3D_ShadowCastMode mode)
+static void r3d_drawcall_apply_shadow_cast_mode(R3D_ShadowCastMode castMode, R3D_CullMode cullMode)
 {
-    switch (mode)
+    switch (castMode)
     {
-    case R3D_SHADOW_CAST_ALL_FACES:
+    case R3D_SHADOW_CAST_ON:
+    case R3D_SHADOW_CAST_ONLY:
+        r3d_drawcall_apply_cull_mode(cullMode);
+        break;
+    case R3D_SHADOW_CAST_DOUBLE_SIDED:
         glDisable(GL_CULL_FACE);
         break;
-    case R3D_SHADOW_CAST_FRONT_FACES:
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
-        break;
-    case R3D_SHADOW_CAST_BACK_FACES:
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);
-        break;
-
     case R3D_SHADOW_CAST_DISABLED:
     default:
         assert("This shouldn't happen" && false);

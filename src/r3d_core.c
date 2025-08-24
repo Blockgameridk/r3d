@@ -390,10 +390,7 @@ void R3D_End(void)
 
     /* --- Prcoess all draw calls before rendering --- */
 
-    if (!(R3D.state.flags & R3D_FLAG_NO_FRUSTUM_CULLING)) {
-        r3d_prepare_cull_drawcalls();
-    }
-
+    r3d_prepare_cull_drawcalls();
     r3d_prepare_sort_drawcalls();
     r3d_prepare_anim_drawcalls();
 
@@ -987,10 +984,17 @@ void r3d_prepare_cull_drawcalls(void)
 
     calls = (r3d_drawcall_t*)R3D.container.aDrawDeferred.data;
     count = (int)R3D.container.aDrawDeferred.count;
-    
+
     for (int i = count - 1; i >= 0; i--) {
-        if (!r3d_drawcall_geometry_is_visible(&calls[i])) {
+        if (calls->shadowCastMode == R3D_SHADOW_CAST_ONLY) {
             calls[i] = calls[--count];
+            continue;
+        }
+        if (!(R3D.state.flags & R3D_FLAG_NO_FRUSTUM_CULLING)) {
+            if (!r3d_drawcall_geometry_is_visible(&calls[i])) {
+                calls[i] = calls[--count];
+                continue;
+            }
         }
     }
 
@@ -1000,10 +1004,17 @@ void r3d_prepare_cull_drawcalls(void)
 
     calls = (r3d_drawcall_t*)R3D.container.aDrawForward.data;
     count = (int)R3D.container.aDrawForward.count;
-    
+
     for (int i = count - 1; i >= 0; i--) {
-        if (!r3d_drawcall_geometry_is_visible(&calls[i])) {
+        if (calls->shadowCastMode == R3D_SHADOW_CAST_ONLY) {
             calls[i] = calls[--count];
+            continue;
+        }
+        if (!(R3D.state.flags & R3D_FLAG_NO_FRUSTUM_CULLING)) {
+            if (!r3d_drawcall_geometry_is_visible(&calls[i])) {
+                calls[i] = calls[--count];
+                continue;
+            }
         }
     }
 
@@ -1013,10 +1024,17 @@ void r3d_prepare_cull_drawcalls(void)
 
     calls = (r3d_drawcall_t*)R3D.container.aDrawDeferredInst.data;
     count = (int)R3D.container.aDrawDeferredInst.count;
-    
+
     for (int i = count - 1; i >= 0; i--) {
-        if (!r3d_drawcall_instanced_geometry_is_visible(&calls[i])) {
+        if (calls->shadowCastMode == R3D_SHADOW_CAST_ONLY) {
             calls[i] = calls[--count];
+            continue;
+        }
+        if (!(R3D.state.flags & R3D_FLAG_NO_FRUSTUM_CULLING)) {
+            if (!r3d_drawcall_instanced_geometry_is_visible(&calls[i])) {
+                calls[i] = calls[--count];
+                continue;
+            }
         }
     }
 
@@ -1026,10 +1044,17 @@ void r3d_prepare_cull_drawcalls(void)
 
     calls = (r3d_drawcall_t*)R3D.container.aDrawForwardInst.data;
     count = (int)R3D.container.aDrawForwardInst.count;
-    
+
     for (int i = count - 1; i >= 0; i--) {
-        if (!r3d_drawcall_instanced_geometry_is_visible(&calls[i])) {
+        if (calls->shadowCastMode == R3D_SHADOW_CAST_ONLY) {
             calls[i] = calls[--count];
+            continue;
+        }
+        if (!(R3D.state.flags & R3D_FLAG_NO_FRUSTUM_CULLING)) {
+            if (!r3d_drawcall_instanced_geometry_is_visible(&calls[i])) {
+                calls[i] = calls[--count];
+                continue;
+            }
         }
     }
 

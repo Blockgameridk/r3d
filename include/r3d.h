@@ -133,16 +133,17 @@ typedef enum R3D_CullMode {
 } R3D_CullMode;
 
 /**
- * @brief Defines the shadow casting mode for objects in the scene.
+ * @brief Shadow casting modes for objects.
  *
- * Determines how an object contributes to shadow mapping, which can affect
- * performance and visual accuracy depending on the rendering technique used.
+ * Controls how an object interacts with the shadow mapping system.
+ * These modes determine whether the object contributes to shadows,
+ * and if so, whether it is also rendered in the main pass.
  */
 typedef enum R3D_ShadowCastMode {
-    R3D_SHADOW_CAST_FRONT_FACES,  ///< Only front-facing polygons cast shadows.
-    R3D_SHADOW_CAST_BACK_FACES,   ///< Only back-facing polygons cast shadows.
-    R3D_SHADOW_CAST_ALL_FACES,    ///< Both front and back-facing polygons cast shadows.
-    R3D_SHADOW_CAST_DISABLED      ///< The object does not cast shadows.
+    R3D_SHADOW_CAST_ON,             ///< The object casts shadows; the faces used are determined by the mesh culling mode.
+    R3D_SHADOW_CAST_DOUBLE_SIDED,   ///< The object casts shadows with both front and back faces, ignoring face culling.
+    R3D_SHADOW_CAST_ONLY,           ///< The object does not render normally, but still contributes to shadow maps.
+    R3D_SHADOW_CAST_DISABLED        ///< The object does not cast shadows at all.
 } R3D_ShadowCastMode;
 
 /**
