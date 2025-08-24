@@ -305,13 +305,15 @@ typedef struct R3D_ModelAnimation {
     int frameCount;         /**< Total number of frames in the animation sequence. */
 
     BoneInfo* bones;        /**< Array of bone metadata (name, parent index, etc.) that defines the skeleton hierarchy. */
-    union 
-    {
-        Matrix** framePoses;    /**< 2D array of transformation matrices: [frame][bone].
-                                     Each matrix represents the pose of a bone in a specific frame, typically in global space. */
+
+    union {
+        Matrix** framePoses;            /**< 2D array of transformation matrices: [frame][bone].
+                                             Each matrix represents the pose of a bone in a specific frame, typically in global space. */
         Transform** frameTransforms;    /**< 2D array of transformation transforms: [frame][bone]. in local space */
     };
+
     char name[32];          /**< Name identifier for the animation (e.g., "Walk", "Jump", etc.). */
+
 } R3D_ModelAnimation;
 
 /**
