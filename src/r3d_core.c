@@ -37,7 +37,12 @@
 #include "./details/containers/r3d_array.h"
 #include "./details/containers/r3d_registry.h"
 
-/* === Internal declarations === */
+/* === Internal Macros === */
+
+#define R3D_IS_ACTIVE_LAYERS(bitfield) \
+    ((bitfield) == 0 || ((bitfield) & R3D.state.layers) != 0)
+
+/* === Internal Functions Declarations === */
 
 static bool r3d_has_deferred_calls(void);
 static bool r3d_has_forward_calls(void);
@@ -161,6 +166,9 @@ void R3D_Init(int resWidth, int resHeight, unsigned int flags)
     // Init default loading parameters
     R3D.state.loading.aiProps = aiCreatePropertyStore();
     R3D.state.loading.textureFilter = TEXTURE_FILTER_TRILINEAR;
+
+    // Init default rendering layers
+    R3D.state.layers = 0;
 
     // Load primitive shapes
     glGenVertexArrays(1, &R3D.primitive.dummyVAO);
@@ -293,6 +301,26 @@ void R3D_SetSceneBounds(BoundingBox sceneBounds)
 void R3D_SetTextureFilter(TextureFilter filter)
 {
     R3D.state.loading.textureFilter = filter;
+}
+
+R3D_Layer R3D_GetActiveLayers(void)
+{
+    return R3D.state.layers;
+}
+
+void R3D_SetActiveLayers(R3D_Layer layers)
+{
+    R3D.state.layers = layers;
+}
+
+void R3D_EnableLayers(R3D_Layer bitfield)
+{
+    R3D.state.layers |= bitfield;
+}
+
+void R3D_DisableLayers(R3D_Layer bitfield)
+{
+    R3D.state.layers &= ~bitfield;
 }
 
 void R3D_Begin(Camera3D camera)
@@ -441,7 +469,7 @@ void R3D_End(void)
 
 void R3D_DrawMesh(const R3D_Mesh* mesh, const R3D_Material* material, Matrix transform)
 {
-    if (mesh == NULL || mesh->skipRender) {
+    if (mesh == NULL || !R3D_IS_ACTIVE_LAYERS(mesh->layers)) {
         return;
     }
 
@@ -490,7 +518,8 @@ void R3D_DrawMeshInstancedPro(const R3D_Mesh* mesh, const R3D_Material* material
                               const Color* instanceColors, int colorsStride,
                               int instanceCount)
 {
-    if (mesh == NULL || mesh->skipRender || instanceCount == 0 || instanceTransforms == NULL) {
+    if (mesh == NULL || !R3D_IS_ACTIVE_LAYERS(mesh->layers) ||
+        instanceCount == 0 || instanceTransforms == NULL) {
         return;
     }
 
@@ -554,7 +583,9 @@ void R3D_DrawModelPro(const R3D_Model* model, Matrix transform)
     for (int i = 0; i < model->meshCount; i++)
     {
         const R3D_Mesh* mesh = &model->meshes[i];
-        if (mesh->skipRender) continue;
+        if (!R3D_IS_ACTIVE_LAYERS(mesh->layers)) {
+            continue;
+        }
 
         r3d_drawcall_t drawCall = { 0 };
 
@@ -635,7 +666,9 @@ void R3D_DrawModelInstancedPro(const R3D_Model* model,
     for (int i = 0; i < model->meshCount; i++)
     {
         const R3D_Mesh* mesh = &model->meshes[i];
-        if (mesh->skipRender) continue;
+        if (!R3D_IS_ACTIVE_LAYERS(mesh->layers)) {
+            continue;
+        }
 
         r3d_drawcall_t drawCall = { 0 };
 
@@ -679,7 +712,9 @@ void R3D_DrawSpriteEx(const R3D_Sprite* sprite, Vector3 position, Vector2 size, 
 
 void R3D_DrawSpritePro(const R3D_Sprite* sprite, Vector3 position, Vector2 size, Vector3 rotationAxis, float rotationAngle)
 {
-    if (sprite == NULL) return;
+    if (sprite == NULL || !R3D_IS_ACTIVE_LAYERS(sprite->layers)) {
+        return;
+    }
 
     r3d_drawcall_t drawCall = { 0 };
 
@@ -762,7 +797,8 @@ void R3D_DrawSpriteInstancedPro(const R3D_Sprite* sprite, const BoundingBox* glo
                                 const Color* instanceColors, int colorsStride,
                                 int instanceCount)
 {
-    if (sprite == NULL || instanceCount == 0 || instanceTransforms == NULL) {
+    if (sprite == NULL || !R3D_IS_ACTIVE_LAYERS(sprite->layers) ||
+        instanceCount == 0 || instanceTransforms == NULL) {
         return;
     }
 

@@ -73,6 +73,42 @@ typedef unsigned int R3D_Flags;
 #define R3D_FLAG_LOW_PRECISION_BUFFERS  (1 << 10)   /**< Use 32-bit HDR formats like R11G11B10F for intermediate color buffers instead of full 16-bit floats. Saves memory and bandwidth. */
 
 /**
+ * @brief Bitfield type used to specify rendering layers for 3D objects.
+ *
+ * This type is used by `R3D_Mesh` and `R3D_Sprite` objects to indicate
+ * which rendering layer(s) they belong to. Active layers are controlled
+ * globally via the functions:
+ * 
+ * - void R3D_EnableLayers(R3D_Layer bitfield);
+ * - void R3D_DisableLayers(R3D_Layer bitfield);
+ *
+ * A mesh or sprite will be rendered if at least one of its assigned layers is active.
+ * Assigning a value of 0 to an object's layer (the default) means the object
+ * will always be rendered on screen.
+ *
+ * For simplicity, 16 layers are defined in this header, but the maximum number
+ * of layers depends on the number of bits in `unsigned int` on the target platform.
+ */
+typedef unsigned int R3D_Layer;
+
+#define R3D_LAYER_01    (1 << 0)
+#define R3D_LAYER_02    (1 << 1)
+#define R3D_LAYER_03    (1 << 2)
+#define R3D_LAYER_04    (1 << 3)
+#define R3D_LAYER_05    (1 << 4)
+#define R3D_LAYER_06    (1 << 5)
+#define R3D_LAYER_07    (1 << 6)
+#define R3D_LAYER_08    (1 << 7)
+#define R3D_LAYER_09    (1 << 8)
+#define R3D_LAYER_10    (1 << 9)
+#define R3D_LAYER_11    (1 << 10)
+#define R3D_LAYER_12    (1 << 11)
+#define R3D_LAYER_13    (1 << 12)
+#define R3D_LAYER_14    (1 << 13)
+#define R3D_LAYER_15    (1 << 14)
+#define R3D_LAYER_16    (1 << 15)
+
+/**
  * @brief Blend modes for rendering.
  *
  * Defines common blending modes used in 3D rendering to combine source and destination colors.
@@ -240,7 +276,8 @@ typedef struct R3D_Mesh {
 
     BoundingBox aabb;                     /**< Axis-Aligned Bounding Box in local space. */
 
-    bool skipRender;		/** disables rendering of a specific mesh if set */
+    R3D_Layer layers;                     /**< Bitfield indicating the rendering layer(s) this object belongs to. 
+                                               A value of 0 means the object is always rendered. */
 
 } R3D_Mesh;
 
@@ -380,6 +417,8 @@ typedef struct R3D_Sprite {
     Vector2 frameSize;                     ///< The size of a single animation frame, in texture coordinates (width and height).
     int xFrameCount;                       ///< The number of frames along the horizontal (X) axis of the texture.
     int yFrameCount;                       ///< The number of frames along the vertical (Y) axis of the texture.
+    R3D_Layer layers;                      /**< Bitfield indicating the rendering layer(s) this object belongs to. 
+                                                A value of 0 means the object is always rendered. */
 } R3D_Sprite;
 
 /**
@@ -606,6 +645,48 @@ R3DAPI void R3D_SetSceneBounds(BoundingBox sceneBounds);
  * @param filter The texture filtering mode to be applied by default.
  */
 R3DAPI void R3D_SetTextureFilter(TextureFilter filter);
+
+/**
+ * @brief Get the currently active global rendering layers.
+ *
+ * Returns the bitfield representing the currently active layers in the renderer.
+ * By default, the internal active layers are set to 0, which means that any
+ * non-zero layer assigned to an object will NOT be rendered unless explicitly
+ * activated.
+ *
+ * @return R3D_Layer Bitfield of active layers.
+ */
+R3DAPI R3D_Layer R3D_GetActiveLayers(void);
+
+/**
+ * @brief Set the active global rendering layers.
+ *
+ * Replaces the current set of active layers with the given bitfield.
+ *
+ * @param layers Bitfield representing the layers to activate.
+ */
+R3DAPI void R3D_SetActiveLayers(R3D_Layer layers);
+
+/**
+ * @brief Enable one or more layers without affecting other active layers.
+ *
+ * This function sets the bits in the global active layers corresponding to
+ * the bits in the provided bitfield. Layers already active remain active.
+ *
+ * @param bitfield Bitfield representing one or more layers to enable.
+ */
+R3DAPI void R3D_EnableLayers(R3D_Layer bitfield);
+
+/**
+ * @brief Disable one or more layers without affecting other active layers.
+ *
+ * This function clears the bits in the global active layers corresponding to
+ * the bits in the provided bitfield. Layers not included in the bitfield
+ * remain unchanged.
+ *
+ * @param bitfield Bitfield representing one or more layers to disable.
+ */
+R3DAPI void R3D_DisableLayers(R3D_Layer bitfield);
 
 // --------------------------------------------
 // CORE: Drawing Functions

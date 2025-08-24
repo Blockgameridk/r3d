@@ -317,8 +317,11 @@ extern struct R3D_State {
             TextureFilter textureFilter;       //< Texture filter used by R3D during model loading
         } loading;
 
+        // Active layers
+        R3D_Layer layers;
+
         // Miscellaneous flags
-        unsigned int flags;
+        R3D_Flags flags;
 
     } state;
 
