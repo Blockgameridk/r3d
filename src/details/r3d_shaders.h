@@ -331,6 +331,7 @@ typedef struct {
     r3d_shader_uniform_float_t uFar;
     r3d_shader_uniform_float_t uRadius;
     r3d_shader_uniform_float_t uBias;
+    r3d_shader_uniform_float_t uIntensity;
 } r3d_shader_screen_ssao_t;
 
 typedef struct {
@@ -346,6 +347,7 @@ typedef struct {
     r3d_shader_uniform_vec4_t uQuatSkybox;
     r3d_shader_uniform_float_t uSkyboxAmbientIntensity;
     r3d_shader_uniform_float_t uSkyboxReflectIntensity;
+    r3d_shader_uniform_float_t uSSAOPower;
     r3d_shader_uniform_vec3_t uViewPosition;
     r3d_shader_uniform_mat4_t uMatInvProj;
     r3d_shader_uniform_mat4_t uMatInvView;
@@ -356,6 +358,7 @@ typedef struct {
     r3d_shader_uniform_sampler2D_t uTexAlbedo;
     r3d_shader_uniform_sampler2D_t uTexSSAO;
     r3d_shader_uniform_sampler2D_t uTexORM;
+    r3d_shader_uniform_float_t uSSAOPower;
     r3d_shader_uniform_vec3_t uAmbientColor;
 } r3d_shader_screen_ambient_t;
 

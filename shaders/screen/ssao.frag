@@ -41,6 +41,7 @@ uniform float uFar;
 
 uniform float uRadius;
 uniform float uBias;
+uniform float uIntensity;
 
 /* === Constants === */
 
@@ -143,5 +144,5 @@ void main()
         }
     }
     
-    FragOcclusion = 1.0 - (occlusion / float(KERNEL_SIZE));
+    FragOcclusion = 1.0 - ((occlusion / float(KERNEL_SIZE)) * uIntensity);
 }

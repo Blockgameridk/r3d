@@ -43,6 +43,7 @@ uniform sampler2D uTexBrdfLut;
 uniform vec4 uQuatSkybox;
 uniform float uSkyboxAmbientIntensity;
 uniform float uSkyboxReflectIntensity;
+uniform float uSSAOPower;
 
 uniform vec3 uViewPosition;
 uniform mat4 uMatInvProj;
@@ -119,7 +120,13 @@ void main()
 
     /* Sample SSAO buffer and modulate occlusion value */
 
-    occlusion *= texture(uTexSSAO, vTexCoord).r;
+	float ssao = texture(uTexSSAO, vTexCoord).r;
+
+	if (uSSAOPower != 1.0) {
+        ssao = pow(ssao, uSSAOPower);
+	}
+
+	occlusion *= ssao;
 
     /* Compute F0 (reflectance at normal incidence) based on the metallic factor */
 
@@ -174,6 +181,7 @@ uniform sampler2D uTexAlbedo;
 uniform sampler2D uTexSSAO;
 uniform sampler2D uTexORM;
 uniform vec3 uAmbientColor;
+uniform float uSSAOPower;
 
 /* === Fragments === */
 
@@ -212,7 +220,12 @@ void main()
     /* --- Ambient occlusion (SSAO) --- */
 
     float ssao = texture(uTexSSAO, vTexCoord).r;
-    occlusion *= ssao;
+
+	if (uSSAOPower != 1.0) {
+        ssao = pow(ssao, uSSAOPower);
+    }
+
+	occlusion *= ssao;
 
     /* --- PBR surface reflectance model --- */
 

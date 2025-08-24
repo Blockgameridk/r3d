@@ -114,6 +114,8 @@ void R3D_Init(int resWidth, int resHeight, unsigned int flags)
     R3D.env.ssaoRadius = 0.5f;
     R3D.env.ssaoBias = 0.025f;
     R3D.env.ssaoIterations = 1;
+    R3D.env.ssaoIntensity = 1.0f;
+    R3D.env.ssaoPower = 1.0f;
     R3D.env.bloomMode = R3D_BLOOM_DISABLED;
     R3D.env.bloomIntensity = 0.05f;
     R3D.env.bloomFilterRadius = 0;
@@ -1316,6 +1318,7 @@ void r3d_pass_ssao(void)
 
             r3d_shader_set_float(screen.ssao, uRadius, R3D.env.ssaoRadius);
             r3d_shader_set_float(screen.ssao, uBias, R3D.env.ssaoBias);
+            r3d_shader_set_float(screen.ssao, uIntensity, R3D.env.ssaoIntensity);
 
             r3d_shader_bind_sampler2D(screen.ssao, uTexDepth, R3D.target.depthStencil);
             r3d_shader_bind_sampler2D(screen.ssao, uTexNormal, R3D.target.normal);
@@ -1410,6 +1413,7 @@ void r3d_pass_deferred_ambient(void)
                 r3d_shader_set_vec4(screen.ambientIbl, uQuatSkybox, R3D.env.quatSky);
                 r3d_shader_set_float(screen.ambientIbl, uSkyboxAmbientIntensity, R3D.env.skyAmbientIntensity);
                 r3d_shader_set_float(screen.ambientIbl, uSkyboxReflectIntensity, R3D.env.skyReflectIntensity);
+                r3d_shader_set_float(screen.ambientIbl, uSSAOPower, R3D.env.ssaoPower);
 
                 r3d_primitive_bind_and_draw_screen();
 
@@ -1448,6 +1452,7 @@ void r3d_pass_deferred_ambient(void)
                 }
 
                 r3d_shader_set_vec3(screen.ambient, uAmbientColor, R3D.env.ambientColor);
+                r3d_shader_set_float(screen.ambient, uSSAOPower, R3D.env.ssaoPower);
 
                 r3d_primitive_bind_and_draw_screen();
 

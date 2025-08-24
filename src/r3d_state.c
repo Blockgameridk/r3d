@@ -1481,6 +1481,7 @@ void r3d_shader_load_screen_ssao(void)
     r3d_shader_get_location(screen.ssao, uFar);
     r3d_shader_get_location(screen.ssao, uRadius);
     r3d_shader_get_location(screen.ssao, uBias);
+    r3d_shader_get_location(screen.ssao, uIntensity);
 
     r3d_shader_enable(screen.ssao);
     r3d_shader_set_sampler2D_slot(screen.ssao, uTexDepth, 0);
@@ -1514,6 +1515,7 @@ void r3d_shader_load_screen_ambient_ibl(void)
     r3d_shader_get_location(screen.ambientIbl, uViewPosition);
     r3d_shader_get_location(screen.ambientIbl, uMatInvProj);
     r3d_shader_get_location(screen.ambientIbl, uMatInvView);
+    r3d_shader_get_location(screen.ambientIbl, uSSAOPower);
 
     r3d_shader_enable(screen.ambientIbl);
 
@@ -1540,6 +1542,7 @@ void r3d_shader_load_screen_ambient(void)
     r3d_shader_get_location(screen.ambient, uTexSSAO);
     r3d_shader_get_location(screen.ambient, uTexORM);
     r3d_shader_get_location(screen.ambient, uAmbientColor);
+    r3d_shader_get_location(screen.ambient, uSSAOPower);
 
     r3d_shader_enable(screen.ambient);
     r3d_shader_set_sampler2D_slot(screen.ambient, uTexAlbedo, 0);

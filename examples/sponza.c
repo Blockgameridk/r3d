@@ -24,6 +24,9 @@ const char* Init(void)
 
     R3D_SetSSAO(true);
     R3D_SetSSAORadius(4.0f);
+    R3D_SetSSAOIntensity(1.25f);
+    R3D_SetSSAOPower(1.25f);
+
     R3D_SetBloomMode(R3D_BLOOM_MIX);
 
     /* --- Set default ambient color (when no skybox is activated) --- */
