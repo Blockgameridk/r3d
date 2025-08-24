@@ -223,6 +223,8 @@ extern struct R3D_State {
         float ssaoRadius;               // (pre-light pass)
         float ssaoBias;                 // (pre-light pass)
         int ssaoIterations;             // (pre-light pass)
+        float ssaoIntensity;            // (pre-light pass)
+        float ssaoPower;                // (light pass)
                                         
         R3D_Bloom bloomMode;            // (post pass)
         float bloomIntensity;           // (post pass)

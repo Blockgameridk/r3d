@@ -2319,6 +2319,49 @@ R3DAPI void R3D_SetSSAOIterations(int value);
  */
 R3DAPI int R3D_GetSSAOIterations(void);
 
+/**
+ * @brief Sets the intensity multiplier for the SSAO effect.
+ *
+ * This function sets the the base multiplier used by the SSAO effect.
+ * Higher values will result in darker occlusion.
+ *
+ * @param value The intensity multiplier for SSAO.
+ *
+ * Default: 1.0
+ */
+R3DAPI void R3D_SetSSAOIntensity(float value);
+
+/**
+ * @brief Gets the intensity multiplier for the SSAO effect.
+ *
+ * This function retrieves the intensity multiplier applied to the SSAO effect.
+ *
+ * @return The intensity multiplier for SSAO.
+ */
+R3DAPI float R3D_GetSSAOIntensity(void);
+
+/**
+ * @brief Sets the power factor for the SSAO effect.
+ *
+ * This function sets the exponential distributon applied to the SSAO effect.
+ * Higher values will result in darker occlusion with an increasingly sharper
+ * falloff compared to the SSAO intensity value.
+ *
+ * @param value The power factor for SSAO.
+ *
+ * Default: 1.0
+ */
+R3DAPI void R3D_SetSSAOPower(float value);
+
+/**
+ * @brief Gets the power factor used for the SSAO effect.
+ *
+ * This function retrieves the exponential distributon value applied to the SSAO effect.
+ *
+ * @return The power factor for SSAO.
+ */
+R3DAPI float R3D_GetSSAOPower(void);
+
 // --------------------------------------------
 // ENVIRONMENT: Bloom Config Functions
 // --------------------------------------------

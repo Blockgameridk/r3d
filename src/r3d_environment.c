@@ -132,6 +132,26 @@ int R3D_GetSSAOIterations(void)
 	return R3D.env.ssaoIterations;
 }
 
+void R3D_SetSSAOIntensity(float value)
+{
+	R3D.env.ssaoIntensity = value;
+}
+
+float R3D_GetSSAOIntensity(void)
+{
+	return R3D.env.ssaoIntensity;
+}
+
+void R3D_SetSSAOPower(float value)
+{
+	R3D.env.ssaoPower = value;
+}
+
+float R3D_GetSSAOPower(void)
+{
+	return R3D.env.ssaoPower;
+}
+
 void R3D_SetBloomMode(R3D_Bloom mode)
 {
 	R3D.env.bloomMode = mode;
