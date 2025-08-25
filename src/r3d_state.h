@@ -229,6 +229,7 @@ extern struct R3D_State {
                                         
         R3D_Bloom bloomMode;            // (post pass)
         float bloomIntensity;           // (post pass)
+        int bloomLevels;                // (gen pass)
         int bloomFilterRadius;          // (gen pass)
         float bloomThreshold;           // (gen pass)
         float bloomSoftThreshold;       // (gen pass)
@@ -404,6 +405,10 @@ void r3d_texture_load_blue_noise(void);
 void r3d_texture_load_ssao_noise(void);
 void r3d_texture_load_ssao_kernel(void);
 void r3d_texture_load_ibl_brdf_lut(void);
+
+/* === Target loading functions === */
+
+void r3d_target_load_mip_chain_hs(int width, int height, int count);
 
 /* === Framebuffer helper macros === */
 

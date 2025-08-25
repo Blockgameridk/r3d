@@ -190,6 +190,26 @@ R3D_Bloom R3D_GetBloomMode(void)
 	return R3D.env.bloomMode;
 }
 
+void R3D_SetBloomLevels(int value)
+{
+	if (R3D.target.mipChainHs.chain != NULL) {
+		for (int i = 0; i < R3D.target.mipChainHs.count; i++) {
+			glDeleteTextures(1, &R3D.target.mipChainHs.chain[i].id);
+		}
+		RL_FREE(R3D.target.mipChainHs.chain);
+
+	    r3d_target_load_mip_chain_hs(R3D.state.resolution.width, R3D.state.resolution.height, value);
+	}
+
+	// Update value based on actual number of mip levels generated
+	R3D.env.bloomLevels = R3D.target.mipChainHs.count;
+}
+
+int R3D_GetBloomLevels(void)
+{
+	return R3D.env.bloomLevels;
+}
+
 void R3D_SetBloomIntensity(float value)
 {
 	R3D.env.bloomIntensity = value;

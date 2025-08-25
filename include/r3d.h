@@ -2411,6 +2411,30 @@ R3DAPI void R3D_SetBloomMode(R3D_Bloom mode);
 R3DAPI R3D_Bloom R3D_GetBloomMode(void);
 
 /**
+ * @brief Sets the number of mipmap levels used for the bloom effect.
+ *
+ * This function controls how many mipmap level are generated for use in the bloom effect.
+ * More levels will give a smoother and more widely dispersed effect, while less mipmaps
+ * can provide a tighter effect. Setting this value to 0 will result in the maximum
+ * possible amount of levels to be used. Use of this function will rebuild the
+ * mipmaps and may give a one time performance hit.
+ *
+ * @param value The number of mipmap level to be used for the bloom effect.
+ *
+ * Default: 7
+ */
+R3DAPI void R3D_SetBloomLevels(int value);
+
+/**
+ * @brief Gets the current amount of mipmap levels used for the bloom effect.
+ *
+ * This function retrieves the current amount of mipmap levels in use by the bloom effect.
+ *
+ * @return The number of mipmap level currently used for the bloom effect.
+ */
+R3DAPI int R3D_GetBloomLevels(void);
+
+/**
  * @brief Sets the bloom intensity.
  *
  * This function controls the strength of the bloom effect. Higher values result
