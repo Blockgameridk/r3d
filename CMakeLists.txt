@@ -1,5 +1,5 @@
 ﻿cmake_minimum_required(VERSION 3.8)
-project(r3d VERSION 0.4.0 LANGUAGES C)
+project(r3d VERSION 0.4.0 LANGUAGES C CXX)
 
 # This section configures MSVC (Visual Studio) to enable "Edit and Continue" debugging
 
@@ -105,7 +105,7 @@ if(R3D_ASSIMP_VENDORED)
 
         add_subdirectory("${R3D_ASSIMP_SUBMODULE_PATH}")
 
-        set(R3D_ASSIMP_INC_PATH "${R3D_ASSIMP_SUBMODULE_PATH}/src" CACHE STRING "Path to assimp includes" FORCE)
+        set(R3D_ASSIMP_INC_PATH "${R3D_ASSIMP_SUBMODULE_PATH}/include" CACHE STRING "Path to assimp includes" FORCE)
     else()
         message(FATAL_ERROR "Vendored assimp not found!
 Missing: ${R3D_ASSIMP_CMAKELISTS}
@@ -244,7 +244,10 @@ EmbedAssets(${PROJECT_NAME}
 
 # Link project dependencies
 
-target_link_libraries(${PROJECT_NAME} PUBLIC raylib assimp)
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+        raylib assimp
+)
 
 check_library_exists(m cos "" HAVE_LIB_M)
 
@@ -254,17 +257,18 @@ endif()
 
 # Specify the include directories needed for the project
 
-target_include_directories(${PROJECT_NAME} PUBLIC
-    "${R3D_ROOT_PATH}/external/glad"
-    "${R3D_ROOT_PATH}/include"
-    "${R3D_RAYLIB_INC_PATH}"
-    "${R3D_ASSIMP_INC_PATH}"
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        "${R3D_ROOT_PATH}/external/glad"
+        "${R3D_ROOT_PATH}/include"
+        "${R3D_RAYLIB_INC_PATH}"
+        "${R3D_ASSIMP_INC_PATH}"
 )
 
 # Ensure the C standard is set for MSVC if using CMake version greater than 3.12
 
 if(CMAKE_VERSION VERSION_GREATER 3.12)
-    set_property(TARGET r3d PROPERTY C_STANDARD 99)
+    set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 11)
 endif()
 
 # Doxygen configuration
