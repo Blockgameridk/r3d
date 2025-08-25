@@ -409,6 +409,7 @@ void r3d_texture_load_ibl_brdf_lut(void);
 /* === Target loading functions === */
 
 void r3d_target_load_mip_chain_hs(int width, int height, int count);
+void r3d_target_unload_mip_chain_hs(void);
 
 /* === Framebuffer helper macros === */
 

@@ -486,10 +486,7 @@ void r3d_framebuffers_unload(void)
         glDeleteTextures(2, R3D.target.scenePp);
     }
     if (R3D.target.mipChainHs.chain != NULL) {
-        for (int i = 0; i < R3D.target.mipChainHs.count; i++) {
-            glDeleteTextures(1, &R3D.target.mipChainHs.chain[i].id);
-        }
-        RL_FREE(R3D.target.mipChainHs.chain);
+        r3d_target_unload_mip_chain_hs();
     }
 
     memset(&R3D.target, 0, sizeof(R3D.target));
@@ -889,6 +886,18 @@ void r3d_target_load_mip_chain_hs(int width, int height, int count)
     }
 
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+/* === Target unloading functions === */
+
+void r3d_target_unload_mip_chain_hs(void)
+{
+    assert(R3D.target.mipChainHs.chain != NULL);
+    for (int i = 0; i < R3D.target.mipChainHs.count; i++) {
+        glDeleteTextures(1, &R3D.target.mipChainHs.chain[i].id);
+    }
+    RL_FREE(R3D.target.mipChainHs.chain);
+    R3D.target.mipChainHs.chain = NULL;
 }
 
 /* === Framebuffer loading functions === */

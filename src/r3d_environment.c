@@ -193,13 +193,11 @@ R3D_Bloom R3D_GetBloomMode(void)
 void R3D_SetBloomLevels(int value)
 {
 	if (R3D.target.mipChainHs.chain != NULL) {
-		for (int i = 0; i < R3D.target.mipChainHs.count; i++) {
-			glDeleteTextures(1, &R3D.target.mipChainHs.chain[i].id);
-		}
-		RL_FREE(R3D.target.mipChainHs.chain);
-
-	    r3d_target_load_mip_chain_hs(R3D.state.resolution.width, R3D.state.resolution.height, value);
+		r3d_target_unload_mip_chain_hs();
 	}
+
+	// Re-generate the mip chain
+	r3d_target_load_mip_chain_hs(R3D.state.resolution.width, R3D.state.resolution.height, value);
 
 	// Update value based on actual number of mip levels generated
 	R3D.env.bloomLevels = R3D.target.mipChainHs.count;
