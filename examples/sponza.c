@@ -25,13 +25,14 @@ const char* Init(void)
     R3D_SetSSAO(true);
     R3D_SetSSAORadius(4.0f);
     R3D_SetSSAOIntensity(1.25f);
-    R3D_SetSSAOPower(1.25f);
+    R3D_SetSSAOPower(1.5f);
 
     R3D_SetBloomMode(R3D_BLOOM_MIX);
 
-    /* --- Set default ambient color (when no skybox is activated) --- */
+    /* --- Set default background and ambient color (when no skybox is activated) --- */
 
-    R3D_SetAmbientColor(GRAY);
+    R3D_SetBackgroundColor(SKYBLUE);
+    R3D_SetAmbientColor(DARKGRAY);
 
     /* --- Load Sponza scene --- */
 
@@ -54,7 +55,7 @@ const char* Init(void)
 
         R3D_SetLightPosition(lights[i], (Vector3) { i ? -10 : 10, 20, 0 });
         R3D_SetLightActive(lights[i], true);
-        R3D_SetLightEnergy(lights[i], 1.0f);
+        R3D_SetLightEnergy(lights[i], 4.0f);
 
         R3D_SetShadowUpdateMode(lights[i], R3D_SHADOW_UPDATE_MANUAL);
         R3D_EnableShadow(lights[i], 4096);
@@ -62,11 +63,11 @@ const char* Init(void)
 
     /* --- Configure camera --- */
 
-    camera = (Camera3D) {
-        .position = (Vector3) { 0, 0, 0 },
-        .target = (Vector3) { 0, 0, -1 },
-        .up = (Vector3) { 0, 1, 0 },
-        .fovy = 60,
+    camera = (Camera3D){
+        .position = (Vector3) { 8.0f, 1.0f, 0.5f },
+        .target = (Vector3) { 0.0f, 2.0f, -2.0f },
+        .up = (Vector3) { 0.0f, 1.0f, 0.0f },
+        .fovy = 60.0f
     };
 
     /* --- Ready to go! --- */

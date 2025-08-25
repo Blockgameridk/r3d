@@ -121,6 +121,7 @@ void R3D_Init(int resWidth, int resHeight, unsigned int flags)
     R3D.env.ssaoIterations = 1;
     R3D.env.ssaoIntensity = 1.0f;
     R3D.env.ssaoPower = 1.0f;
+    R3D.env.ssaoLightAffect = 0.0f;
     R3D.env.bloomMode = R3D_BLOOM_DISABLED;
     R3D.env.bloomIntensity = 0.05f;
     R3D.env.bloomFilterRadius = 0;
@@ -1752,12 +1753,23 @@ void r3d_pass_scene_deferred(void)
             r3d_shader_bind_sampler2D(screen.scene, uTexDiffuse, R3D.target.diffuse);
             r3d_shader_bind_sampler2D(screen.scene, uTexSpecular, R3D.target.specular);
 
+            if (R3D.env.ssaoEnabled) {
+                r3d_shader_bind_sampler2D(screen.scene, uTexSSAO, R3D.target.ssaoPpHs[1]);
+            }
+            else {
+                r3d_shader_bind_sampler2D(screen.scene, uTexSSAO, R3D.texture.white);
+            }
+
+            r3d_shader_set_float(screen.scene, uSSAOPower, R3D.env.ssaoPower);
+            r3d_shader_set_float(screen.scene, uSSAOLightAffect, R3D.env.ssaoLightAffect);
+
             r3d_primitive_bind_and_draw_screen();
 
             r3d_shader_unbind_sampler2D(screen.scene, uTexAlbedo);
             r3d_shader_unbind_sampler2D(screen.scene, uTexEmission);
             r3d_shader_unbind_sampler2D(screen.scene, uTexDiffuse);
             r3d_shader_unbind_sampler2D(screen.scene, uTexSpecular);
+            r3d_shader_unbind_sampler2D(screen.scene, uTexSSAO);
         }
         r3d_shader_disable();
 
