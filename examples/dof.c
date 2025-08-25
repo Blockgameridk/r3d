@@ -100,8 +100,7 @@ void Update(float delta)
     }
 
     if (IsKeyPressed(KEY_F1)) {
-        int debugMode = R3D_GetDofDebugMode();
-        R3D_SetDofDebugMode((debugMode + 1) % 3);
+        R3D_SetDofDebugMode(R3D_GetDofDebugMode() ? false : true);
     }
 }
 
