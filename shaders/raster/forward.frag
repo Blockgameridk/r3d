@@ -249,7 +249,10 @@ float Shadow(int i, float cNdotL)
 
     /* --- Shadow Map Bounds Check --- */
 
-    if (!(all(lessThanEqual(projCoords, vec3(1.0))) && all(greaterThanEqual(projCoords, vec3(0.0))))) {
+    bool insideUpperBound = all(lessThanEqual(projCoords, vec3(1.0)));
+    bool insideLowerBound = all(greaterThanEqual(projCoords, vec3(0.0)));
+
+    if (!(insideUpperBound && insideLowerBound)) {
         return 1.0;
     }
 
