@@ -223,7 +223,7 @@ float Shadow(vec3 position, float cNdotL)
 
     /* --- Shadow Map Bounds Check --- */
 
-    if (!all(lessThanEqual(projCoords, vec3(1.0)) && greaterThanEqual(projCoords, vec3(0.0)))) {
+    if (!all(lessThanEqual(projCoords, vec3(1.0))) && all(greaterThanEqual(projCoords, vec3(0.0)))) {
         return 1.0;
     }
 
