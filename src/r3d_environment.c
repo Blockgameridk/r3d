@@ -192,12 +192,10 @@ R3D_Bloom R3D_GetBloomMode(void)
 
 void R3D_SetBloomLevels(int value)
 {
-	if (R3D.target.mipChainHs.chain != NULL) {
+	if (R3D.env.bloomMode != R3D_BLOOM_DISABLED) {
 		r3d_target_unload_mip_chain_hs();
+		r3d_target_load_mip_chain_hs(R3D.state.resolution.width, R3D.state.resolution.height, value);
 	}
-
-	// Re-generate the mip chain
-	r3d_target_load_mip_chain_hs(R3D.state.resolution.width, R3D.state.resolution.height, value);
 
 	// Update value based on actual number of mip levels generated
 	R3D.env.bloomLevels = R3D.target.mipChainHs.count;
