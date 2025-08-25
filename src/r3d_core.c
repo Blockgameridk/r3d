@@ -123,6 +123,7 @@ void R3D_Init(int resWidth, int resHeight, unsigned int flags)
     R3D.env.ssaoPower = 1.0f;
     R3D.env.ssaoLightAffect = 0.0f;
     R3D.env.bloomMode = R3D_BLOOM_DISABLED;
+    R3D.env.bloomLevels = 7;
     R3D.env.bloomIntensity = 0.05f;
     R3D.env.bloomFilterRadius = 0;
     R3D.env.bloomThreshold = 0.0f;

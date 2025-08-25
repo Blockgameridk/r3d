@@ -833,7 +833,7 @@ static void r3d_target_load_scene_pp(int width, int height)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-static void r3d_target_load_mip_chain_hs(int width, int height)
+void r3d_target_load_mip_chain_hs(int width, int height, int count)
 {
     assert(R3D.target.mipChainHs.chain == NULL);
 
@@ -847,9 +847,17 @@ static void r3d_target_load_mip_chain_hs(int width, int height)
         internalFormat = r3d_support_get_internal_format(GL_RGB16F, true);
     }
 
-    // Calculate max mip levels based on smallest dimension
+    // Calculate the maximum mip levels based on smallest dimension
     int maxDimension = (width > height) ? width : height;
-    R3D.target.mipChainHs.count = 1 + (int)floor(log2((float)maxDimension));
+    int maxLevels = 1 + (int)floor(log2((float)maxDimension));
+
+    // Use maximum level if count is too large or not specified
+    if (count <= 0 || count > maxLevels) {
+        R3D.target.mipChainHs.count = maxLevels;
+    }
+    else {
+        R3D.target.mipChainHs.count = count;
+    }
 
     // Allocate the array containing the mipmaps
     R3D.target.mipChainHs.chain = RL_MALLOC(R3D.target.mipChainHs.count * sizeof(struct r3d_mip));
@@ -983,7 +991,7 @@ void r3d_framebuffer_load_bloom(int width, int height)
     /* --- Ensures that targets exist --- */
 
     if (R3D.target.mipChainHs.chain == NULL) {
-        r3d_target_load_mip_chain_hs(width, height);
+        r3d_target_load_mip_chain_hs(width, height, R3D.env.bloomLevels);
     }
 
     /* --- Create and configure the framebuffer --- */
