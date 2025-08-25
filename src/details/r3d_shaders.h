@@ -402,6 +402,9 @@ typedef struct {
     r3d_shader_uniform_sampler2D_t uTexEmission;
     r3d_shader_uniform_sampler2D_t uTexDiffuse;
     r3d_shader_uniform_sampler2D_t uTexSpecular;
+    r3d_shader_uniform_sampler2D_t uTexSSAO;
+    r3d_shader_uniform_float_t uSSAOPower;
+    r3d_shader_uniform_float_t uSSAOLightAffect;
 } r3d_shader_screen_scene_t;
 
 typedef struct {

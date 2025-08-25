@@ -1609,6 +1609,9 @@ void r3d_shader_load_screen_scene(void)
     r3d_shader_get_location(screen.scene, uTexEmission);
     r3d_shader_get_location(screen.scene, uTexDiffuse);
     r3d_shader_get_location(screen.scene, uTexSpecular);
+    r3d_shader_get_location(screen.scene, uTexSSAO);
+    r3d_shader_get_location(screen.scene, uSSAOPower);
+    r3d_shader_get_location(screen.scene, uSSAOLightAffect);
 
     r3d_shader_enable(screen.scene);
 
@@ -1616,6 +1619,8 @@ void r3d_shader_load_screen_scene(void)
     r3d_shader_set_sampler2D_slot(screen.scene, uTexEmission, 1);
     r3d_shader_set_sampler2D_slot(screen.scene, uTexDiffuse, 2);
     r3d_shader_set_sampler2D_slot(screen.scene, uTexSpecular, 3);
+
+    r3d_shader_set_sampler2D_slot(screen.scene, uTexSSAO, 4);
 
     r3d_shader_disable();
 }

@@ -152,6 +152,16 @@ float R3D_GetSSAOPower(void)
 	return R3D.env.ssaoPower;
 }
 
+void R3D_SetSSAOLightAffect(float value)
+{
+	R3D.env.ssaoLightAffect = value;
+}
+
+float R3D_GetSSAOLightAffect(void)
+{
+	return R3D.env.ssaoLightAffect;
+}
+
 void R3D_SetBloomMode(R3D_Bloom mode)
 {
 	R3D.env.bloomMode = mode;
