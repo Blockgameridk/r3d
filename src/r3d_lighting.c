@@ -86,7 +86,7 @@ void R3D_ToggleLight(R3D_Light id)
     light->enabled = !light->enabled;
 
     if (light->enabled && light->shadow.enabled) {
-        light->shadow.updateConf.shoudlUpdate = true;
+        light->shadow.updateConf.shouldUpdate = true;
     }
 }
 
@@ -99,7 +99,7 @@ void R3D_SetLightActive(R3D_Light id, bool active)
     }
 
     if (active && light->shadow.enabled) {
-        light->shadow.updateConf.shoudlUpdate = true;
+        light->shadow.updateConf.shouldUpdate = true;
     }
 
     light->enabled = active;
@@ -321,7 +321,7 @@ void R3D_SetShadowUpdateFrequency(R3D_Light id, int msec)
 void R3D_UpdateShadowMap(R3D_Light id)
 {
     r3d_get_and_check_light(light, id);
-    light->shadow.updateConf.shoudlUpdate = true;
+    light->shadow.updateConf.shouldUpdate = true;
 }
 
 float R3D_GetShadowSoftness(R3D_Light id)

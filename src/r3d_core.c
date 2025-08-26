@@ -1146,7 +1146,7 @@ void r3d_pass_shadow_maps(void)
         if (!light->data->shadow.enabled) continue;
 
         // Skip if it's not time to update shadows
-        if (!light->data->shadow.updateConf.shoudlUpdate) continue;
+        if (!light->data->shadow.updateConf.shouldUpdate) continue;
         else r3d_light_indicate_shadow_update(light->data);
 
         // TODO: The lights could be sorted to avoid too frequent
