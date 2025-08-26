@@ -29,7 +29,7 @@ typedef struct {
     R3D_ShadowUpdateMode mode;
     float frequencySec;
     float timerSec;
-    bool shoudlUpdate;
+    bool shouldUpdate;
 } r3d_shadow_update_conf_t;
 
 typedef struct {
