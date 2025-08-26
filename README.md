@@ -7,6 +7,12 @@ R3D is a modern 3D rendering library for <a href="https://www.raylib.com/">rayli
 
 ---
 
+> [!WARNING]
+> **It is recommended to use the pre-release tags.**
+> While you can use the master branch, unexpected (mostly minor) API breaking changes may occur until the first official release is published.
+
+---
+
 ## Key Features
 
 - **Hybrid Renderer**: Automatic (or manual) deferred/forward rendering
