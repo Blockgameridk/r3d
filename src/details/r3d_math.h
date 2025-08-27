@@ -230,16 +230,18 @@ static inline Matrix r3d_matrix_multiply(const Matrix* R3D_RESTRICT left, const 
 
 #else
 
-    for (int i = 0; i < 4; i++) {
-        float ai0 = A[i * 4 + 0];
-        float ai1 = A[i * 4 + 1];
-        float ai2 = A[i * 4 + 2];
-        float ai3 = A[i * 4 + 3];
+    // NOTE: Takes into account the inversion made for SIMD versions
 
-        R[i * 4 + 0] = ai0 * B[0]  + ai1 * B[4]  + ai2 * B[8]  + ai3 * B[12];
-        R[i * 4 + 1] = ai0 * B[1]  + ai1 * B[5]  + ai2 * B[9]  + ai3 * B[13];
-        R[i * 4 + 2] = ai0 * B[2]  + ai1 * B[6]  + ai2 * B[10] + ai3 * B[14];
-        R[i * 4 + 3] = ai0 * B[3]  + ai1 * B[7]  + ai2 * B[11] + ai3 * B[15];
+    for (int i = 0; i < 4; i++) {
+        float bi0 = B[i * 4 + 0];
+        float bi1 = B[i * 4 + 1];
+        float bi2 = B[i * 4 + 2];
+        float bi3 = B[i * 4 + 3];
+
+        R[i * 4 + 0] = bi0 * A[0]  + bi1 * A[4]  + bi2 * A[8]  + bi3 * A[12];
+        R[i * 4 + 1] = bi0 * A[1]  + bi1 * A[5]  + bi2 * A[9]  + bi3 * A[13];
+        R[i * 4 + 2] = bi0 * A[2]  + bi1 * A[6]  + bi2 * A[10] + bi3 * A[14];
+        R[i * 4 + 3] = bi0 * A[3]  + bi1 * A[7]  + bi2 * A[11] + bi3 * A[15];
     }
 
 #endif
