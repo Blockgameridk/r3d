@@ -1127,8 +1127,8 @@ void r3d_prepare_anim_drawcalls(void)
                 // Only meshes belonging to a model with bones have a boneMatrices cache
                 TraceLog(LOG_WARNING, "Attempting to play animation on mesh without bone matrix cache");
             }
-
-            r3d_drawcall_update_model_animation(call);
+            if (call->geometry.model.boneOverride==NULL)// skip animation update if custom is being used
+                r3d_drawcall_update_model_animation(call);
         }
     }
 }
