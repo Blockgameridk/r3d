@@ -39,7 +39,7 @@ Matrix GetWorldMatrix(R3D_Model *model,int boneID)
 //  from a hierarchical list of transforms, we rebuild the final matrix pose 
 void GeneratePoseFromLocal(Matrix *outMatrices,R3D_Model *model)
 {
-    Matrix scale = MatrixScale(0.01f,0.01f,0.01f);  //  WHAT ? 
+    Matrix scale = MatrixScale(0.01f,0.01f,0.01f);  //  I'm not sure why this is needed 
 
     for (int boneID=0;boneID<model->boneCount;boneID++)
         outMatrices[boneID] = MatrixMultiply(MatrixMultiply(model->boneOffsets[boneID],GetWorldMatrix(model,boneID)),scale);
@@ -95,7 +95,7 @@ const char* Init(void)
     LocalMatrices = RL_CALLOC(dancer.boneCount,sizeof(Matrix));
     for (int q=0;q<dancer.boneCount;q++)
     {
-        CustomMatrices[q] = MatrixIdentity();//MatrixScale(0.01,0.01,0.01);
+        CustomMatrices[q] = MatrixIdentity();
         LocalMatrices[q] = CustomMatrices[q];
     }
 
