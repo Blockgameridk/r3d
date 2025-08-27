@@ -76,7 +76,7 @@ const char* Init(void)
 
     /* --- Load model animations --- */
 
-    anims = R3D_LoadModelAnimations(RESOURCES_PATH "dancer.glb", &animCount, 60, false);
+    anims = R3D_LoadModelAnimations(RESOURCES_PATH "dancer.glb", &animCount, 60);
 
     /* --- Setup scene lights with shadows --- */
 

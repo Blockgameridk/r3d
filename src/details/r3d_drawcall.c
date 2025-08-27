@@ -105,7 +105,7 @@ void r3d_drawcall_update_model_animation(const r3d_drawcall_t* call)
 
     for (int boneId = 0; boneId < call->geometry.model.anim->boneCount; boneId++) {
         const Matrix* offsetMatrix = &call->geometry.model.boneOffsets[boneId];
-        const Matrix* targetMatrix = &call->geometry.model.anim->framePoses[frame][boneId];
+        const Matrix* targetMatrix = &call->geometry.model.anim->frameGlobalPoses[frame][boneId];
         call->geometry.model.mesh->boneMatrices[boneId] = r3d_matrix_multiply(offsetMatrix, targetMatrix);
     }
 }
