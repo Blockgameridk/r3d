@@ -103,11 +103,12 @@ void r3d_drawcall_update_model_animation(const r3d_drawcall_t* call)
         frame = frame % call->geometry.model.anim->frameCount;
     }
 
-    for (int boneId = 0; boneId < call->geometry.model.anim->boneCount; boneId++) {
-        const Matrix* offsetMatrix = &call->geometry.model.boneOffsets[boneId];
-        const Matrix* targetMatrix = &call->geometry.model.anim->frameGlobalPoses[frame][boneId];
-        call->geometry.model.mesh->boneMatrices[boneId] = r3d_matrix_multiply(offsetMatrix, targetMatrix);
-    }
+    r3d_matrix_multiply_batch(
+        call->geometry.model.mesh->boneMatrices,
+        call->geometry.model.boneOffsets,
+        call->geometry.model.anim->frameGlobalPoses[frame],
+        call->geometry.model.anim->boneCount
+    );
 }
 
 void r3d_drawcall_raster_depth(const r3d_drawcall_t* call, bool forward, bool shadow, const Matrix* matVP)

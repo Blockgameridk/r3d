@@ -249,6 +249,170 @@ static inline Matrix r3d_matrix_multiply(const Matrix* R3D_RESTRICT left, const 
     return result;
 }
 
+static inline void r3d_matrix_multiply_batch(
+    Matrix* R3D_RESTRICT results,
+    const Matrix* R3D_RESTRICT left_matrices,
+    const Matrix* R3D_RESTRICT right_matrices,
+    int count)
+{
+#if defined(R3D_HAS_FMA_AVX)
+
+    for (int m = 0; m < count; m++) {
+        const float* R3D_RESTRICT A = (float*)(&right_matrices[m]);
+        const float* R3D_RESTRICT B = (float*)(&left_matrices[m]);
+        float* R3D_RESTRICT R = (float*)(&results[m]);
+
+        __m128 col0 = _mm_loadu_ps(&B[0]);
+        __m128 col1 = _mm_loadu_ps(&B[4]);
+        __m128 col2 = _mm_loadu_ps(&B[8]);
+        __m128 col3 = _mm_loadu_ps(&B[12]);
+
+        for (int i = 0; i < 4; i++) {
+            __m128 ai0 = _mm_broadcast_ss(&A[i * 4 + 0]);
+            __m128 ai1 = _mm_broadcast_ss(&A[i * 4 + 1]);
+            __m128 ai2 = _mm_broadcast_ss(&A[i * 4 + 2]);
+            __m128 ai3 = _mm_broadcast_ss(&A[i * 4 + 3]);
+
+            __m128 row = _mm_mul_ps(ai0, col0);
+            row = _mm_fmadd_ps(ai1, col1, row);
+            row = _mm_fmadd_ps(ai2, col2, row);
+            row = _mm_fmadd_ps(ai3, col3, row);
+
+            _mm_storeu_ps(&R[i * 4], row);
+        }
+    }
+
+#elif defined(R3D_HAS_AVX)
+
+    for (int m = 0; m < count; m++) {
+        const float* R3D_RESTRICT A = (float*)(&right_matrices[m]);
+        const float* R3D_RESTRICT B = (float*)(&left_matrices[m]);
+        float* R3D_RESTRICT R = (float*)(&results[m]);
+
+        __m128 col0 = _mm_loadu_ps(&B[0]);
+        __m128 col1 = _mm_loadu_ps(&B[4]);
+        __m128 col2 = _mm_loadu_ps(&B[8]);
+        __m128 col3 = _mm_loadu_ps(&B[12]);
+
+        for (int i = 0; i < 4; i++) {
+            __m128 ai0 = _mm_broadcast_ss(&A[i * 4 + 0]);
+            __m128 ai1 = _mm_broadcast_ss(&A[i * 4 + 1]);
+            __m128 ai2 = _mm_broadcast_ss(&A[i * 4 + 2]);
+            __m128 ai3 = _mm_broadcast_ss(&A[i * 4 + 3]);
+
+            __m128 row = _mm_add_ps(
+                _mm_add_ps(_mm_mul_ps(ai0, col0), _mm_mul_ps(ai1, col1)),
+                _mm_add_ps(_mm_mul_ps(ai2, col2), _mm_mul_ps(ai3, col3))
+            );
+
+            _mm_storeu_ps(&R[i * 4], row);
+        }
+    }
+
+#elif defined(R3D_HAS_SSE42) || defined(R3D_HAS_SSE)
+
+    for (int m = 0; m < count; m++) {
+        const float* R3D_RESTRICT A = (float*)(&right_matrices[m]);
+        const float* R3D_RESTRICT B = (float*)(&left_matrices[m]);
+        float* R3D_RESTRICT R = (float*)(&results[m]);
+
+        __m128 col0 = _mm_loadu_ps(&B[0]);
+        __m128 col1 = _mm_loadu_ps(&B[4]);
+        __m128 col2 = _mm_loadu_ps(&B[8]);
+        __m128 col3 = _mm_loadu_ps(&B[12]);
+
+        for (int i = 0; i < 4; i++) {
+            __m128 ai0 = _mm_set1_ps(A[i * 4 + 0]);
+            __m128 ai1 = _mm_set1_ps(A[i * 4 + 1]);
+            __m128 ai2 = _mm_set1_ps(A[i * 4 + 2]);
+            __m128 ai3 = _mm_set1_ps(A[i * 4 + 3]);
+
+            __m128 row = _mm_add_ps(
+                _mm_add_ps(_mm_mul_ps(ai0, col0), _mm_mul_ps(ai1, col1)),
+                _mm_add_ps(_mm_mul_ps(ai2, col2), _mm_mul_ps(ai3, col3))
+            );
+
+            _mm_storeu_ps(&R[i * 4], row);
+        }
+    }
+
+#elif defined(R3D_HAS_NEON_FMA)
+
+    for (int m = 0; m < count; m++) {
+        const float* R3D_RESTRICT A = (float*)(&right_matrices[m]);
+        const float* R3D_RESTRICT B = (float*)(&left_matrices[m]);
+        float* R3D_RESTRICT R = (float*)(&results[m]);
+
+        float32x4_t col0 = vld1q_f32(&B[0]);
+        float32x4_t col1 = vld1q_f32(&B[4]);
+        float32x4_t col2 = vld1q_f32(&B[8]);
+        float32x4_t col3 = vld1q_f32(&B[12]);
+
+        for (int i = 0; i < 4; i++) {
+            float32x4_t ai0 = vdupq_n_f32(A[i * 4 + 0]);
+            float32x4_t ai1 = vdupq_n_f32(A[i * 4 + 1]);
+            float32x4_t ai2 = vdupq_n_f32(A[i * 4 + 2]);
+            float32x4_t ai3 = vdupq_n_f32(A[i * 4 + 3]);
+
+            float32x4_t row = vmulq_f32(ai0, col0);
+            row = vfmaq_f32(row, ai1, col1);
+            row = vfmaq_f32(row, ai2, col2);
+            row = vfmaq_f32(row, ai3, col3);
+
+            vst1q_f32(&R[i * 4], row);
+        }
+    }
+
+#elif defined(R3D_HAS_NEON)
+
+    for (int m = 0; m < count; m++) {
+        const float* R3D_RESTRICT A = (float*)(&right_matrices[m]);
+        const float* R3D_RESTRICT B = (float*)(&left_matrices[m]);
+        float* R3D_RESTRICT R = (float*)(&results[m]);
+
+        float32x4_t col0 = vld1q_f32(&B[0]);
+        float32x4_t col1 = vld1q_f32(&B[4]);
+        float32x4_t col2 = vld1q_f32(&B[8]);
+        float32x4_t col3 = vld1q_f32(&B[12]);
+
+        for (int i = 0; i < 4; i++) {
+            float32x4_t ai0 = vdupq_n_f32(A[i * 4 + 0]);
+            float32x4_t ai1 = vdupq_n_f32(A[i * 4 + 1]);
+            float32x4_t ai2 = vdupq_n_f32(A[i * 4 + 2]);
+            float32x4_t ai3 = vdupq_n_f32(A[i * 4 + 3]);
+
+            float32x4_t row = vmulq_f32(ai0, col0);
+            row = vmlaq_f32(row, ai1, col1);
+            row = vmlaq_f32(row, ai2, col2);
+            row = vmlaq_f32(row, ai3, col3);
+
+            vst1q_f32(&R[i * 4], row);
+        }
+    }
+
+#else
+
+    for (int m = 0; m < count; m++) {
+        const float* R3D_RESTRICT A = (float*)(&right_matrices[m]);
+        const float* R3D_RESTRICT B = (float*)(&left_matrices[m]);
+        float* R3D_RESTRICT R = (float*)(&results[m]);
+
+        for (int i = 0; i < 4; i++) {
+            float bi0 = B[i * 4 + 0];
+            float bi1 = B[i * 4 + 1];
+            float bi2 = B[i * 4 + 2];
+            float bi3 = B[i * 4 + 3];
+
+            R[i * 4 + 0] = bi0 * A[0]  + bi1 * A[4]  + bi2 * A[8]  + bi3 * A[12];
+            R[i * 4 + 1] = bi0 * A[1]  + bi1 * A[5]  + bi2 * A[9]  + bi3 * A[13];
+            R[i * 4 + 2] = bi0 * A[2]  + bi1 * A[6]  + bi2 * A[10] + bi3 * A[14];
+            R[i * 4 + 3] = bi0 * A[3]  + bi1 * A[7]  + bi2 * A[11] + bi3 * A[15];
+        }
+    }
+
+#endif
+}
+
 static inline Matrix r3d_matrix_scale_translate(const Vector3* s, const Vector3* t)
 {
     return (Matrix) {
