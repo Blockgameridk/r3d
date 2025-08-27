@@ -230,8 +230,6 @@ static inline Matrix r3d_matrix_multiply(const Matrix* R3D_RESTRICT left, const 
 
 #else
 
-    // NOTE: Takes into account the inversion made for SIMD versions
-
     for (int i = 0; i < 4; i++) {
         float ai0 = A[i * 4 + 0];
         float ai1 = A[i * 4 + 1];
