@@ -1,4 +1,3 @@
-#include "details/r3d_shaders.h"
 #include "r3d.h"
 
 #include "./details/r3d_primitives.h"
@@ -2798,9 +2797,9 @@ bool r3d_process_bones_and_offsets(R3D_Model* model, const struct aiScene* scene
     for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
         int meshNumBones = scene->mMeshes[i]->mNumBones;
         if (meshNumBones > 0) {
-            if (meshNumBones > R3D_SHADER_MAX_BONES) {
-                TraceLog(LOG_WARNING, "R3D: Bone count (%i / %i) exceeded for mesh (IDX %i), animations may be incorrect", meshNumBones, R3D_SHADER_MAX_BONES, i);
-                meshNumBones = R3D_SHADER_MAX_BONES; //< Clamp also for 'maxPossibleBones' is incorrect, yes, but at this point, it will be anyway...
+            if (meshNumBones > R3D_STORAGE_MATRIX_CAPACITY) {
+                TraceLog(LOG_WARNING, "R3D: Bone count (%i / %i) exceeded for mesh (IDX %i), animations may be incorrect", meshNumBones, R3D_STORAGE_MATRIX_CAPACITY, i);
+                meshNumBones = R3D_STORAGE_MATRIX_CAPACITY; //< Clamp also for 'maxPossibleBones' is incorrect, yes, but at this point, it will be anyway...
             }
             model->meshes[i].boneMatrices = RL_MALLOC(meshNumBones * sizeof(Matrix));
             model->meshes[i].boneCount = meshNumBones;

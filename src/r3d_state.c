@@ -342,6 +342,22 @@ GLenum r3d_support_get_internal_format(GLenum internalFormat, bool asAttachment)
     #undef END_ALTERNATIVES
 }
 
+/* === Storage functions === */
+
+void r3d_storage_bind_and_upload_matrices(const Matrix* matrices, int count, int slot)
+{
+    assert(count <= R3D_STORAGE_MATRIX_CAPACITY);
+
+    static const int texCount = sizeof(R3D.storage.texMatrices) / sizeof(*R3D.storage.texMatrices);
+    static int texIndex = 0;
+
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_1D, R3D.storage.texMatrices[texIndex]);
+    glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 4 * count, GL_RGBA, GL_FLOAT, matrices);
+
+    texIndex = (texIndex + 1) % texCount;
+}
+
 /* === Main loading functions === */
 
 void r3d_supports_check(void)
@@ -520,6 +536,19 @@ void r3d_textures_unload(void)
 
     if (R3D.texture.ssaoKernel != 0) {
         rlUnloadTexture(R3D.texture.ssaoKernel);
+    }
+}
+
+void r3d_storages_load(void)
+{
+    r3d_storage_load_tex_matrices();
+}
+
+void r3d_storages_unload(void)
+{
+    if (R3D.storage.texMatrices[0] != 0) {
+        static const int count = sizeof(R3D.storage.texMatrices) / sizeof(*R3D.storage.texMatrices);
+        glDeleteTextures(count, R3D.storage.texMatrices);
     }
 }
 
@@ -1156,7 +1185,7 @@ void r3d_shader_load_raster_geometry(void)
         GEOMETRY_VERT, GEOMETRY_FRAG
     );
 
-    r3d_shader_get_location(raster.geometry, uBoneMatrices);
+    r3d_shader_get_location(raster.geometry, uTexBoneMatrices);
     r3d_shader_get_location(raster.geometry, uUseSkinning);
     r3d_shader_get_location(raster.geometry, uMatNormal);
     r3d_shader_get_location(raster.geometry, uMatModel);
@@ -1176,10 +1205,11 @@ void r3d_shader_load_raster_geometry(void)
     r3d_shader_get_location(raster.geometry, uEmissionColor);
 
     r3d_shader_enable(raster.geometry);
-    r3d_shader_set_sampler2D_slot(raster.geometry, uTexAlbedo, 0);
-    r3d_shader_set_sampler2D_slot(raster.geometry, uTexNormal, 1);
-    r3d_shader_set_sampler2D_slot(raster.geometry, uTexEmission, 2);
-    r3d_shader_set_sampler2D_slot(raster.geometry, uTexORM, 3);
+    r3d_shader_set_sampler1D_slot(raster.geometry, uTexBoneMatrices, 0);
+    r3d_shader_set_sampler2D_slot(raster.geometry, uTexAlbedo, 1);
+    r3d_shader_set_sampler2D_slot(raster.geometry, uTexNormal, 2);
+    r3d_shader_set_sampler2D_slot(raster.geometry, uTexEmission, 3);
+    r3d_shader_set_sampler2D_slot(raster.geometry, uTexORM, 4);
     r3d_shader_disable();
 }
 
@@ -1189,7 +1219,7 @@ void r3d_shader_load_raster_geometry_inst(void)
         GEOMETRY_INSTANCED_VERT, GEOMETRY_FRAG
     );
 
-    r3d_shader_get_location(raster.geometryInst, uBoneMatrices);
+    r3d_shader_get_location(raster.geometryInst, uTexBoneMatrices);
     r3d_shader_get_location(raster.geometryInst, uUseSkinning);
     r3d_shader_get_location(raster.geometryInst, uMatInvView);
     r3d_shader_get_location(raster.geometryInst, uMatModel);
@@ -1210,10 +1240,11 @@ void r3d_shader_load_raster_geometry_inst(void)
     r3d_shader_get_location(raster.geometryInst, uEmissionColor);
 
     r3d_shader_enable(raster.geometryInst);
-    r3d_shader_set_sampler2D_slot(raster.geometryInst, uTexAlbedo, 0);
-    r3d_shader_set_sampler2D_slot(raster.geometryInst, uTexNormal, 1);
-    r3d_shader_set_sampler2D_slot(raster.geometryInst, uTexEmission, 2);
-    r3d_shader_set_sampler2D_slot(raster.geometryInst, uTexORM, 3);
+    r3d_shader_set_sampler1D_slot(raster.geometryInst, uTexBoneMatrices, 0);
+    r3d_shader_set_sampler2D_slot(raster.geometryInst, uTexAlbedo, 1);
+    r3d_shader_set_sampler2D_slot(raster.geometryInst, uTexNormal, 2);
+    r3d_shader_set_sampler2D_slot(raster.geometryInst, uTexEmission, 3);
+    r3d_shader_set_sampler2D_slot(raster.geometryInst, uTexORM, 4);
     r3d_shader_disable();
 }
 
@@ -1225,7 +1256,7 @@ void r3d_shader_load_raster_forward(void)
 
     r3d_shader_raster_forward_t* shader = &R3D.shader.raster.forward;
 
-    r3d_shader_get_location(raster.forward, uBoneMatrices);
+    r3d_shader_get_location(raster.forward, uTexBoneMatrices);
     r3d_shader_get_location(raster.forward, uUseSkinning);
     r3d_shader_get_location(raster.forward, uMatNormal);
     r3d_shader_get_location(raster.forward, uMatModel);
@@ -1257,14 +1288,15 @@ void r3d_shader_load_raster_forward(void)
 
     r3d_shader_enable(raster.forward);
 
-    r3d_shader_set_sampler2D_slot(raster.forward, uTexAlbedo, 0);
-    r3d_shader_set_sampler2D_slot(raster.forward, uTexEmission, 1);
-    r3d_shader_set_sampler2D_slot(raster.forward, uTexNormal, 2);
-    r3d_shader_set_sampler2D_slot(raster.forward, uTexORM, 3);
-    r3d_shader_set_sampler2D_slot(raster.forward, uTexNoise, 4);
-    r3d_shader_set_samplerCube_slot(raster.forward, uCubeIrradiance, 5);
-    r3d_shader_set_samplerCube_slot(raster.forward, uCubePrefilter, 6);
-    r3d_shader_set_sampler2D_slot(raster.forward, uTexBrdfLut, 7);
+    r3d_shader_set_sampler1D_slot(raster.forward, uTexBoneMatrices, 0);
+    r3d_shader_set_sampler2D_slot(raster.forward, uTexAlbedo, 1);
+    r3d_shader_set_sampler2D_slot(raster.forward, uTexEmission, 2);
+    r3d_shader_set_sampler2D_slot(raster.forward, uTexNormal, 3);
+    r3d_shader_set_sampler2D_slot(raster.forward, uTexORM, 4);
+    r3d_shader_set_sampler2D_slot(raster.forward, uTexNoise, 5);
+    r3d_shader_set_samplerCube_slot(raster.forward, uCubeIrradiance, 6);
+    r3d_shader_set_samplerCube_slot(raster.forward, uCubePrefilter, 7);
+    r3d_shader_set_sampler2D_slot(raster.forward, uTexBrdfLut, 8);
 
     int shadowMapSlot = 10;
     for (int i = 0; i < R3D_SHADER_FORWARD_NUM_LIGHTS; i++) {
@@ -1305,7 +1337,7 @@ void r3d_shader_load_raster_forward_inst(void)
 
     r3d_shader_raster_forward_inst_t* shader = &R3D.shader.raster.forwardInst;
 
-    r3d_shader_get_location(raster.forwardInst, uBoneMatrices);
+    r3d_shader_get_location(raster.forwardInst, uTexBoneMatrices);
     r3d_shader_get_location(raster.forwardInst, uUseSkinning);
     r3d_shader_get_location(raster.forwardInst, uMatInvView);
     r3d_shader_get_location(raster.forwardInst, uMatModel);
@@ -1338,14 +1370,15 @@ void r3d_shader_load_raster_forward_inst(void)
 
     r3d_shader_enable(raster.forwardInst);
 
-    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexAlbedo, 0);
-    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexEmission, 1);
-    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexNormal, 2);
-    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexORM, 3);
-    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexNoise, 4);
-    r3d_shader_set_samplerCube_slot(raster.forwardInst, uCubeIrradiance, 5);
-    r3d_shader_set_samplerCube_slot(raster.forwardInst, uCubePrefilter, 6);
-    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexBrdfLut, 7);
+    r3d_shader_set_sampler1D_slot(raster.forwardInst, uTexBoneMatrices, 0);
+    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexAlbedo, 1);
+    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexEmission, 2);
+    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexNormal, 3);
+    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexORM, 4);
+    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexNoise, 5);
+    r3d_shader_set_samplerCube_slot(raster.forwardInst, uCubeIrradiance, 6);
+    r3d_shader_set_samplerCube_slot(raster.forwardInst, uCubePrefilter, 7);
+    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexBrdfLut, 8);
 
     int shadowMapSlot = 10;
     for (int i = 0; i < R3D_SHADER_FORWARD_NUM_LIGHTS; i++) {
@@ -1410,7 +1443,7 @@ void r3d_shader_load_raster_depth(void)
         DEPTH_VERT, DEPTH_FRAG
     );
 
-    r3d_shader_get_location(raster.depth, uBoneMatrices);
+    r3d_shader_get_location(raster.depth, uTexBoneMatrices);
     r3d_shader_get_location(raster.depth, uUseSkinning);
     r3d_shader_get_location(raster.depth, uMatMVP);
     r3d_shader_get_location(raster.depth, uTexCoordOffset);
@@ -1418,6 +1451,11 @@ void r3d_shader_load_raster_depth(void)
     r3d_shader_get_location(raster.depth, uAlpha);
     r3d_shader_get_location(raster.depth, uTexAlbedo);
     r3d_shader_get_location(raster.depth, uAlphaCutoff);
+
+    r3d_shader_enable(raster.depth);
+    r3d_shader_set_sampler1D_slot(raster.depth, uTexBoneMatrices, 0);
+    r3d_shader_set_sampler2D_slot(raster.depth, uTexAlbedo, 1);
+    r3d_shader_disable();
 }
 
 void r3d_shader_load_raster_depth_inst(void)
@@ -1426,7 +1464,7 @@ void r3d_shader_load_raster_depth_inst(void)
         DEPTH_INSTANCED_VERT, DEPTH_FRAG
     );
 
-    r3d_shader_get_location(raster.depthInst, uBoneMatrices);
+    r3d_shader_get_location(raster.depthInst, uTexBoneMatrices);
     r3d_shader_get_location(raster.depthInst, uUseSkinning);
     r3d_shader_get_location(raster.depthInst, uMatInvView);
     r3d_shader_get_location(raster.depthInst, uMatModel);
@@ -1437,6 +1475,11 @@ void r3d_shader_load_raster_depth_inst(void)
     r3d_shader_get_location(raster.depthInst, uAlpha);
     r3d_shader_get_location(raster.depthInst, uTexAlbedo);
     r3d_shader_get_location(raster.depthInst, uAlphaCutoff);
+
+    r3d_shader_enable(raster.depthInst);
+    r3d_shader_set_sampler1D_slot(raster.depthInst, uTexBoneMatrices, 0);
+    r3d_shader_set_sampler2D_slot(raster.depthInst, uTexAlbedo, 1);
+    r3d_shader_disable();
 }
 
 void r3d_shader_load_raster_depth_cube(void)
@@ -1445,7 +1488,7 @@ void r3d_shader_load_raster_depth_cube(void)
         DEPTH_CUBE_VERT, DEPTH_CUBE_FRAG
     );
 
-    r3d_shader_get_location(raster.depthCube, uBoneMatrices);
+    r3d_shader_get_location(raster.depthCube, uTexBoneMatrices);
     r3d_shader_get_location(raster.depthCube, uUseSkinning);
     r3d_shader_get_location(raster.depthCube, uViewPosition);
     r3d_shader_get_location(raster.depthCube, uMatModel);
@@ -1456,6 +1499,11 @@ void r3d_shader_load_raster_depth_cube(void)
     r3d_shader_get_location(raster.depthCube, uAlpha);
     r3d_shader_get_location(raster.depthCube, uTexAlbedo);
     r3d_shader_get_location(raster.depthCube, uAlphaCutoff);
+
+    r3d_shader_enable(raster.depthCube);
+    r3d_shader_set_sampler1D_slot(raster.depthCube, uTexBoneMatrices, 0);
+    r3d_shader_set_sampler2D_slot(raster.depthCube, uTexAlbedo, 1);
+    r3d_shader_disable();
 }
 
 void r3d_shader_load_raster_depth_cube_inst(void)
@@ -1464,7 +1512,7 @@ void r3d_shader_load_raster_depth_cube_inst(void)
         DEPTH_CUBE_INSTANCED_VERT, DEPTH_CUBE_FRAG
     );
 
-    r3d_shader_get_location(raster.depthCubeInst, uBoneMatrices);
+    r3d_shader_get_location(raster.depthCubeInst, uTexBoneMatrices);
     r3d_shader_get_location(raster.depthCubeInst, uUseSkinning);
     r3d_shader_get_location(raster.depthCubeInst, uViewPosition);
     r3d_shader_get_location(raster.depthCubeInst, uMatInvView);
@@ -1477,6 +1525,11 @@ void r3d_shader_load_raster_depth_cube_inst(void)
     r3d_shader_get_location(raster.depthCubeInst, uAlpha);
     r3d_shader_get_location(raster.depthCubeInst, uTexAlbedo);
     r3d_shader_get_location(raster.depthCubeInst, uAlphaCutoff);
+
+    r3d_shader_enable(raster.depthCubeInst);
+    r3d_shader_set_sampler1D_slot(raster.depthCubeInst, uTexBoneMatrices, 0);
+    r3d_shader_set_sampler2D_slot(raster.depthCubeInst, uTexAlbedo, 1);
+    r3d_shader_disable();
 }
 
 void r3d_shader_load_screen_ssao(void)
@@ -1853,4 +1906,25 @@ void r3d_texture_load_ibl_brdf_lut(void)
         TraceLog(LOG_ERROR, "R3D: Failed to load IBL BRDF LUT");
         return;
     }
+}
+
+/* === Storage loading functions === */
+
+void r3d_storage_load_tex_matrices(void)
+{
+    assert(R3D.storage.texMatrices[0] == 0);
+
+    static const int count = sizeof(R3D.storage.texMatrices) / sizeof(*R3D.storage.texMatrices);
+
+    glGenTextures(count, R3D.storage.texMatrices);
+
+    for (int i = 0; i < count; i++) {
+        glBindTexture(GL_TEXTURE_1D, R3D.storage.texMatrices[i]);
+        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F, 4 * R3D_STORAGE_MATRIX_CAPACITY, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    }
+
+    glBindTexture(GL_TEXTURE_1D, 0);
 }

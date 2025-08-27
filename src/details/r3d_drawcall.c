@@ -49,6 +49,9 @@ static int r3d_drawcall_compare_front_to_back(const void* a, const void* b);
 static int r3d_drawcall_compare_back_to_front(const void* a, const void* b);
 static int r3d_drawcall_compare_mixed_forward(const void* a, const void* b);
 
+// Upload matrices function
+static void r3d_drawcall_upload_matrices(const r3d_drawcall_t* call);
+
 /* === Function definitions === */
 
 void r3d_drawcall_sort_front_to_back(r3d_drawcall_t* calls, size_t count)
@@ -127,12 +130,8 @@ void r3d_drawcall_raster_depth(const r3d_drawcall_t* call, bool forward, bool sh
         {
             // Send bone matrices and animation related data
             if (call->geometry.model.anim != NULL && call->geometry.model.boneOffsets != NULL) {
-                if (call->geometry.model.boneOverride==NULL)
-                    r3d_shader_set_mat4_v(raster.depth, uBoneMatrices, call->geometry.model.mesh->boneMatrices, call->geometry.model.mesh->boneCount);
-                else
-                    r3d_shader_set_mat4_v(raster.depth, uBoneMatrices, call->geometry.model.boneOverride, call->geometry.model.anim->boneCount);
-
                 r3d_shader_set_int(raster.depth, uUseSkinning, true);
+                r3d_drawcall_upload_matrices(call);
             }
             else {
                 r3d_shader_set_int(raster.depth, uUseSkinning, false);
@@ -201,12 +200,8 @@ void r3d_drawcall_raster_depth_inst(const r3d_drawcall_t* call, bool forward, bo
         {
             // Send bone matrices and animation related data
             if (call->geometry.model.anim != NULL && call->geometry.model.boneOffsets != NULL) {
-                if (call->geometry.model.boneOverride==NULL)
-                    r3d_shader_set_mat4_v(raster.depthInst, uBoneMatrices, call->geometry.model.mesh->boneMatrices, call->geometry.model.mesh->boneCount);
-                else
-                    r3d_shader_set_mat4_v(raster.depthInst, uBoneMatrices, call->geometry.model.boneOverride, call->geometry.model.anim->boneCount);
-
                 r3d_shader_set_int(raster.depthInst, uUseSkinning, true);
+                r3d_drawcall_upload_matrices(call);
             }
             else {
                 r3d_shader_set_int(raster.depthInst, uUseSkinning, false);
@@ -272,12 +267,8 @@ void r3d_drawcall_raster_depth_cube(const r3d_drawcall_t* call, bool forward, bo
         {
             // Send bone matrices and animation related data
             if (call->geometry.model.anim != NULL && call->geometry.model.boneOffsets != NULL) {
-                if (call->geometry.model.boneOverride==NULL)
-                    r3d_shader_set_mat4_v(raster.depthCube, uBoneMatrices, call->geometry.model.mesh->boneMatrices, call->geometry.model.mesh->boneCount);
-                else
-                    r3d_shader_set_mat4_v(raster.depthCube, uBoneMatrices, call->geometry.model.boneOverride, call->geometry.model.anim->boneCount);
-
                 r3d_shader_set_int(raster.depthCube, uUseSkinning, true);
+                r3d_drawcall_upload_matrices(call);
             }
             else {
                 r3d_shader_set_int(raster.depthCube, uUseSkinning, false);
@@ -346,11 +337,8 @@ void r3d_drawcall_raster_depth_cube_inst(const r3d_drawcall_t* call, bool forwar
         {
             // Send bone matrices and animation related data
             if (call->geometry.model.anim != NULL && call->geometry.model.boneOffsets != NULL) {
-                if (call->geometry.model.boneOverride==NULL)
-                    r3d_shader_set_mat4_v(raster.depthCubeInst, uBoneMatrices, call->geometry.model.mesh->boneMatrices, call->geometry.model.mesh->boneCount);
-                else
-                    r3d_shader_set_mat4_v(raster.depthCubeInst, uBoneMatrices, call->geometry.model.boneOverride, call->geometry.model.anim->boneCount);
                 r3d_shader_set_int(raster.depthCubeInst, uUseSkinning, true);
+                r3d_drawcall_upload_matrices(call);
             }
             else {
                 r3d_shader_set_int(raster.depthCubeInst, uUseSkinning, false);
@@ -435,12 +423,8 @@ void r3d_drawcall_raster_geometry(const r3d_drawcall_t* call, const Matrix* matV
         {
             // Send bone matrices and animation related data
             if (call->geometry.model.anim != NULL && call->geometry.model.boneOffsets != NULL) {
-                if (call->geometry.model.boneOverride==NULL)
-                    r3d_shader_set_mat4_v(raster.geometry, uBoneMatrices, call->geometry.model.mesh->boneMatrices, call->geometry.model.mesh->boneCount);
-                else
-                    r3d_shader_set_mat4_v(raster.geometry, uBoneMatrices, call->geometry.model.boneOverride, call->geometry.model.mesh->boneCount);
-                
                 r3d_shader_set_int(raster.geometry, uUseSkinning, true);
+                r3d_drawcall_upload_matrices(call);
             }
             else {
                 r3d_shader_set_int(raster.geometry, uUseSkinning, false);
@@ -505,12 +489,8 @@ void r3d_drawcall_raster_geometry_inst(const r3d_drawcall_t* call, const Matrix*
         {
             // Send bone matrices and animation related data
             if (call->geometry.model.anim != NULL && call->geometry.model.boneOffsets != NULL) {
-                if (call->geometry.model.boneOverride==NULL)
-                    r3d_shader_set_mat4_v(raster.geometryInst, uBoneMatrices, call->geometry.model.mesh->boneMatrices, call->geometry.model.mesh->boneCount);
-                else
-                    r3d_shader_set_mat4_v(raster.geometryInst, uBoneMatrices, call->geometry.model.boneOverride, call->geometry.model.mesh->boneCount);
-
                 r3d_shader_set_int(raster.geometryInst, uUseSkinning, true);
+                r3d_drawcall_upload_matrices(call);
             }
             else {
                 r3d_shader_set_int(raster.geometryInst, uUseSkinning, false);
@@ -585,12 +565,8 @@ void r3d_drawcall_raster_forward(const r3d_drawcall_t* call, const Matrix* matVP
         {
             // Send bone matrices and animation related data
             if (call->geometry.model.anim != NULL && call->geometry.model.boneOffsets != NULL) {
-                if (call->geometry.model.boneOverride==NULL)
-                    r3d_shader_set_mat4_v(raster.forward, uBoneMatrices, call->geometry.model.mesh->boneMatrices, call->geometry.model.mesh->boneCount);
-                else
-                    r3d_shader_set_mat4_v(raster.forward, uBoneMatrices, call->geometry.model.boneOverride, call->geometry.model.mesh->boneCount);
-
                 r3d_shader_set_int(raster.forward, uUseSkinning, true);
+                r3d_drawcall_upload_matrices(call);
             }
             else {
                 r3d_shader_set_int(raster.forward, uUseSkinning, false);
@@ -659,12 +635,8 @@ void r3d_drawcall_raster_forward_inst(const r3d_drawcall_t* call, const Matrix* 
         {
             // Send bone matrices and animation related data
             if (call->geometry.model.anim != NULL && call->geometry.model.boneOffsets != NULL) {
-                if (call->geometry.model.boneOverride==NULL)
-                    r3d_shader_set_mat4_v(raster.forwardInst, uBoneMatrices, call->geometry.model.mesh->boneMatrices, call->geometry.model.mesh->boneCount);
-                else
-                    r3d_shader_set_mat4_v(raster.forwardInst, uBoneMatrices, call->geometry.model.boneOverride, call->geometry.model.mesh->boneCount);
-
                 r3d_shader_set_int(raster.forwardInst, uUseSkinning, true);
+                r3d_drawcall_upload_matrices(call);
             }
             else {
                 r3d_shader_set_int(raster.forwardInst, uUseSkinning, false);
@@ -1043,4 +1015,29 @@ int r3d_drawcall_compare_mixed_forward(const void* a, const void* b)
 
     // If both are transparent, sort back-to-front
     return r3d_drawcall_compare_back_to_front(a, b);
+}
+
+// Upload matrices function
+static void r3d_drawcall_upload_matrices(const r3d_drawcall_t* call)
+{
+    // WARNING: Pay attention to any changes in the binding slot for uTexBoneMatrices.
+    //          In theory, being the only texture sampled in the vertex shader,
+    //          it should be kept in the first slot '0' for consistency.
+
+    const int bindingSlot = 0;
+
+    if (call->geometry.model.boneOverride == NULL) {
+        r3d_storage_bind_and_upload_matrices(
+            call->geometry.model.mesh->boneMatrices,
+            call->geometry.model.mesh->boneCount,
+            bindingSlot
+        );
+    }
+    else {
+        r3d_storage_bind_and_upload_matrices(
+            call->geometry.model.boneOverride,
+            call->geometry.model.anim->boneCount,
+            bindingSlot
+        );
+    }
 }

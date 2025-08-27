@@ -31,7 +31,7 @@
 
 /* === Defines === */
 
-#define R3D_GBUFFER_COUNT 4
+#define R3D_STORAGE_MATRIX_CAPACITY  256
 
 #define R3D_STENCIL_GEOMETRY_BIT     0x80                               // Bit 7 (MSB) for geometry
 #define R3D_STENCIL_GEOMETRY_MASK    0x80                               // Mask for geometry bit only
@@ -285,6 +285,11 @@ extern struct R3D_State {
         r3d_primitive_t cube;
     } primitive;
 
+    // Storages
+    struct {
+        GLuint texMatrices[3];  // Stores 4x4 matrices for GPU skinning (triple-buffered to avoid GPU stalls)
+    } storage;
+
     // State data
     struct {
 
@@ -345,6 +350,10 @@ void r3d_calculate_bloom_prefilter_data(void);
 
 GLenum r3d_support_get_internal_format(GLenum internalFormat, bool asAttachment);
 
+/* === Storage functions === */
+
+void r3d_storage_bind_and_upload_matrices(const Matrix* matrices, int count, int slot);
+
 /* === Main loading functions === */
 
 void r3d_supports_check(void);
@@ -355,8 +364,16 @@ void r3d_framebuffers_unload(void);
 void r3d_textures_load(void);
 void r3d_textures_unload(void);
 
+void r3d_storages_load(void);
+void r3d_storages_unload(void);
+
 void r3d_shaders_load(void);
 void r3d_shaders_unload(void);
+
+/* === Target loading functions === */
+
+void r3d_target_load_mip_chain_hs(int width, int height, int count);
+void r3d_target_unload_mip_chain_hs(void);
 
 /* === Framebuffer loading functions === */
 
@@ -406,10 +423,9 @@ void r3d_texture_load_ssao_noise(void);
 void r3d_texture_load_ssao_kernel(void);
 void r3d_texture_load_ibl_brdf_lut(void);
 
-/* === Target loading functions === */
+/* === Storage loading functions === */
 
-void r3d_target_load_mip_chain_hs(int width, int height, int count);
-void r3d_target_unload_mip_chain_hs(void);
+void r3d_storage_load_tex_matrices(void);
 
 /* === Framebuffer helper macros === */
 

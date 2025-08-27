@@ -192,6 +192,7 @@ void R3D_Init(int resWidth, int resHeight, unsigned int flags)
     //       on the global state and should be performed last.
     r3d_framebuffers_load(resWidth, resHeight);
     r3d_textures_load();
+    r3d_storages_load();
     r3d_shaders_load();
 
     // Defines suitable clipping plane distances for r3d
@@ -204,6 +205,7 @@ void R3D_Close(void)
 
     r3d_framebuffers_unload();
     r3d_textures_unload();
+    r3d_storages_unload();
     r3d_shaders_unload();
 
     r3d_array_destroy(&R3D.container.aDrawForward);
@@ -1194,6 +1196,9 @@ void r3d_pass_shadow_maps(void)
                                 r3d_drawcall_raster_depth_cube_inst(call, true, true, &matVP);
                             }
                         }
+
+                        // NOTE: The storage texture of the matrices may have been bind during drawcalls
+                        r3d_shader_bind_sampler1D(raster.depthCubeInst, uTexBoneMatrices, 0);
                     }
                     r3d_shader_enable(raster.depthCube);
                     {
@@ -1213,6 +1218,9 @@ void r3d_pass_shadow_maps(void)
                                 r3d_drawcall_raster_depth_cube(call, true, true, &matVP);
                             }
                         }
+
+                        // NOTE: The storage texture of the matrices may have been bind during drawcalls
+                        r3d_shader_bind_sampler1D(raster.depthCube, uTexBoneMatrices, 0);
                     }
                 }
             }
@@ -1253,6 +1261,9 @@ void r3d_pass_shadow_maps(void)
                             r3d_drawcall_raster_depth_inst(call, true, true, &matVP);
                         }
                     }
+
+                    // NOTE: The storage texture of the matrices may have been bind during drawcalls
+                    r3d_shader_bind_sampler1D(raster.depthInst, uTexBoneMatrices, 0);
                 }
                 r3d_shader_enable(raster.depth);
                 {
@@ -1268,6 +1279,9 @@ void r3d_pass_shadow_maps(void)
                             r3d_drawcall_raster_depth(call, true, true, &matVP);
                         }
                     }
+
+                    // NOTE: The storage texture of the matrices may have been bind during drawcalls
+                    r3d_shader_bind_sampler1D(raster.depth, uTexBoneMatrices, 0);
                 }
             }
             r3d_shader_disable();
@@ -1333,12 +1347,18 @@ void r3d_pass_gbuffer(void)
             for (size_t i = 0; i < R3D.container.aDrawDeferredInst.count; i++) {
                 r3d_drawcall_raster_geometry_inst((r3d_drawcall_t*)R3D.container.aDrawDeferredInst.data + i, &R3D.state.transform.viewProj);
             }
+
+            // NOTE: The storage texture of the matrices may have been bind during drawcalls
+            r3d_shader_bind_sampler1D(raster.geometryInst, uTexBoneMatrices, 0);
         }
         r3d_shader_enable(raster.geometry);
         {
             for (size_t i = 0; i < R3D.container.aDrawDeferred.count; i++) {
                 r3d_drawcall_raster_geometry((r3d_drawcall_t*)R3D.container.aDrawDeferred.data + i, &R3D.state.transform.viewProj);
             }
+
+            // NOTE: The storage texture of the matrices may have been bind during drawcalls
+            r3d_shader_bind_sampler1D(raster.geometry, uTexBoneMatrices, 0);
         }
         r3d_shader_disable();
 
@@ -1963,6 +1983,9 @@ void r3d_pass_scene_forward_depth_prepass(void)
                     r3d_drawcall_t* call = r3d_array_at(&R3D.container.aDrawForwardInst, i);
                     r3d_drawcall_raster_depth_inst(call, true, false, &R3D.state.transform.viewProj);
                 }
+
+                // NOTE: The storage texture of the matrices may have been bind during drawcalls
+                r3d_shader_bind_sampler1D(raster.depthInst, uTexBoneMatrices, 0);
             }
             r3d_shader_disable();
         }
@@ -1978,6 +2001,9 @@ void r3d_pass_scene_forward_depth_prepass(void)
                     r3d_drawcall_t* call = r3d_array_at(&R3D.container.aDrawForward, i);
                     r3d_drawcall_raster_depth(call, true, false, &R3D.state.transform.viewProj);
                 }
+
+                // NOTE: The storage texture of the matrices may have been bind during drawcalls
+                r3d_shader_bind_sampler1D(raster.depth, uTexBoneMatrices, 0);
             }
             r3d_shader_disable();
         }
@@ -2056,6 +2082,10 @@ void r3d_pass_scene_forward(void)
                     r3d_shader_unbind_samplerCube(raster.forwardInst, uLights[i].shadowCubemap);
                     r3d_shader_unbind_sampler2D(raster.forwardInst, uLights[i].shadowMap);
                 }
+
+                // NOTE: The storage texture of the matrices may have been bind during drawcalls
+                r3d_shader_bind_sampler1D(raster.forwardInst, uTexBoneMatrices, 0);
+                r3d_shader_bind_sampler2D(raster.forwardInst, uTexNoise, 0);
             }
             r3d_shader_disable();
         }
@@ -2101,6 +2131,10 @@ void r3d_pass_scene_forward(void)
                     r3d_shader_unbind_samplerCube(raster.forward, uLights[i].shadowCubemap);
                     r3d_shader_unbind_sampler2D(raster.forward, uLights[i].shadowMap);
                 }
+
+                // NOTE: The storage texture of the matrices may have been bind during drawcalls
+                r3d_shader_bind_sampler1D(raster.forward, uTexBoneMatrices, 0);
+                r3d_shader_bind_sampler2D(raster.forward, uTexNoise, 0);
             }
             r3d_shader_disable();
         }

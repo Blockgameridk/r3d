@@ -23,10 +23,6 @@
 
 #define NUM_LIGHTS 8
 
-/* === Constants === */
-
-const int MAX_BONES = 128;
-
 /* === Attributes === */
 
 layout(location = 0) in vec3 aPosition;
@@ -50,7 +46,7 @@ uniform vec4 uAlbedoColor;
 uniform vec2 uTexCoordOffset;
 uniform vec2 uTexCoordScale;
 
-uniform mat4 uBoneMatrices[MAX_BONES];
+uniform sampler1D uTexBoneMatrices;
 uniform bool uUseSkinning;
 
 /* === Varyings === */
@@ -61,6 +57,20 @@ out vec4 vColor;
 out mat3 vTBN;
 
 out vec4 vPosLightSpace[NUM_LIGHTS];
+
+/* === Helper Functions === */
+
+mat4 GetBoneMatrix(int boneID)
+{
+    int baseIndex = 4 * boneID;
+
+    vec4 row0 = texelFetch(uTexBoneMatrices, baseIndex + 0, 0);
+    vec4 row1 = texelFetch(uTexBoneMatrices, baseIndex + 1, 0);
+    vec4 row2 = texelFetch(uTexBoneMatrices, baseIndex + 2, 0);
+    vec4 row3 = texelFetch(uTexBoneMatrices, baseIndex + 3, 0);
+
+    return transpose(mat4(row0, row1, row2, row3));
+}
 
 /* === Main program === */
 
@@ -73,10 +83,10 @@ void main()
     if (uUseSkinning)
     {
         mat4 skinMatrix = 
-              aWeights.x * uBoneMatrices[aBoneIDs.x] +
-              aWeights.y * uBoneMatrices[aBoneIDs.y] +
-              aWeights.z * uBoneMatrices[aBoneIDs.z] +
-              aWeights.w * uBoneMatrices[aBoneIDs.w];
+            aWeights.x * GetBoneMatrix(aBoneIDs.x) +
+            aWeights.y * GetBoneMatrix(aBoneIDs.y) +
+            aWeights.z * GetBoneMatrix(aBoneIDs.z) +
+            aWeights.w * GetBoneMatrix(aBoneIDs.w);
 
         skinnedPosition = vec3(skinMatrix * vec4(aPosition, 1.0));
         skinnedNormal   = mat3(skinMatrix) * aNormal;
