@@ -42,10 +42,15 @@
 #define R3D_IS_ACTIVE_LAYERS(bitfield) \
     ((bitfield) == 0 || ((bitfield) & R3D.state.layers) != 0)
 
-#define SHADOW_CAST_ONLY_MASK (R3D_SHADOW_CAST_ONLY | \
-                               R3D_SHADOW_CAST_ONLY_DOUBLE_SIDED | \
-                               R3D_SHADOW_CAST_ONLY_FRONT_SIDE | \
-                               R3D_SHADOW_CAST_ONLY_BACK_SIDE)
+#define R3D_SHADOW_CAST_ONLY_MASK ( \
+    (1 << R3D_SHADOW_CAST_ONLY) | \
+    (1 << R3D_SHADOW_CAST_ONLY_DOUBLE_SIDED) | \
+    (1 << R3D_SHADOW_CAST_ONLY_FRONT_SIDE) | \
+    (1 << R3D_SHADOW_CAST_ONLY_BACK_SIDE) \
+)
+
+#define R3D_IS_SHADOW_CAST_ONLY(mode) \
+    ((R3D_SHADOW_CAST_ONLY_MASK & (1 << (mode))) != 0)
 
 /* === Internal Functions Declarations === */
 
@@ -997,7 +1002,7 @@ void r3d_prepare_cull_drawcalls(void)
     count = (int)R3D.container.aDrawDeferred.count;
 
     for (int i = count - 1; i >= 0; i--) {
-        if ((calls->shadowCastMode & SHADOW_CAST_ONLY_MASK) != 0) {
+        if (R3D_IS_SHADOW_CAST_ONLY(calls->shadowCastMode)) {
             calls[i] = calls[--count];
             continue;
         }
@@ -1017,7 +1022,7 @@ void r3d_prepare_cull_drawcalls(void)
     count = (int)R3D.container.aDrawForward.count;
 
     for (int i = count - 1; i >= 0; i--) {
-        if ((calls->shadowCastMode & SHADOW_CAST_ONLY_MASK) != 0) {
+        if (R3D_IS_SHADOW_CAST_ONLY(calls->shadowCastMode)) {
             calls[i] = calls[--count];
             continue;
         }
@@ -1037,7 +1042,7 @@ void r3d_prepare_cull_drawcalls(void)
     count = (int)R3D.container.aDrawDeferredInst.count;
 
     for (int i = count - 1; i >= 0; i--) {
-        if ((calls->shadowCastMode & SHADOW_CAST_ONLY_MASK) != 0) {
+        if (R3D_IS_SHADOW_CAST_ONLY(calls->shadowCastMode)) {
             calls[i] = calls[--count];
             continue;
         }
@@ -1057,7 +1062,7 @@ void r3d_prepare_cull_drawcalls(void)
     count = (int)R3D.container.aDrawForwardInst.count;
 
     for (int i = count - 1; i >= 0; i--) {
-        if ((calls->shadowCastMode & SHADOW_CAST_ONLY_MASK) != 0) {
+        if (R3D_IS_SHADOW_CAST_ONLY(calls->shadowCastMode)) {
             calls[i] = calls[--count];
             continue;
         }
