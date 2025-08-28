@@ -42,6 +42,11 @@
 #define R3D_IS_ACTIVE_LAYERS(bitfield) \
     ((bitfield) == 0 || ((bitfield) & R3D.state.layers) != 0)
 
+#define SHADOW_CAST_ONLY_MASK (R3D_SHADOW_CAST_ONLY | \
+                               R3D_SHADOW_CAST_ONLY_DOUBLE_SIDED | \
+                               R3D_SHADOW_CAST_ONLY_FRONT_SIDE | \
+                               R3D_SHADOW_CAST_ONLY_BACK_SIDE)
+
 /* === Internal Functions Declarations === */
 
 static bool r3d_has_deferred_calls(void);
@@ -992,7 +997,7 @@ void r3d_prepare_cull_drawcalls(void)
     count = (int)R3D.container.aDrawDeferred.count;
 
     for (int i = count - 1; i >= 0; i--) {
-        if (calls->shadowCastMode == R3D_SHADOW_CAST_ONLY) {
+        if ((calls->shadowCastMode & SHADOW_CAST_ONLY_MASK) != 0) {
             calls[i] = calls[--count];
             continue;
         }
@@ -1012,7 +1017,7 @@ void r3d_prepare_cull_drawcalls(void)
     count = (int)R3D.container.aDrawForward.count;
 
     for (int i = count - 1; i >= 0; i--) {
-        if (calls->shadowCastMode == R3D_SHADOW_CAST_ONLY) {
+        if ((calls->shadowCastMode & SHADOW_CAST_ONLY_MASK) != 0) {
             calls[i] = calls[--count];
             continue;
         }
@@ -1032,7 +1037,7 @@ void r3d_prepare_cull_drawcalls(void)
     count = (int)R3D.container.aDrawDeferredInst.count;
 
     for (int i = count - 1; i >= 0; i--) {
-        if (calls->shadowCastMode == R3D_SHADOW_CAST_ONLY) {
+        if ((calls->shadowCastMode & SHADOW_CAST_ONLY_MASK) != 0) {
             calls[i] = calls[--count];
             continue;
         }
@@ -1052,7 +1057,7 @@ void r3d_prepare_cull_drawcalls(void)
     count = (int)R3D.container.aDrawForwardInst.count;
 
     for (int i = count - 1; i >= 0; i--) {
-        if (calls->shadowCastMode == R3D_SHADOW_CAST_ONLY) {
+        if ((calls->shadowCastMode & SHADOW_CAST_ONLY_MASK) != 0) {
             calls[i] = calls[--count];
             continue;
         }
