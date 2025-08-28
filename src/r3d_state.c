@@ -412,18 +412,14 @@ void r3d_supports_check(void)
         { GL_RGBA32F,            GL_RGBA,  GL_FLOAT,                        &R3D.support.RGBA32F,         "RGBA32F" },
     };
 
-    for (int i = 0; i < (int)(sizeof(probes)/sizeof(probes[0])); ++i)
-    {
+    for (int i = 0; i < (int)(sizeof(probes)/sizeof(probes[0])); ++i) {
         *probes[i].outFlag = r3d_test_internal_format(fbo, tex, probes[i].internal, probes[i].format, probes[i].type);
-
-        TraceLog(LOG_INFO,
-            "R3D: Texture format %s has been checked:\n"
-            "    > Supported: %s\n"
-            "    > Attachment: %s",
-            probes[i].name,
-            probes[i].outFlag->internal ? "YES" : "NO",
-            probes[i].outFlag->attachment ? "YES" : "NO"
-        );
+        if (!probes[i].outFlag->internal) {
+            TraceLog(LOG_WARNING, "R3D: Texture format %s is not supported", probes[i].name);
+        }
+        if (!probes[i].outFlag->attachment) {
+            TraceLog(LOG_WARNING, "R3D: Texture format %s cannot be used as a color attachment", probes[i].name);
+        }
     }
 
     /* --- Clean up objects and residual errors --- */
