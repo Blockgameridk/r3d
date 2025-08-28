@@ -44,6 +44,7 @@ void GeneratePoseFromLocal(Matrix *outMatrices,R3D_Model *model)
     for (int boneID=0;boneID<model->boneCount;boneID++)
         outMatrices[boneID] = MatrixMultiply(MatrixMultiply(model->boneOffsets[boneID],GetWorldMatrix(model,boneID)),scale);
 }
+
 //  simply copy the matrices and apply the bone offset ( this is the same as what happens internally )
 void GeneratePoseFromWorld(Matrix *outMatrices,R3D_Model *model)
 {
@@ -163,15 +164,19 @@ void Draw(void)
     static int frame = 0;
 
     R3D_Begin(camera);
+
         R3D_DrawMesh(&plane, &material, MatrixIdentity());
+
         dancer.animationMode = R3D_ANIM_INTERNAL;
         R3D_DrawModel(&dancer, (Vector3) { 0, 0, 1.5f }, 1.0f);
+
         //  custom matrices
         dancer.animationMode = R3D_ANIM_CUSTOM;
         dancer.boneOverride = CustomMatrices;
         R3D_DrawModel(&dancer, (Vector3) { 2, 0, 1.5f }, 1.0f);
         dancer.boneOverride = LocalMatrices;
         R3D_DrawModel(&dancer, (Vector3) { -2, 0, 1.5f }, 1.0f);
+
     R3D_End();
 
 	DrawCredits("Model made by zhuoyi0904");
