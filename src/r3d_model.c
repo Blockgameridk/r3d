@@ -3017,7 +3017,7 @@ void r3d_calculate_animation_transforms(
     int totalBones)
 {
     /* --- Get the node's local transform at the specified time --- */
-    
+
     Matrix localTransform;
     if (!r3d_get_node_transform_at_time(&localTransform, aiAnim, node->mName.data, time)) {
         // Use default transformation if no animation is found for this node
@@ -3029,7 +3029,7 @@ void r3d_calculate_animation_transforms(
     Matrix globalTransform = r3d_matrix_multiply(&localTransform, &parentGlobalTransform);
 
     /* --- Store both transforms if this node corresponds to a bone --- */
-    
+
     for (int i = 0; i < totalBones; i++) {
         if (strcmp(node->mName.data, bones[i].name) == 0) {
             // Store global transform (matrix)
@@ -3047,7 +3047,7 @@ void r3d_calculate_animation_transforms(
     }
 
     /* --- Recursively process all child nodes --- */
-    
+
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
         r3d_calculate_animation_transforms(
             node->mChildren[i], aiAnim, time,
