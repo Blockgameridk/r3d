@@ -299,16 +299,6 @@ void R3D_UpdateResolution(int width, int height)
     R3D.state.resolution.maxLevel = 1 + (int)floor(log2((float)fmax(width, height)));
 }
 
-void R3D_SetRenderTarget(const RenderTexture* target)
-{
-    if (target == NULL) {
-        memset(&R3D.framebuffer.customTarget, 0, sizeof(RenderTexture));
-        return;
-    }
-
-    R3D.framebuffer.customTarget = *target;
-}
-
 void R3D_SetSceneBounds(BoundingBox sceneBounds)
 {
     R3D.state.scene.bounds = sceneBounds;
@@ -341,19 +331,28 @@ void R3D_DisableLayers(R3D_Layer bitfield)
 
 void R3D_Begin(Camera3D camera)
 {
-    // Render the batch before proceeding
+    R3D_BeginEx(camera, NULL);
+}
+
+void R3D_BeginEx(Camera3D camera, const RenderTexture* target)
+{
+    /* --- Render the rlgl batch before proceeding --- */
+
     rlDrawRenderBatchActive();
 
-    // Clear the previous draw call array state
+    /* --- Clear the previous draw call array state --- */
+
     r3d_array_clear(&R3D.container.aDrawForward);
     r3d_array_clear(&R3D.container.aDrawDeferred);
     r3d_array_clear(&R3D.container.aDrawForwardInst);
     r3d_array_clear(&R3D.container.aDrawDeferredInst);
 
-    // Store camera position
+    /* --- Store camera position --- */
+
     R3D.state.transform.viewPos = camera.position;
 
-    // Compute aspect ratio
+    /* --- Compute aspect ratio --- */
+
     float aspect = 1.0f;
     if (R3D.state.flags & R3D_FLAG_ASPECT_KEEP) {
         aspect = (float)R3D.state.resolution.width / R3D.state.resolution.height;
@@ -362,7 +361,8 @@ void R3D_Begin(Camera3D camera)
         aspect = (float)GetScreenWidth() / GetScreenHeight();
     }
 
-    // Compute projection matrix
+    /* --- Compute projection matrix --- */
+
     if (camera.projection == CAMERA_PERSPECTIVE) {
         double top = rlGetCullDistanceNear() * tan(camera.fovy * 0.5 * DEG2RAD);
         double right = top * aspect;
@@ -382,19 +382,22 @@ void R3D_Begin(Camera3D camera)
         );
     }
 
-    // Compute view matrix
-    R3D.state.transform.view = MatrixLookAt(camera.position, camera.target, camera.up);
+    /* --- Compute view/proj matrices --- */
 
-    // Store inverse matrices
+    R3D.state.transform.view = MatrixLookAt(camera.position, camera.target, camera.up);
     R3D.state.transform.invProj = MatrixInvert(R3D.state.transform.proj);
     R3D.state.transform.invView = MatrixInvert(R3D.state.transform.view);
-
-    // Compute view projection matrix
     R3D.state.transform.viewProj = r3d_matrix_multiply(&R3D.state.transform.view, &R3D.state.transform.proj);
 
-    // Compute frustum
+    /* --- Compute frustum --- */
+
     R3D.state.frustum.aabb = r3d_frustum_get_bounding_box(R3D.state.transform.viewProj);
     R3D.state.frustum.shape = r3d_frustum_create(R3D.state.transform.viewProj);
+
+    /* --- Saves the custom render texture target --- */
+
+    if (target == NULL) R3D.framebuffer.customTarget.id = 0;
+    else R3D.framebuffer.customTarget = *target;
 }
 
 void R3D_End(void)

@@ -619,16 +619,6 @@ R3DAPI void R3D_GetResolution(int* width, int* height);
 R3DAPI void R3D_UpdateResolution(int width, int height);
 
 /**
- * @brief Sets a custom render target.
- * 
- * This function allows rendering to a custom framebuffer instead of the main one. 
- * Passing `NULL` will revert back to rendering to the main framebuffer.
- * 
- * @param target The custom render target (can be NULL to revert to the default framebuffer).
- */
-R3DAPI void R3D_SetRenderTarget(const RenderTexture* target);
-
-/**
  * @brief Defines the bounds of the scene for directional light calculations.
  * 
  * This function sets the scene bounds used to determine which areas should be illuminated 
@@ -704,11 +694,26 @@ R3DAPI void R3D_DisableLayers(R3D_Layer bitfield);
  * @brief Begins a rendering session for a 3D camera.
  * 
  * This function starts a rendering session, preparing the engine to handle subsequent 
- * draw calls using the provided camera settings.
+ * draw calls using the provided camera settings. Rendering output will be directed 
+ * to the default screen framebuffer.
  * 
  * @param camera The camera to use for rendering the scene.
  */
 R3DAPI void R3D_Begin(Camera3D camera);
+
+/**
+ * @brief Begins a rendering session for a 3D camera with an optional custom render target.
+ * 
+ * This function starts a rendering session, preparing the engine to handle subsequent 
+ * draw calls using the provided camera settings. If a render target is provided, rendering 
+ * output will be directed to it. If the target is `NULL`, rendering will be performed 
+ * directly to the screen framebuffer (same behavior as R3D_Begin).
+ * 
+ * @param camera The camera to use for rendering the scene.
+ * @param target Optional pointer to a RenderTexture to render into. Can be NULL to render 
+ *               directly to the screen.
+ */
+R3DAPI void R3D_BeginEx(Camera3D camera, const RenderTexture* target);
 
 /**
  * @brief Ends the current rendering session.
