@@ -36,7 +36,7 @@ glsl_keywords = {
     'uniform', 'attribute', 'varying', 'const', 'in', 'out', 'inout', 'layout',
     'binding', 'location', 'centroid', 'sample', 'pixel', 'patch', 'vertex',
     'instance', 'nonuniform', 'subroutine', 'invariant', 'precise', 'shared',
-    'lowp', 'mediump', 'highp', 'flat', 'smooth', 'noperspective',
+    'precision', 'lowp', 'mediump', 'highp', 'flat', 'smooth', 'noperspective',
 
     # Layout specifiers
     'std140', 'std430', 'packed', 'column_major', 'row_major',
