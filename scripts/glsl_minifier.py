@@ -18,8 +18,8 @@
 import sys, re, string, itertools
 
 glsl_keywords = {
-    # Preprocessor directives
-    'core',
+    # GL Profiles
+    'core', "es",
 
     # Data types
     'void', 'bool', 'uint', 'int', 'float',
