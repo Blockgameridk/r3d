@@ -34,8 +34,6 @@
 
 struct Light
 {
-    sampler2D shadowMap;
-    samplerCube shadowCubemap;
     vec3 color;
     vec3 position;
     vec3 direction;
@@ -73,6 +71,9 @@ uniform sampler2D uTexNormal;
 uniform sampler2D uTexORM;
 
 uniform sampler2D uTexNoise;   //< Noise texture (used for soft shadows)
+
+uniform samplerCube uShadowMapCube[NUM_LIGHTS];
+uniform sampler2D uShadowMap2D[NUM_LIGHTS];
 
 uniform float uEmissionEnergy;
 uniform float uNormalScale;
@@ -190,21 +191,23 @@ vec2 Rotate2D(vec2 v, float c, float s)
 
 float ShadowOmni(int i, float cNdotL)
 {
+    Light light = uLights[i];
+
     /* --- Light Vector and Distance Calculation --- */
 
-    vec3 lightToFrag = vPosition - uLights[i].position;
+    vec3 lightToFrag = vPosition - light.position;
     float currentDepth = length(lightToFrag);
     vec3 direction = normalize(lightToFrag);
 
     /* --- Shadow Bias and Depth Adjustment --- */
 
-    float bias = uLights[i].shadowSlopeBias * (1.0 - cNdotL * 0.5);
-    bias = max(bias, uLights[i].shadowDepthBias * currentDepth);
+    float bias = light.shadowSlopeBias * (1.0 - cNdotL * 0.5);
+    bias = max(bias, light.shadowDepthBias * currentDepth);
     currentDepth -= bias;
 
     /* --- Adaptive Softness Based on Distance --- */
 
-    float adaptiveRadius = uLights[i].shadowSoftness * sqrt(currentDepth / uLights[i].far);
+    float adaptiveRadius = light.shadowSoftness * sqrt(currentDepth / light.far);
 
     /* --- Tangent Space Construction for Sampling --- */
 
@@ -220,7 +223,7 @@ float ShadowOmni(int i, float cNdotL)
 
     /* --- Central Shadow Sample --- */
 
-    float centerDepth = texture(uLights[i].shadowCubemap, direction).r * uLights[i].far;
+    float centerDepth = texture(uShadowMapCube[i], direction).r * light.far;
     float shadow = step(currentDepth, centerDepth);
 
     /* --- Poisson Disk PCF Sampling --- */
@@ -230,7 +233,7 @@ float ShadowOmni(int i, float cNdotL)
         vec2 rotatedOffset = Rotate2D(POISSON_DISK[j], rc, rs);
         vec3 sampleDir = normalize(direction + (tangent * rotatedOffset.x + bitangent * rotatedOffset.y) * adaptiveRadius);
         
-        float sampleDepth = texture(uLights[i].shadowCubemap, sampleDir).r * uLights[i].far;
+        float sampleDepth = texture(uShadowMapCube[i], sampleDir).r * light.far;
         shadow += step(currentDepth, sampleDepth);
     }
 
@@ -241,6 +244,8 @@ float ShadowOmni(int i, float cNdotL)
 
 float Shadow(int i, float cNdotL)
 {
+    Light light = uLights[i];
+
     /* --- Light Space Projection --- */
 
     vec4 p = vPosLightSpace[i];
@@ -258,13 +263,13 @@ float Shadow(int i, float cNdotL)
 
     /* --- Shadow Bias and Depth Adjustment --- */
 
-    float bias = uLights[i].shadowSlopeBias * (1.0 - cNdotL);
-    bias = max(bias, uLights[i].shadowDepthBias * projCoords.z);
+    float bias = light.shadowSlopeBias * (1.0 - cNdotL);
+    bias = max(bias, light.shadowDepthBias * projCoords.z);
     float currentDepth = projCoords.z - bias;
 
     /* --- Distance-Based Adaptive Softness --- */
 
-    float adaptiveRadius = uLights[i].shadowSoftness * sqrt(projCoords.z);
+    float adaptiveRadius = light.shadowSoftness * sqrt(projCoords.z);
 
     /* --- Blue Noise Rotation for Sample Distribution --- */
 
@@ -274,14 +279,14 @@ float Shadow(int i, float cNdotL)
 
     /* --- Central Shadow Sample --- */
 
-    float shadow = step(currentDepth, texture(uLights[i].shadowMap, projCoords.xy).r);
+    float shadow = step(currentDepth, texture(uShadowMap2D[i], projCoords.xy).r);
 
     /* --- Poisson Disk PCF Sampling --- */
 
     for (int j = 0; j < SHADOW_SAMPLES; ++j)
     {
         vec2 offset = Rotate2D(POISSON_DISK[j], rc, rs) * adaptiveRadius;
-        shadow += step(currentDepth, texture(uLights[i].shadowMap, projCoords.xy + offset).r);
+        shadow += step(currentDepth, texture(uShadowMap2D[i], projCoords.xy + offset).r);
     }
 
     /* --- Final Shadow Value --- */
@@ -364,75 +369,81 @@ void main()
 
     for (int i = 0; i < NUM_LIGHTS; i++)
     {
-        if (uLights[i].enabled)
-        {
-            /* Compute light direction */
-
-            vec3 L = vec3(0.0);
-            if (uLights[i].type == DIRLIGHT) L = -uLights[i].direction;
-            else L = normalize(uLights[i].position - vPosition);
-
-            /* Compute the dot product of the normal and light direction */
-
-            float NdotL = max(dot(N, L), 0.0);
-            float cNdotL = min(NdotL, 1.0); // clamped NdotL
-
-            /* Compute the halfway vector between the view and light directions */
-
-            vec3 H = normalize(V + L);
-
-            float LdotH = max(dot(L, H), 0.0);
-            float cLdotH = min(dot(L, H), 1.0);
-
-            float NdotH = max(dot(N, H), 0.0);
-            float cNdotH = min(NdotH, 1.0);
-
-            /* Compute light color energy */
-
-            vec3 lightColE = uLights[i].color * uLights[i].energy;
-
-            /* Compute diffuse lighting */
-
-            float diffuseStrength = 1.0 - metalness;  // 0.0 for pure metal, 1.0 for dielectric
-            vec3 diffLight = lightColE * Diffuse(cLdotH, cNdotV, cNdotL, roughness) * diffuseStrength;
-
-            /* Compute specular lighting */
-
-            vec3 specLight =  Specular(F0, cLdotH, cNdotH, cNdotV, cNdotL, roughness);
-            specLight *= lightColE * uLights[i].specular;
-
-            /* Apply shadow factor if the light casts shadows */
-
-            float shadow = 1.0;
-            if (uLights[i].shadow)
-            {
-                if (uLights[i].type != OMNILIGHT) shadow = Shadow(i, cNdotL);
-                else shadow = ShadowOmni(i, cNdotL);
-            }
-
-            /* Apply attenuation based on the distance from the light */
-
-            if (uLights[i].type != DIRLIGHT)
-            {
-                float dist = length(uLights[i].position - vPosition);
-                float atten = 1.0 - clamp(dist / uLights[i].range, 0.0, 1.0);
-                shadow *= atten * uLights[i].attenuation;
-            }
-
-            /* Apply spotlight effect if the light is a spotlight */
-
-            if (uLights[i].type == SPOTLIGHT)
-            {
-                float theta = dot(L, -uLights[i].direction);
-                float epsilon = (uLights[i].innerCutOff - uLights[i].outerCutOff);
-                shadow *= smoothstep(0.0, 1.0, (theta - uLights[i].outerCutOff) / epsilon);
-            }
-
-            /* Accumulate the diffuse and specular lighting contributions */
-
-            diffuse += diffLight * shadow;
-            specular += specLight * shadow;
+        if (!uLights[i].enabled) {
+            continue;
         }
+
+        Light light = uLights[i];
+
+        /* Compute light direction */
+
+        vec3 L = vec3(0.0);
+        if (light.type == DIRLIGHT) L = -light.direction;
+        else L = normalize(light.position - vPosition);
+
+        /* Compute the dot product of the normal and light direction */
+
+        float NdotL = max(dot(N, L), 0.0);
+        float cNdotL = min(NdotL, 1.0); // clamped NdotL
+
+        /* Compute the halfway vector between the view and light directions */
+
+        vec3 H = normalize(V + L);
+
+        float LdotH = max(dot(L, H), 0.0);
+        float cLdotH = min(dot(L, H), 1.0);
+
+        float NdotH = max(dot(N, H), 0.0);
+        float cNdotH = min(NdotH, 1.0);
+
+        /* Compute light color energy */
+
+        vec3 lightColE = light.color * light.energy;
+
+        /* Compute diffuse lighting */
+
+        float diffuseStrength = 1.0 - metalness;  // 0.0 for pure metal, 1.0 for dielectric
+        vec3 diffLight = lightColE * Diffuse(cLdotH, cNdotV, cNdotL, roughness) * diffuseStrength;
+
+        /* Compute specular lighting */
+
+        vec3 specLight =  Specular(F0, cLdotH, cNdotH, cNdotV, cNdotL, roughness);
+        specLight *= lightColE * light.specular;
+
+        /* Apply shadow factor if the light casts shadows */
+
+        float shadow = 1.0;
+        if (light.shadow) {
+            if (light.type == OMNILIGHT) {
+                shadow = ShadowOmni(i, cNdotL);
+            }
+            else {
+                shadow = Shadow(i, cNdotL);
+            }
+        }
+
+        /* Apply attenuation based on the distance from the light */
+
+        if (light.type != DIRLIGHT)
+        {
+            float dist = length(light.position - vPosition);
+            float atten = 1.0 - clamp(dist / light.range, 0.0, 1.0);
+            shadow *= atten * light.attenuation;
+        }
+
+        /* Apply spotlight effect if the light is a spotlight */
+
+        if (light.type == SPOTLIGHT)
+        {
+            float theta = dot(L, -light.direction);
+            float epsilon = (light.innerCutOff - light.outerCutOff);
+            shadow *= smoothstep(0.0, 1.0, (theta - light.outerCutOff) / epsilon);
+        }
+
+        /* Accumulate the diffuse and specular lighting contributions */
+
+        diffuse += diffLight * shadow;
+        specular += specLight * shadow;
     }
 
     /* Compute ambient - (IBL diffuse) */

@@ -1879,11 +1879,11 @@ static void r3d_pass_scene_forward_filter_and_send_lights(const r3d_drawcall_t* 
         // Send shadow map data
         if (light->data->shadow.enabled) {
             if (light->data->type == R3D_LIGHT_OMNI) {
-                r3d_shader_bind_samplerCube(raster.forward, uLights[i].shadowCubemap, light->data->shadow.map.depth);
+                r3d_shader_bind_samplerCube(raster.forward, uShadowMapCube[i], light->data->shadow.map.depth);
             }
             else {
                 r3d_shader_set_float(raster.forward, uLights[i].shadowMapTxlSz, light->data->shadow.map.texelSize);
-                r3d_shader_bind_sampler2D(raster.forward, uLights[i].shadowMap, light->data->shadow.map.depth);
+                r3d_shader_bind_sampler2D(raster.forward, uShadowMap2D[i], light->data->shadow.map.depth);
                 r3d_shader_set_mat4(raster.forward, uMatLightVP[i], light->data->shadow.matVP);
             }
             r3d_shader_set_float(raster.forward, uLights[i].shadowSoftness, light->data->shadow.softness);
@@ -1949,11 +1949,11 @@ static void r3d_pass_scene_forward_instanced_filter_and_send_lights(const r3d_dr
         // Send shadow map data
         if (light->data->shadow.enabled) {
             if (light->data->type == R3D_LIGHT_OMNI) {
-                r3d_shader_bind_samplerCube(raster.forwardInst, uLights[i].shadowCubemap, light->data->shadow.map.depth);
+                r3d_shader_bind_samplerCube(raster.forwardInst, uShadowMapCube[i], light->data->shadow.map.depth);
             }
             else {
                 r3d_shader_set_float(raster.forwardInst, uLights[i].shadowMapTxlSz, light->data->shadow.map.texelSize);
-                r3d_shader_bind_sampler2D(raster.forwardInst, uLights[i].shadowMap, light->data->shadow.map.depth);
+                r3d_shader_bind_sampler2D(raster.forwardInst, uShadowMap2D[i], light->data->shadow.map.depth);
                 r3d_shader_set_mat4(raster.forwardInst, uMatLightVP[i], light->data->shadow.matVP);
             }
             r3d_shader_set_float(raster.forwardInst, uLights[i].shadowSoftness, light->data->shadow.softness);
@@ -2094,8 +2094,8 @@ void r3d_pass_scene_forward(void)
                 }
 
                 for (int i = 0; i < R3D_SHADER_FORWARD_NUM_LIGHTS; i++) {
-                    r3d_shader_unbind_samplerCube(raster.forwardInst, uLights[i].shadowCubemap);
-                    r3d_shader_unbind_sampler2D(raster.forwardInst, uLights[i].shadowMap);
+                    r3d_shader_unbind_samplerCube(raster.forwardInst, uShadowMapCube[i]);
+                    r3d_shader_unbind_sampler2D(raster.forwardInst, uShadowMap2D[i]);
                 }
 
                 // NOTE: The storage texture of the matrices may have been bind during drawcalls
@@ -2143,8 +2143,8 @@ void r3d_pass_scene_forward(void)
                 }
 
                 for (int i = 0; i < R3D_SHADER_FORWARD_NUM_LIGHTS; i++) {
-                    r3d_shader_unbind_samplerCube(raster.forward, uLights[i].shadowCubemap);
-                    r3d_shader_unbind_sampler2D(raster.forward, uLights[i].shadowMap);
+                    r3d_shader_unbind_samplerCube(raster.forward, uShadowMapCube[i]);
+                    r3d_shader_unbind_sampler2D(raster.forward, uShadowMap2D[i]);
                 }
 
                 // NOTE: The storage texture of the matrices may have been bind during drawcalls

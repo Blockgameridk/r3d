@@ -205,8 +205,6 @@ typedef struct {
 typedef struct {
     unsigned int id;
     struct {
-        r3d_shader_uniform_sampler2D_t shadowMap;
-        r3d_shader_uniform_samplerCube_t shadowCubemap;
         r3d_shader_uniform_vec3_t color;
         r3d_shader_uniform_vec3_t position;
         r3d_shader_uniform_vec3_t direction;
@@ -238,6 +236,8 @@ typedef struct {
     r3d_shader_uniform_sampler2D_t uTexEmission;
     r3d_shader_uniform_sampler2D_t uTexNormal;
     r3d_shader_uniform_sampler2D_t uTexORM;
+    r3d_shader_uniform_samplerCube_t uShadowMapCube[R3D_SHADER_FORWARD_NUM_LIGHTS];
+    r3d_shader_uniform_sampler2D_t uShadowMap2D[R3D_SHADER_FORWARD_NUM_LIGHTS];
     r3d_shader_uniform_sampler2D_t uTexNoise;
     r3d_shader_uniform_float_t uEmissionEnergy;
     r3d_shader_uniform_float_t uNormalScale;
@@ -261,8 +261,6 @@ typedef struct {
 typedef struct {
     unsigned int id;
     struct {
-        r3d_shader_uniform_sampler2D_t shadowMap;
-        r3d_shader_uniform_samplerCube_t shadowCubemap;
         r3d_shader_uniform_vec3_t color;
         r3d_shader_uniform_vec3_t position;
         r3d_shader_uniform_vec3_t direction;
@@ -295,6 +293,8 @@ typedef struct {
     r3d_shader_uniform_sampler2D_t uTexEmission;
     r3d_shader_uniform_sampler2D_t uTexNormal;
     r3d_shader_uniform_sampler2D_t uTexORM;
+    r3d_shader_uniform_samplerCube_t uShadowMapCube[R3D_SHADER_FORWARD_NUM_LIGHTS];
+    r3d_shader_uniform_sampler2D_t uShadowMap2D[R3D_SHADER_FORWARD_NUM_LIGHTS];
     r3d_shader_uniform_sampler2D_t uTexNoise;
     r3d_shader_uniform_float_t uEmissionEnergy;
     r3d_shader_uniform_float_t uNormalScale;

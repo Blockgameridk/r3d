@@ -1297,8 +1297,8 @@ void r3d_shader_load_raster_forward(void)
     int shadowMapSlot = 10;
     for (int i = 0; i < R3D_SHADER_FORWARD_NUM_LIGHTS; i++) {
         shader->uMatLightVP[i].loc = rlGetLocationUniform(shader->id, TextFormat("uMatLightVP[%i]", i));
-        shader->uLights[i].shadowMap.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowMap", i));
-        shader->uLights[i].shadowCubemap.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowCubemap", i));
+        shader->uShadowMapCube[i].loc = rlGetLocationUniform(shader->id, TextFormat("uShadowMapCube[%i]", i));
+        shader->uShadowMap2D[i].loc = rlGetLocationUniform(shader->id, TextFormat("uShadowMap2D[%i]", i));
         shader->uLights[i].color.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].color", i));
         shader->uLights[i].position.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].position", i));
         shader->uLights[i].direction.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].direction", i));
@@ -1318,8 +1318,8 @@ void r3d_shader_load_raster_forward(void)
         shader->uLights[i].enabled.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].enabled", i));
         shader->uLights[i].shadow.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadow", i));
 
-        r3d_shader_set_sampler2D_slot(raster.forward, uLights[i].shadowMap, shadowMapSlot++);
-        r3d_shader_set_samplerCube_slot(raster.forward, uLights[i].shadowCubemap, shadowMapSlot++);
+        r3d_shader_set_samplerCube_slot(raster.forward, uShadowMapCube[i], shadowMapSlot++);
+        r3d_shader_set_sampler2D_slot(raster.forward, uShadowMap2D[i], shadowMapSlot++);
     }
 
     r3d_shader_disable();
@@ -1379,8 +1379,8 @@ void r3d_shader_load_raster_forward_inst(void)
     int shadowMapSlot = 10;
     for (int i = 0; i < R3D_SHADER_FORWARD_NUM_LIGHTS; i++) {
         shader->uMatLightVP[i].loc = rlGetLocationUniform(shader->id, TextFormat("uMatLightVP[%i]", i));
-        shader->uLights[i].shadowMap.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowMap", i));
-        shader->uLights[i].shadowCubemap.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadowCubemap", i));
+        shader->uShadowMapCube[i].loc = rlGetLocationUniform(shader->id, TextFormat("uShadowMapCube[%i]", i));
+        shader->uShadowMap2D[i].loc = rlGetLocationUniform(shader->id, TextFormat("uShadowMap2D[%i]", i));
         shader->uLights[i].color.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].color", i));
         shader->uLights[i].position.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].position", i));
         shader->uLights[i].direction.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].direction", i));
@@ -1400,8 +1400,8 @@ void r3d_shader_load_raster_forward_inst(void)
         shader->uLights[i].enabled.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].enabled", i));
         shader->uLights[i].shadow.loc = rlGetLocationUniform(shader->id, TextFormat("uLights[%i].shadow", i));
 
-        r3d_shader_set_sampler2D_slot(raster.forwardInst, uLights[i].shadowMap, shadowMapSlot++);
-        r3d_shader_set_samplerCube_slot(raster.forwardInst, uLights[i].shadowCubemap, shadowMapSlot++);
+        r3d_shader_set_samplerCube_slot(raster.forwardInst, uShadowMapCube[i], shadowMapSlot++);
+        r3d_shader_set_sampler2D_slot(raster.forwardInst, uShadowMap2D[i], shadowMapSlot++);
     }
 
     r3d_shader_disable();
