@@ -238,8 +238,8 @@ EmbedShaders(${PROJECT_NAME}
 )
 
 EmbedAssets(${PROJECT_NAME}
-    "${R3D_ROOT_PATH}/assets/lut/brdf_lut_512.dds"
-    "${R3D_ROOT_PATH}/assets/noise/blue_noise_64.raw"
+    "${R3D_ROOT_PATH}/assets/brdf_lut_512.dds"
+    "${R3D_ROOT_PATH}/assets/blue_noise_64.raw"
 )
 
 # Link project dependencies
