@@ -1828,7 +1828,7 @@ void r3d_texture_load_blue_noise(void)
 {
     glGenTextures(1, &R3D.texture.blueNoise);
     glBindTexture(GL_TEXTURE_2D, R3D.texture.blueNoise);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, 64, 64, 0, GL_RED, GL_UNSIGNED_BYTE, BLUE_NOISE_64_RAW);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, 64, 64, 0, GL_RED, GL_UNSIGNED_BYTE, BLUE_NOISE_64_R8_UNORM_RAW);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -1894,14 +1894,16 @@ void r3d_texture_load_ssao_kernel(void)
 
 void r3d_texture_load_ibl_brdf_lut(void)
 {
-    // TODO: Review in case 'R3D.support.RG16F.internal' is false
+    GLenum format = r3d_support_get_internal_format(GL_RG16F, false);
 
-    uint32_t w, h;
-    R3D.texture.iblBrdfLut = r3d_load_dds_texture_from_memory(BRDF_LUT_512_DDS, &w, &h);
-    if (R3D.texture.iblBrdfLut == 0) {
-        TraceLog(LOG_ERROR, "R3D: Failed to load IBL BRDF LUT");
-        return;
-    }
+    glGenTextures(1, &R3D.texture.iblBrdfLut);
+    glBindTexture(GL_TEXTURE_2D, R3D.texture.iblBrdfLut);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, 512, 512, 0, GL_RG, GL_HALF_FLOAT, BRDF_LUT_512_RG16_FLOAT_RAW);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
 /* === Storage loading functions === */
