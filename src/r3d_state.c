@@ -26,7 +26,6 @@
 #include <glad.h>
 
 #include "./details/misc/r3d_half.h"
-#include "./details/misc/r3d_dds.h"
 
 #include "shaders.h"
 #include "assets.h"
