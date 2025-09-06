@@ -2459,12 +2459,20 @@ void r3d_pass_final_blit(void)
 
     unsigned int dstId = 0;
     int dstX = 0, dstY = 0;
+    int dstW = 0, dstH = 0;
 
-    // Use render size (framebuffer size) to handle HiDPI/Retina on macOS
-    int dstW = GetRenderWidth();
-    int dstH = GetRenderHeight();
-
+    if (R3D.framebuffer.customTarget.id != 0) {
     // If a custom final framebuffer is set, use its ID and dimensions
+        dstId = R3D.framebuffer.customTarget.id;
+        dstW = R3D.framebuffer.customTarget.texture.width;
+        dstH = R3D.framebuffer.customTarget.texture.height;
+    }
+    else {
+        // Use render size (framebuffer size) to handle HiDPI/Retina on macOS
+        dstW = GetRenderWidth();
+        dstH = GetRenderHeight();
+    }
+
     if (R3D.framebuffer.customTarget.id != 0) {
         dstId = R3D.framebuffer.customTarget.id;
         dstW = R3D.framebuffer.customTarget.texture.width;
