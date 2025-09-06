@@ -1782,7 +1782,6 @@ void r3d_shader_load_screen_output(R3D_Tonemap tonemap)
     r3d_shader_get_location(screen.output[tonemap], uBrightness);
     r3d_shader_get_location(screen.output[tonemap], uContrast);
     r3d_shader_get_location(screen.output[tonemap], uSaturation);
-    r3d_shader_get_location(screen.output[tonemap], uResolution);
 
     r3d_shader_enable(screen.output[tonemap]);
     r3d_shader_set_sampler2D_slot(screen.output[tonemap], uTexColor, 0);

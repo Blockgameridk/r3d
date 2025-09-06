@@ -2417,9 +2417,6 @@ void r3d_pass_post_output(void)
             r3d_shader_set_float(screen.output[tonemap], uBrightness, R3D.env.brightness);
             r3d_shader_set_float(screen.output[tonemap], uContrast, R3D.env.contrast);
             r3d_shader_set_float(screen.output[tonemap], uSaturation, R3D.env.saturation);
-            r3d_shader_set_vec2(screen.output[tonemap], uResolution, (Vector2) {
-                (float)R3D.state.resolution.width, (float)R3D.state.resolution.height
-            });
 
             r3d_primitive_bind_and_draw_screen();
 

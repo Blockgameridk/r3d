@@ -39,7 +39,6 @@ uniform float uTonemapWhite;        //< Tonemap white point, not used with AGX
 uniform float uBrightness;          //< Brightness adjustment
 uniform float uContrast;            //< Contrast adjustment
 uniform float uSaturation;          //< Saturation adjustment
-uniform vec2 uResolution;           //< Resolution used for dithering
 
 /* === Fragments === */
 
