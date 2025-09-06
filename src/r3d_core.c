@@ -358,7 +358,13 @@ void R3D_BeginEx(Camera3D camera, const RenderTexture* target)
         aspect = (float)R3D.state.resolution.width / R3D.state.resolution.height;
     }
     else {
-        aspect = (float)GetScreenWidth() / GetScreenHeight();
+        if (R3D.framebuffer.customTarget.id != 0) {
+            const Texture2D* target = &R3D.framebuffer.customTarget.texture;
+            aspect = (float)target->width / target->height;
+        }
+        else {
+            aspect = (float)GetRenderWidth() / GetRenderHeight();
+        }
     }
 
     /* --- Compute projection matrix --- */
