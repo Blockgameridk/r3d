@@ -969,6 +969,7 @@ int r3d_drawcall_compare_front_to_back(const void* a, const void* b)
     const r3d_drawcall_t* drawCallA = a;
     const r3d_drawcall_t* drawCallB = b;
 
+    // REVIEW: Would sorting the closest AABB corners first be better?
     float distA = r3d_drawcall_calculate_center_distance_to_camera(drawCallA);
     float distB = r3d_drawcall_calculate_center_distance_to_camera(drawCallB);
 
