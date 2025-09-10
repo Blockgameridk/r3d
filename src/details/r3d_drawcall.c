@@ -919,31 +919,28 @@ void r3d_drawcall_instanced(const r3d_drawcall_t* call, int locInstanceModel, in
 // Helper function to calculate AABB center distance in view space
 static float r3d_drawcall_calculate_center_distance_to_camera(const r3d_drawcall_t* drawCall)
 {
-    // Calculate AABB center in local space
     Vector3 center = { 0 };
     if (drawCall->geometryType == R3D_DRAWCALL_GEOMETRY_MODEL) {
         center.x = (drawCall->geometry.model.mesh->aabb.min.x + drawCall->geometry.model.mesh->aabb.max.x) * 0.5f;
         center.y = (drawCall->geometry.model.mesh->aabb.min.y + drawCall->geometry.model.mesh->aabb.max.y) * 0.5f;
         center.z = (drawCall->geometry.model.mesh->aabb.min.z + drawCall->geometry.model.mesh->aabb.max.z) * 0.5f;
     }
-    
-    // Transform to world space
-    Vector3 worldCenter = Vector3Transform(center, drawCall->transform);
-    
-    // Transform to camera/view space
-    Vector3 camSpace = Vector3Transform(worldCenter, R3D.state.transform.view);
-    
-    // Return squared distance for performance
-    return Vector3LengthSqr(camSpace);
+    else if (drawCall->geometryType == R3D_DRAWCALL_GEOMETRY_SPRITE) {
+        center.x = drawCall->transform.m12;
+        center.y = drawCall->transform.m13;
+        center.z = drawCall->transform.m14;
+    }
+
+    center = Vector3Transform(center, drawCall->transform);
+    return Vector3DistanceSqr(R3D.state.transform.viewPos, center);
 }
 
 // Helper function to calculate maximum AABB corner distance in view space
 static float r3d_drawcall_calculate_max_distance_to_camera(const r3d_drawcall_t* drawCall)
 {
     if (drawCall->geometryType == R3D_DRAWCALL_GEOMETRY_SPRITE) {
-        Vector3 worldCenter = { drawCall->transform.m12, drawCall->transform.m13, drawCall->transform.m14 };
-        Vector3 camCenter = Vector3Transform(worldCenter, R3D.state.transform.view);
-        return Vector3LengthSqr(camCenter); // distSq
+        Vector3 center = { drawCall->transform.m12, drawCall->transform.m13, drawCall->transform.m14 };
+        return Vector3DistanceSqr(R3D.state.transform.viewPos, center);
     }
 
     Vector3 corners[8] = {
@@ -959,12 +956,9 @@ static float r3d_drawcall_calculate_max_distance_to_camera(const r3d_drawcall_t*
 
     float maxDistSq = 0.0f;
     for (int i = 0; i < 8; ++i) {
-        Vector3 worldCorner = Vector3Transform(corners[i], drawCall->transform);
-        Vector3 camCorner = Vector3Transform(worldCorner, R3D.state.transform.view);
-        float distSq = Vector3LengthSqr(camCorner);
-        if (distSq > maxDistSq) {
-            maxDistSq = distSq;
-        }
+        Vector3 corner = Vector3Transform(corners[i], drawCall->transform);
+        float distSq = Vector3DistanceSqr(R3D.state.transform.viewPos, corner);
+        if (distSq > maxDistSq) maxDistSq = distSq;
     }
     return maxDistSq;
 }
