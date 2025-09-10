@@ -981,31 +981,11 @@ int r3d_drawcall_compare_back_to_front(const void* a, const void* b)
 {
     const r3d_drawcall_t* drawCallA = a;
     const r3d_drawcall_t* drawCallB = b;
-    
-    const float EPSILON_SQ = 0.001f * 0.001f;
 
-    // Sort by max distance
     float maxDistA = r3d_drawcall_calculate_max_distance_to_camera(drawCallA);
     float maxDistB = r3d_drawcall_calculate_max_distance_to_camera(drawCallB);
-    
-    float distDiff = maxDistA - maxDistB;
-    if (fabsf(distDiff) >= EPSILON_SQ) {
-        // Back-to-front: larger distance first
-        return (maxDistA < maxDistB) - (maxDistA > maxDistB);
-    }
 
-    // Secondary: sort by center distance
-    float centerDistA = r3d_drawcall_calculate_center_distance_to_camera(drawCallA);
-    float centerDistB = r3d_drawcall_calculate_center_distance_to_camera(drawCallB);
-    
-    float centerDiff = centerDistA - centerDistB;
-    if (fabsf(centerDiff) >= EPSILON_SQ) {
-        // Back-to-front: larger distance first
-        return (centerDistA < centerDistB) - (centerDistA > centerDistB);
-    }
-
-    // Tertiary: deterministic fallback using pointer comparison
-    return (drawCallA < drawCallB) - (drawCallA > drawCallB);
+    return (maxDistA < maxDistB) - (maxDistA > maxDistB);
 }
 
 // Comparison function for forward objects (opaque/transparent mixed, front-to-back or back-to-front)
