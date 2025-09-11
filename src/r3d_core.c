@@ -43,7 +43,7 @@
     ((bitfield) == 0 || ((bitfield) & R3D.state.layers) != 0)
 
 #define R3D_SHADOW_CAST_ONLY_MASK ( \
-    (1 << R3D_SHADOW_CAST_ONLY) | \
+    (1 << R3D_SHADOW_CAST_ONLY_AUTO) | \
     (1 << R3D_SHADOW_CAST_ONLY_DOUBLE_SIDED) | \
     (1 << R3D_SHADOW_CAST_ONLY_FRONT_SIDE) | \
     (1 << R3D_SHADOW_CAST_ONLY_BACK_SIDE) \

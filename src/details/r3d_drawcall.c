@@ -719,7 +719,7 @@ static void r3d_drawcall_apply_shadow_cast_mode(R3D_ShadowCastMode castMode, R3D
 {
     switch (castMode)
     {
-    case R3D_SHADOW_CAST_ON:
+    case R3D_SHADOW_CAST_ON_AUTO:
         r3d_drawcall_apply_cull_mode(cullMode);
         break;
     case R3D_SHADOW_CAST_ON_DOUBLE_SIDED:
@@ -733,7 +733,7 @@ static void r3d_drawcall_apply_shadow_cast_mode(R3D_ShadowCastMode castMode, R3D
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
         break;
-    case R3D_SHADOW_CAST_ONLY:
+    case R3D_SHADOW_CAST_ONLY_AUTO:
         r3d_drawcall_apply_cull_mode(cullMode);
         break;
     case R3D_SHADOW_CAST_ONLY_DOUBLE_SIDED:
