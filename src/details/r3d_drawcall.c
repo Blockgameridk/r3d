@@ -756,7 +756,7 @@ static void r3d_drawcall_apply_shadow_cast_mode(R3D_ShadowCastMode castMode, R3D
 
 static void r3d_drawcall_bind_geometry_mesh(const R3D_Mesh* mesh)
 {
-    if (!rlEnableVertexArray(mesh->vao)) {
+    if (rlEnableVertexArray(mesh->vao)) {
         return;
     }
 
