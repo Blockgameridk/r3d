@@ -241,11 +241,11 @@ typedef enum R3D_Dof {
  *
  * Controls wether to allow external animation matrices
  */
-
 typedef enum R3D_AnimMode {
-    R3D_ANIM_INTERNAL,         ///< default animation solution
-    R3D_ANIM_CUSTOM,           ///< user supplied matrices 
+    R3D_ANIM_INTERNAL,         ///< Default animation solution
+    R3D_ANIM_CUSTOM,           ///< User supplied matrices 
 } R3D_AnimMode;
+
 // --------------------------------------------
 //                   TYPES
 // --------------------------------------------
