@@ -23,8 +23,9 @@
 
 in vec3 vPosition;
 
-uniform samplerCube uTexCubemap;
-uniform float uRoughness;
+uniform samplerCube uTexCubemap;    //< Source cubemap
+uniform float uResolution;          //< Resolution of the source cubemap
+uniform float uRoughness;           //< Roughness (relative to mip level)
 
 out vec4 FragColor;
 
@@ -115,8 +116,7 @@ void main()
             float HdotV = max(dot(H, V), 0.0);
             float pdf = D * NdotH / (4.0 * HdotV) + 0.0001; 
 
-            float resolution = 512.0; // resolution of source cubemap (per face)
-            float saTexel  = 4.0 * PI / (6.0 * resolution * resolution);
+            float saTexel  = 4.0 * PI / (6.0 * uResolution * uResolution);
             float saSample = 1.0 / (float(SAMPLE_COUNT) * pdf + 0.0001);
 
             float mipLevel = (uRoughness == 0.0) ? 0.0 : 0.5 * log2(saSample / saTexel); 

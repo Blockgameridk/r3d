@@ -81,6 +81,7 @@ typedef struct {
     r3d_shader_uniform_mat4_t uMatProj;
     r3d_shader_uniform_mat4_t uMatView;
     r3d_shader_uniform_samplerCube_t uCubemap;
+    r3d_shader_uniform_float_t uResolution;
     r3d_shader_uniform_float_t uRoughness;
 } r3d_shader_generate_prefilter_t;
 

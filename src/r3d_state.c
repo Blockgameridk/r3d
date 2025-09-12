@@ -1167,6 +1167,7 @@ void r3d_shader_load_generate_prefilter(void)
     r3d_shader_get_location(generate.prefilter, uMatProj);
     r3d_shader_get_location(generate.prefilter, uMatView);
     r3d_shader_get_location(generate.prefilter, uCubemap);
+    r3d_shader_get_location(generate.prefilter, uResolution);
     r3d_shader_get_location(generate.prefilter, uRoughness);
 
     r3d_shader_enable(generate.prefilter);
