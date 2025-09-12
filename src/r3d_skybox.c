@@ -190,8 +190,6 @@ static TextureCubemap r3d_skybox_load_cubemap_from_panorama(Image image, int siz
 
     // Create and configure the working framebuffer
     unsigned int fbo = rlLoadFramebuffer();
-    unsigned int rbo = rlLoadTextureDepth(size, size, true);
-    rlFramebufferAttach(fbo, rbo, RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_RENDERBUFFER, 0);
 
     // Calculate projection matrix
     const Matrix matProj = MatrixPerspective(90.0 * DEG2RAD, 1.0, 0.1, 10.0);
@@ -222,7 +220,6 @@ static TextureCubemap r3d_skybox_load_cubemap_from_panorama(Image image, int siz
 
     // Cleanup the working framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDeleteRenderbuffers(1, &rbo);
     glDeleteFramebuffers(1, &fbo);
 
     // Reset viewport and re-enable culling
@@ -281,8 +278,6 @@ static TextureCubemap r3d_skybox_generate_irradiance(TextureCubemap sky)
 
     // Create and configure the working framebuffer
     unsigned int fbo = rlLoadFramebuffer();
-    unsigned int rbo = rlLoadTextureDepth(size, size, true);
-    rlFramebufferAttach(fbo, rbo, RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_RENDERBUFFER, 0);
 
     // Calculate projection matrix
     const Matrix matProj = MatrixPerspective(90.0 * DEG2RAD, 1.0, 0.1, 10.0);
@@ -313,7 +308,6 @@ static TextureCubemap r3d_skybox_generate_irradiance(TextureCubemap sky)
 
     // Cleanup the working framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDeleteRenderbuffers(1, &rbo);
     glDeleteFramebuffers(1, &fbo);
 
     // Reset viewport and re-enable culling
@@ -359,11 +353,6 @@ static TextureCubemap r3d_skybox_generate_prefilter(TextureCubemap sky)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // Generate the working depth renderbuffer
-    // It will be allocated for each mipmap
-    unsigned int rbo = 0;
-    glGenRenderbuffers(1, &rbo);
-
     // Create a working framebuffer
     // It will be configured for each mipmap
     unsigned int fbo = rlLoadFramebuffer();
@@ -386,9 +375,6 @@ static TextureCubemap r3d_skybox_generate_prefilter(TextureCubemap sky)
         int mipWidth = (int)(PREFILTER_SIZE * powf(0.5, (float)mip));
         int mipHeight = (int)(PREFILTER_SIZE * powf(0.5, (float)mip));
 
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
-
         glViewport(0, 0, mipWidth, mipHeight);
         float roughness = (float)mip / (float)(MAX_MIP_LEVELS - 1);
         r3d_shader_set_float(generate.prefilter, uRoughness, roughness);
@@ -408,7 +394,6 @@ static TextureCubemap r3d_skybox_generate_prefilter(TextureCubemap sky)
 
     // Cleanup the working framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDeleteRenderbuffers(1, &rbo);
     glDeleteFramebuffers(1, &fbo);
     
     // Reset viewport and re-enable culling
