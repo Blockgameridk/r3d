@@ -494,14 +494,16 @@ void main()
         vec3 kD = (1.0 - kS) * (1.0 - metalness);
 
         vec3 Nr = RotateWithQuat(N, uQuatSkybox);
-        ambient = kD * texture(uCubeIrradiance, Nr).rgb * uSkyboxAmbientIntensity;
+        ambient = kD * texture(uCubeIrradiance, Nr).rgb;
+        ambient *= uSkyboxAmbientIntensity;
     }
     else
     {
-        const float NdotV_ = 1.0; // view facing normal, for ambient assume facing camera
-        vec3 kS = F0 + (1.0 - F0) * SchlickFresnel(NdotV_);
-        vec3 kD = (1.0 - kS) * (1.0 - metalness);
-        ambient *= (kD * albedo.rgb + kS);
+        // Simplified calculation of diffuse as if NdotV is equal to 1.0 (view facing normal)
+        // NOTE: Small tweak here, we also add F0. It's not physically correct, 
+        //       but it's to at least simulate some specularity, otherwise the 
+        //       result would look poor for metals...
+        ambient = (1.0 - F0) * (1.0 - metalness) * ambient + F0;
     }
 
     /* Compute ambient occlusion map */

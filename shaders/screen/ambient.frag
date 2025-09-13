@@ -273,20 +273,17 @@ void main()
 
 	occlusion *= ssao;
 
-    /* --- PBR surface reflectance model --- */
+    /* --- Ambient lighting --- */
 
-    vec3 F0 = ComputeF0(metalness, 0.5, albedo);  // Specular reflectance at normal incidence
+    // Simplified calculation of diffuse as if NdotV is equal to 1.0 (view facing normal)
+    // NOTE: Small tweak here, we also add F0. It's not physically correct, 
+    //       but it's to at least simulate some specularity, otherwise the 
+    //       result would look poor for metals...
 
-    const float NdotV = 1.0;  // For ambient lighting, assume normal facing the view direction
-
-    vec3 kS = F0 + (1.0 - F0) * SchlickFresnel(NdotV);          // Specular reflection coefficient
-    vec3 kD = (1.0 - kS) * (1.0 - metalness);                   // Diffuse coefficient (non-metallic part)
-
-    /* --- Ambient lighting (diffuse + specular) --- */
-
-    vec3 ambient = uAmbientColor;                               // Ambient light tint (scene-level)
-    ambient *= (kD * albedo + kS);                              // Apply material response
-    ambient *= occlusion;                                       // Apply ambient occlusion
+    vec3 F0 = ComputeF0(metalness, 0.5, albedo);
+    vec3 kD = (1.0 - F0) * (1.0 - metalness);
+    vec3 ambient = kD * uAmbientColor + F0;
+    ambient *= albedo * occlusion;
 
     /* --- Output --- */
 
