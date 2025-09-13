@@ -193,25 +193,19 @@ float ShadowOmni(vec3 position, float cNdotL)
     float rc = cos(rotationAngle);
     float rs = sin(rotationAngle);
 
-    /* --- Central Shadow Sample --- */
-
-    float centerDepth = texture(uLight.shadowCubemap, direction).r * uLight.far;
-    float shadow = step(currentDepth, centerDepth);
-
     /* --- Poisson Disk PCF Sampling --- */
 
-    for (int i = 0; i < SHADOW_SAMPLES; ++i)
-    {
+    float shadow = 0.0;
+    for (int i = 0; i < SHADOW_SAMPLES; ++i) {
         vec2 rotatedOffset = Rotate2D(POISSON_DISK[i], rc, rs);
         vec3 sampleDir = normalize(direction + (tangent * rotatedOffset.x + bitangent * rotatedOffset.y) * adaptiveRadius);
-        
         float sampleDepth = texture(uLight.shadowCubemap, sampleDir).r * uLight.far;
         shadow += step(currentDepth, sampleDepth);
     }
 
     /* --- Final Shadow Value --- */
 
-    return shadow / float(SHADOW_SAMPLES + 1);
+    return shadow / float(SHADOW_SAMPLES);
 }
 
 float Shadow(vec3 position, float cNdotL)
@@ -244,21 +238,17 @@ float Shadow(vec3 position, float cNdotL)
     float rc = cos(rotationAngle);
     float rs = sin(rotationAngle);
 
-    /* --- Central Shadow Sample --- */
-
-    float shadow = step(currentDepth, texture(uLight.shadowMap, projCoords.xy).r);
-
     /* --- Poisson Disk PCF Sampling --- */
 
-    for (int i = 0; i < SHADOW_SAMPLES; ++i)
-    {
+    float shadow = 0.0;
+    for (int i = 0; i < SHADOW_SAMPLES; ++i) {
         vec2 offset = Rotate2D(POISSON_DISK[i], rc, rs) * adaptiveRadius;
         shadow += step(currentDepth, texture(uLight.shadowMap, projCoords.xy + offset).r);
     }
 
     /* --- Final Shadow Value --- */
 
-    return shadow / float(SHADOW_SAMPLES + 1);
+    return shadow / float(SHADOW_SAMPLES);
 }
 
 /* === Misc functions === */
