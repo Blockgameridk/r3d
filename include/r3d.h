@@ -243,7 +243,7 @@ typedef enum R3D_Dof {
  */
 typedef enum R3D_AnimMode {
     R3D_ANIM_INTERNAL,         ///< Default animation solution
-    R3D_ANIM_CUSTOM,           ///< User supplied matrices 
+    R3D_ANIM_CUSTOM,           ///< User supplied matrices via R3D_Model::boneOverride 
 } R3D_AnimMode;
 
 // --------------------------------------------
@@ -380,7 +380,7 @@ typedef struct R3D_Model {
     Matrix* boneOffsets;            /**< Array of offset (inverse bind) matrices, one per bone.
                                          Transforms mesh-space vertices to bone space. Used in skinning. */
     R3D_AnimMode animationMode;
-    Matrix* boneOverride;            /**< Array of Matrices we'll use if we have it instead of internal calculations, Used in skinning. */
+    Matrix* boneOverride;           /**< Array of Matrices we'll use if we have it instead of internal calculations, Used in skinning. */
 
     BoneInfo* bones;                /**< Bones information (skeleton). Defines the hierarchy and names of bones. */
     int boneCount;                  /**< Number of bones. */
