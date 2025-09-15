@@ -3195,7 +3195,7 @@ static R3D_ModelAnimation* r3d_process_animations_from_scene(const struct aiScen
     /* --- Check if there are animations --- */
 
     if (scene->mNumAnimations == 0) {
-        TraceLog(LOG_INFO, "R3D: No animations found in '%s'", sourceName ? sourceName : "memory");
+        TraceLog(LOG_ERROR, "R3D: No animations found in '%s'", sourceName ? sourceName : "memory");
         return NULL;
     }
 
