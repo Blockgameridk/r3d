@@ -2242,7 +2242,7 @@ static bool r3d_process_assimp_mesh(R3D_Model* model, const Matrix* modelMatrix,
 #undef CLEANUP
 }
 
-static bool r3d_process_assimp_meshes(const struct aiScene *scene, R3D_Model *model, struct aiNode *node, const Matrix* parentFinalTransform)
+static bool r3d_process_assimp_meshes(const struct aiScene *scene, R3D_Model *model, const struct aiNode *node, const Matrix* parentFinalTransform)
 {
     Matrix relativeTransform = r3d_matrix_from_ai_matrix(&node->mTransformation);
     Matrix finalTransform = r3d_matrix_multiply(&relativeTransform, parentFinalTransform);
