@@ -282,7 +282,8 @@ void main()
 
     vec3 F0 = ComputeF0(metalness, 0.5, albedo);
     vec3 kD = (1.0 - F0) * (1.0 - metalness);
-    vec3 ambient = kD * uAmbientColor + F0;
+    vec3 ambient = kD * uAmbientColor;
+    ambient += F0 * uAmbientColor;
     ambient *= albedo * occlusion;
 
     /* --- Output --- */

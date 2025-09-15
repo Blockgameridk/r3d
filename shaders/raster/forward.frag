@@ -503,7 +503,8 @@ void main()
         // NOTE: Small tweak here, we also add F0. It's not physically correct, 
         //       but it's to at least simulate some specularity, otherwise the 
         //       result would look poor for metals...
-        ambient = (1.0 - F0) * (1.0 - metalness) * ambient + F0;
+        ambient = (1.0 - F0) * (1.0 - metalness) * ambient;
+        ambient += F0 * uAmbientColor;
     }
 
     /* Compute ambient occlusion map */
