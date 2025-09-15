@@ -2242,10 +2242,10 @@ static bool r3d_process_assimp_mesh(R3D_Model* model, Matrix modelMatrix, int me
 #undef CLEANUP
 }
 
-static bool r3d_process_assimp_meshes(const struct aiScene *scene, R3D_Model *model, struct aiNode *node, Matrix parentFinalTransform)
+static bool r3d_process_assimp_meshes(const struct aiScene *scene, R3D_Model *model, struct aiNode *node, const Matrix* parentFinalTransform)
 {
     Matrix relativeTransform = r3d_matrix_from_ai_matrix(&node->mTransformation);
-    Matrix finalTransform = r3d_matrix_multiply(&relativeTransform, &parentFinalTransform);
+    Matrix finalTransform = r3d_matrix_multiply(&relativeTransform, parentFinalTransform);
 
     for (unsigned int i = 0; i < node->mNumMeshes; i++)
     {
@@ -2264,7 +2264,7 @@ static bool r3d_process_assimp_meshes(const struct aiScene *scene, R3D_Model *mo
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
-        if(!r3d_process_assimp_meshes(scene, model, node->mChildren[i], finalTransform)) {
+        if(!r3d_process_assimp_meshes(scene, model, node->mChildren[i], &finalTransform)) {
             return false;
         }
     }
@@ -3274,7 +3274,7 @@ static bool r3d_process_model_from_scene(R3D_Model* model, const struct aiScene*
 
     /* --- Process all meshes --- */
 
-    if (!r3d_process_assimp_meshes(scene, model, scene->mRootNode, R3D_MATRIX_IDENTITY)) {
+    if (!r3d_process_assimp_meshes(scene, model, scene->mRootNode, &R3D_MATRIX_IDENTITY)) {
         return false;
     }
 
