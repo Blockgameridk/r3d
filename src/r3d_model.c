@@ -3175,15 +3175,6 @@ static bool r3d_process_model_from_scene(R3D_Model* model, const struct aiScene*
         return false;
     }
 
-    for (int i = 0; i < model->meshCount; i++) {
-        if (model->meshes[i].vertexCount == 0 && model->meshes[i].indexCount == 0) {
-            if (!r3d_process_assimp_mesh(model, &R3D_MATRIX_IDENTITY, i, scene->mMeshes[i], scene, true)) {
-                TraceLog(LOG_ERROR, "R3D: Unable to load mesh [%d]; The model will be invalid", i);
-                return false;
-            }
-        }
-    }
-
     /* --- Process bones and bind poses --- */
 
     if (!r3d_process_bones_and_offsets(model, scene)) {
