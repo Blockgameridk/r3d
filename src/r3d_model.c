@@ -1963,11 +1963,11 @@ static inline Matrix r3d_matrix_from_ai_matrix(const struct aiMatrix4x4* aiMat)
 
 /* === Assimp Mesh Processing === */
 
-static bool r3d_process_assimp_mesh(R3D_Model* model, Matrix modelMatrix, int meshIndex, const struct aiMesh* aiMesh, const struct aiScene* scene, bool upload)
+static bool r3d_process_assimp_mesh(R3D_Model* model, const Matrix* modelMatrix, int meshIndex, const struct aiMesh* aiMesh, const struct aiScene* scene, bool upload)
 {
     /* --- Pre compute the normal matrix --- */
 
-    Matrix normalMatrix = r3d_matrix_normal(&modelMatrix);
+    Matrix normalMatrix = r3d_matrix_normal(modelMatrix);
 
     /* --- Cleanup macro in case we failed to process mesh --- */
 
@@ -2047,7 +2047,7 @@ static bool r3d_process_assimp_mesh(R3D_Model* model, Matrix modelMatrix, int me
 
         // Position
         vertex->position = r3d_vec3_from_ai_vec3(&aiMesh->mVertices[i]);
-        vertex->position = Vector3Transform(vertex->position, modelMatrix);
+        vertex->position = Vector3Transform(vertex->position, *modelMatrix);
 
         // Bounds update
         if (vertex->position.x < minBounds.x) minBounds.x = vertex->position.x;
@@ -2257,7 +2257,7 @@ static bool r3d_process_assimp_meshes(const struct aiScene *scene, R3D_Model *mo
         if (scene->mMeshes[node->mMeshes[i]]->mNumBones != 0) {
             meshTransform = R3D_MATRIX_IDENTITY;
         }
-        if (!r3d_process_assimp_mesh(model, meshTransform, node->mMeshes[i], scene->mMeshes[node->mMeshes[i]], scene, true)) {
+        if (!r3d_process_assimp_mesh(model, &meshTransform, node->mMeshes[i], scene->mMeshes[node->mMeshes[i]], scene, true)) {
             TraceLog(LOG_ERROR, "R3D: Unable to load mesh [%d]; The model will be invalid", node->mMeshes[i]);
             return false;
         }
@@ -3280,7 +3280,7 @@ static bool r3d_process_model_from_scene(R3D_Model* model, const struct aiScene*
 
     for (int i = 0; i < model->meshCount; i++) {
         if (model->meshes[i].vertexCount == 0 && model->meshes[i].indexCount == 0) {
-            if (!r3d_process_assimp_mesh(model, R3D_MATRIX_IDENTITY, i, scene->mMeshes[i], scene, true)) {
+            if (!r3d_process_assimp_mesh(model, &R3D_MATRIX_IDENTITY, i, scene->mMeshes[i], scene, true)) {
                 TraceLog(LOG_ERROR, "R3D: Unable to load mesh [%d]; The model will be invalid", i);
                 return false;
             }
