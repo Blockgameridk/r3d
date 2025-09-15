@@ -186,6 +186,7 @@ add_library(${PROJECT_NAME}
     "${R3D_ROOT_PATH}/src/details/r3d_drawcall.c"
     "${R3D_ROOT_PATH}/src/details/r3d_frustum.c"
     "${R3D_ROOT_PATH}/src/details/r3d_light.c"
+    "${R3D_ROOT_PATH}/src/details/r3d_image.c"
     "${R3D_ROOT_PATH}/src/r3d_environment.c"
     "${R3D_ROOT_PATH}/src/r3d_particles.c"
     "${R3D_ROOT_PATH}/src/r3d_lighting.c"

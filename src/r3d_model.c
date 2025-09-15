@@ -1,6 +1,7 @@
 #include "r3d.h"
 
 #include "./details/r3d_primitives.h"
+#include "./details/r3d_image.h"
 #include "./details/r3d_math.h"
 #include "./r3d_state.h"
 
@@ -2376,226 +2377,122 @@ static Texture2D r3d_load_assimp_orm_texture(
     const struct aiScene* scene, const struct aiMaterial* aiMat, const char* basePath,
     bool* hasOcclusion, bool* hasRoughness, bool* hasMetalness)
 {
-#define PATHS_EQUAL(a, b) (strcmp((a).data, (b).data) == 0)
-#define HAS_TEXTURE_DATA(comp) ((comp).image.data != NULL)
-#define IS_SHININESS_TYPE(comp) ((comp).type == aiTextureType_SHININESS)
-
     Texture2D ormTexture = { 0 };
-
-    /* --- Init output values --- */
-
+    
     *hasOcclusion = false;
     *hasRoughness = false;
     *hasMetalness = false;
 
-    /* --- Texture component structure --- */
-    
-    typedef struct {
-        Image image;
-        bool isAllocated;
-        enum aiTextureType type;
-        struct aiString texPath;
-        bool hasTexture;
-    } TextureComponent;
+    /* --- Check for glTF combined metallic-roughness texture first --- */
 
-    TextureComponent components[3] = {
-        { {0}, false, aiTextureType_AMBIENT_OCCLUSION, {0}, false },
-        { {0}, false, aiTextureType_DIFFUSE_ROUGHNESS, {0}, false },
-        { {0}, false, aiTextureType_METALNESS, {0}, false }
-    };
+    struct aiString gltfPath;
+    if (aiGetMaterialTexture(aiMat, aiTextureType_GLTF_METALLIC_ROUGHNESS, 0, &gltfPath, NULL, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+        bool gltfAllocated;
+        Image gltfImage = r3d_load_assimp_image(scene, aiMat, aiTextureType_GLTF_METALLIC_ROUGHNESS, 0, basePath, &gltfAllocated);
 
-    /* --- Initialize texture availability --- */
-    
-    *hasOcclusion = components[0].hasTexture = (aiGetMaterialTexture(aiMat, components[0].type, 0, &components[0].texPath, NULL, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS);
-    *hasRoughness = components[1].hasTexture = (aiGetMaterialTexture(aiMat, components[1].type, 0, &components[1].texPath, NULL, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS);
-    
-    // Fallback to shininess for roughness if not available
-    if (!components[1].hasTexture) {
-        *hasRoughness = components[1].hasTexture = (aiGetMaterialTexture(aiMat, aiTextureType_SHININESS, 0, &components[1].texPath, NULL, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS);
-        if (components[1].hasTexture) components[1].type = aiTextureType_SHININESS;
-    }
-    
-    *hasMetalness = components[2].hasTexture = (aiGetMaterialTexture(aiMat, components[2].type, 0, &components[2].texPath, NULL, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS);
+        if (gltfImage.data != NULL) {
+            *hasRoughness = true;
+            *hasMetalness = true;
 
-    /* --- Analyze texture sharing patterns --- */
-    
-    bool allTexturesSame = false, twoTexturesSame = false;
-    int sharedTextureIndex = -1;
-
-    if (components[0].hasTexture && components[1].hasTexture && components[2].hasTexture) {
-        if (PATHS_EQUAL(components[0].texPath, components[1].texPath) && 
-            PATHS_EQUAL(components[1].texPath, components[2].texPath)) {
-            allTexturesSame = true;
-            sharedTextureIndex = 0;
-        }
-        else if (PATHS_EQUAL(components[0].texPath, components[1].texPath) || 
-                 PATHS_EQUAL(components[0].texPath, components[2].texPath)) {
-            twoTexturesSame = true;
-            sharedTextureIndex = 0;
-        }
-        else if (PATHS_EQUAL(components[1].texPath, components[2].texPath)) {
-            twoTexturesSame = true;
-            sharedTextureIndex = 1;
-        }
-    }
-
-    /* --- Handle case where all textures are identical --- */
-    
-    if (allTexturesSame)
-    {
-        components[0].image = r3d_load_assimp_image(scene, aiMat, components[0].type, 0, basePath, &components[0].isAllocated);
-
-        if (HAS_TEXTURE_DATA(components[0]))
-        {
-            // Convert to RGB format if necessary
-            if (components[0].image.format != RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8) {
-                ImageFormat(&components[0].image, RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8);
+            // Load separate occlusion if available
+            Image occlusionImage = { 0 };
+            bool occlusionAllocated = false;
+            struct aiString occlusionPath;
+            if (aiGetMaterialTexture(aiMat, aiTextureType_AMBIENT_OCCLUSION, 0, &occlusionPath, NULL, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+                occlusionImage = r3d_load_assimp_image(scene, aiMat, aiTextureType_AMBIENT_OCCLUSION, 0, basePath, &occlusionAllocated);
+                *hasOcclusion = (occlusionImage.data != NULL);
             }
 
-            // In such cases, there should be no shininess as roughness.
-            //if (IS_SHININESS_TYPE(components[1])) {
-            //    ImageColorInvertGreen(&components[0].image);
-            //}
+            // Compose ORM: O=occlusion, R=gltf.green, M=gltf.blue
+            const Image* sources[3] = { 
+                occlusionImage.data ? &occlusionImage : NULL,  // Red channel
+                &gltfImage,                                    // Green channel (roughness from glTF)
+                &gltfImage                                     // Blue channel (metalness from glTF)
+            };
 
-            ormTexture = LoadTextureFromImage(components[0].image);
+            Image ormImage = r3d_compose_images_rgb(sources, WHITE);
 
-            // Apply texture filtering
-            if (R3D.state.loading.textureFilter > TEXTURE_FILTER_BILINEAR) {
-                GenTextureMipmaps(&ormTexture);
+            if (ormImage.data) {
+                ormTexture = LoadTextureFromImage(ormImage);
+                UnloadImage(ormImage);
             }
-            SetTextureFilter(ormTexture, R3D.state.loading.textureFilter);
 
-            // Cleanup and return
-            if (components[0].isAllocated) {
-                UnloadImage(components[0].image);
+            // Cleanup
+            if (gltfAllocated) UnloadImage(gltfImage);
+            if (occlusionAllocated && occlusionImage.data) UnloadImage(occlusionImage);
+
+            // Apply filtering
+            if (ormTexture.id > 0) {
+                if (R3D.state.loading.textureFilter > TEXTURE_FILTER_BILINEAR) {
+                    GenTextureMipmaps(&ormTexture);
+                }
+                SetTextureFilter(ormTexture, R3D.state.loading.textureFilter);
             }
+
             return ormTexture;
         }
     }
 
-    /* --- Load individual texture components --- */
-    
-    // Load occlusion texture
-    if (components[0].hasTexture) {
-        components[0].image = r3d_load_assimp_image(scene, aiMat, components[0].type, 0, basePath, &components[0].isAllocated);
+    /* --- Fallback: Load individual textures --- */
+
+    Image occlusionImage = { 0 };
+    Image roughnessImage = { 0 };
+    Image metalnessImage = { 0 };
+    bool occlusionAllocated = false, roughnessAllocated = false, metalnessAllocated = false;
+
+    // Load occlusion
+    struct aiString occlusionPath;
+    if (aiGetMaterialTexture(aiMat, aiTextureType_AMBIENT_OCCLUSION, 0, &occlusionPath, NULL, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+        occlusionImage = r3d_load_assimp_image(scene, aiMat, aiTextureType_AMBIENT_OCCLUSION, 0, basePath, &occlusionAllocated);
+        *hasOcclusion = (occlusionImage.data != NULL);
     }
-    
-    // Load roughness texture with sharing
-    if (components[1].hasTexture) {
-        if (twoTexturesSame && sharedTextureIndex == 0 && PATHS_EQUAL(components[0].texPath, components[1].texPath)) {
-            components[1].image = components[0].image;
-            components[1].isAllocated = false;
-        } else {
-            components[1].image = r3d_load_assimp_image(scene, aiMat, components[1].type, 0, basePath, &components[1].isAllocated);
-            if (HAS_TEXTURE_DATA(components[1]) && IS_SHININESS_TYPE(components[1])) {
-                ImageColorInvert(&components[1].image);
-            }
-        }
-    }
-    
-    // Load metalness texture with sharing
-    if (components[2].hasTexture) {
-        bool shouldLoadNew = true;
-        
-        if (twoTexturesSame) {
-            if (sharedTextureIndex == 0 && PATHS_EQUAL(components[0].texPath, components[2].texPath)) {
-                components[2].image = components[0].image;
-                components[2].isAllocated = false;
-                shouldLoadNew = false;
-            } else if (sharedTextureIndex == 1 && PATHS_EQUAL(components[1].texPath, components[2].texPath)) {
-                components[2].image = components[1].image;
-                components[2].isAllocated = false;
-                shouldLoadNew = false;
-            }
-        }
-        
-        if (shouldLoadNew) {
-            components[2].image = r3d_load_assimp_image(scene, aiMat, components[2].type, 0, basePath, &components[2].isAllocated);
+
+    // Load roughness (with shininess fallback)
+    struct aiString roughnessPath;
+    if (aiGetMaterialTexture(aiMat, aiTextureType_DIFFUSE_ROUGHNESS, 0, &roughnessPath, NULL, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+        roughnessImage = r3d_load_assimp_image(scene, aiMat, aiTextureType_DIFFUSE_ROUGHNESS, 0, basePath, &roughnessAllocated);
+        *hasRoughness = (roughnessImage.data != NULL);
+    } else if (aiGetMaterialTexture(aiMat, aiTextureType_SHININESS, 0, &roughnessPath, NULL, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+        roughnessImage = r3d_load_assimp_image(scene, aiMat, aiTextureType_SHININESS, 0, basePath, &roughnessAllocated);
+        if (roughnessImage.data) {
+            *hasRoughness = true;
+            ImageColorInvert(&roughnessImage); // Convert shininess to roughness
         }
     }
 
-    /* --- Validate at least one component is available --- */
-    
-    bool hasAnyTexture = HAS_TEXTURE_DATA(components[0]) || HAS_TEXTURE_DATA(components[1]) || HAS_TEXTURE_DATA(components[2]);
-    if (!hasAnyTexture) goto cleanup;
-
-    /* --- Determine reference dimensions --- */
-    
-    int refWidth = 0, refHeight = 0;
-    for (int i = 0; i < 3; i++) {
-        if (HAS_TEXTURE_DATA(components[i])) {
-            refWidth = components[i].image.width;
-            refHeight = components[i].image.height;
-            break;
-        }
+    // Load metalness
+    struct aiString metalnessPath;
+    if (aiGetMaterialTexture(aiMat, aiTextureType_METALNESS, 0, &metalnessPath, NULL, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+        metalnessImage = r3d_load_assimp_image(scene, aiMat, aiTextureType_METALNESS, 0, basePath, &metalnessAllocated);
+        *hasMetalness = (metalnessImage.data != NULL);
     }
 
-    /* --- Resize components to match reference dimensions --- */
-    
-    for (int i = 0; i < 3; i++) {
-        if (HAS_TEXTURE_DATA(components[i]) && components[i].isAllocated &&
-            (components[i].image.width != refWidth || components[i].image.height != refHeight)) {
-            ImageResize(&components[i].image, refWidth, refHeight);
-        }
-    }
-
-    /* --- Create combined ORM texture --- */
-    
-    Image ormImage = {
-        .data = RL_MALLOC(refWidth * refHeight * 3 * sizeof(uint8_t)),
-        .format = RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8,
-        .width = refWidth,
-        .height = refHeight,
-        .mipmaps = 1
+    // Compose ORM using the utility function
+    const Image* sources[3] = { 
+        occlusionImage.data ? &occlusionImage : NULL,   // Red channel
+        roughnessImage.data ? &roughnessImage : NULL,   // Green channel
+        metalnessImage.data ? &metalnessImage : NULL    // Blue channel
     };
 
-    if (!ormImage.data) goto cleanup;
+    Image ormImage = r3d_compose_images_rgb(sources, WHITE);
 
-    /* --- Pack ORM channels into final image --- */
-    
-    uint8_t* ormData = (uint8_t*)ormImage.data;
-    const size_t pixelCount = refWidth * refHeight;
-    
-    for (size_t i = 0; i < pixelCount; i++)
-    {
-        const int x = i % refWidth;
-        const int y = i / refWidth;
+    if (ormImage.data) {
+        ormTexture = LoadTextureFromImage(ormImage);
+        UnloadImage(ormImage);
 
-        // Extract channels with default values
-        const uint8_t O = HAS_TEXTURE_DATA(components[0]) ? GetImageColor(components[0].image, x, y).r : 255;
-        const uint8_t R = HAS_TEXTURE_DATA(components[1]) ? GetImageColor(components[1].image, x, y).g : 255;
-        const uint8_t M = HAS_TEXTURE_DATA(components[2]) ? GetImageColor(components[2].image, x, y).b : 255;
-
-        // Pack into RGB: Red=Occlusion, Green=Roughness, Blue=Metalness
-        ormData[i * 3 + 0] = O;
-        ormData[i * 3 + 1] = R;
-        ormData[i * 3 + 2] = M;
-    }
-
-    /* --- Generate final texture with filtering --- */
-    
-    ormTexture = LoadTextureFromImage(ormImage);
-    UnloadImage(ormImage);
-
-    if (R3D.state.loading.textureFilter > TEXTURE_FILTER_BILINEAR) {
-        GenTextureMipmaps(&ormTexture);
-    }
-    SetTextureFilter(ormTexture, R3D.state.loading.textureFilter);
-
-cleanup:
-    /* --- Cleanup allocated texture components --- */
-
-    for (int i = 0; i < 3; i++) {
-        if (components[i].isAllocated && HAS_TEXTURE_DATA(components[i])) {
-            UnloadImage(components[i].image);
+        // Apply filtering
+        if (R3D.state.loading.textureFilter > TEXTURE_FILTER_BILINEAR) {
+            GenTextureMipmaps(&ormTexture);
         }
+        SetTextureFilter(ormTexture, R3D.state.loading.textureFilter);
     }
+
+    // Cleanup
+    if (occlusionAllocated && occlusionImage.data) UnloadImage(occlusionImage);
+    if (roughnessAllocated && roughnessImage.data) UnloadImage(roughnessImage);
+    if (metalnessAllocated && metalnessImage.data) UnloadImage(metalnessImage);
 
     return ormTexture;
-
-#undef PATHS_EQUAL
-#undef HAS_TEXTURE_DATA
-#undef IS_SHININESS_TYPE
 }
 
 bool process_assimp_materials(const struct aiScene* scene, R3D_Material** materials, int* materialCount, const char* modelPath)
