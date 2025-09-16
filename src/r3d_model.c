@@ -1448,7 +1448,8 @@ R3D_Mesh R3D_GenMeshCubicmap(Image cubicmap, Vector3 cubeSize, bool upload)
             Color pixel = pixels[z * cubicmap.width + x];
             if (ColorIsEqual(pixel, WHITE)) {
                 maxFaces += 6; // complete cube
-            } else if (ColorIsEqual(pixel, BLACK)) {
+            }
+            else if (ColorIsEqual(pixel, BLACK)) {
                 maxFaces += 2; // floor and ceiling only
             }
         }
@@ -1802,7 +1803,8 @@ bool R3D_UploadMesh(R3D_Mesh* mesh, bool dynamic)
         glGenBuffers(1, &mesh->ebo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indexCount * sizeof(unsigned int), mesh->indices, usage);
-    } else {
+    }
+    else {
         mesh->ebo = 0;
     }
 
@@ -2061,7 +2063,8 @@ static bool r3d_process_assimp_mesh(R3D_Model* model, const Matrix* modelMatrix,
         // Texture coordinates
         if (aiMesh->mTextureCoords[0] && aiMesh->mNumUVComponents[0] >= 2) {
             vertex->texcoord = r3d_vec2_from_ai_vec3(&aiMesh->mTextureCoords[0][i]);
-        } else {
+        }
+        else {
             vertex->texcoord = (Vector2) { 0.0f, 0.0f };
         }
 
@@ -2069,7 +2072,8 @@ static bool r3d_process_assimp_mesh(R3D_Model* model, const Matrix* modelMatrix,
         if (aiMesh->mNormals) {
             vertex->normal = r3d_vec3_from_ai_vec3(&aiMesh->mNormals[i]);
             vertex->normal = Vector3Normalize(Vector3Transform(vertex->normal, normalMatrix));
-        } else {
+        }
+        else {
             vertex->normal = (Vector3) { 0.0f, 0.0f, 1.0f };
         }
 
@@ -2087,7 +2091,8 @@ static bool r3d_process_assimp_mesh(R3D_Model* model, const Matrix* modelMatrix,
             Vector3 reconstructedBitangent = Vector3CrossProduct(normal, tangent);
             float handedness = Vector3DotProduct(reconstructedBitangent, bitangent);
             vertex->tangent.w = (handedness < 0.0f) ? -1.0f : 1.0f;
-        } else {
+        }
+        else {
             vertex->tangent = (Vector4) { 1.0f, 0.0f, 0.0f, 1.0f };
         }
 
@@ -2097,7 +2102,8 @@ static bool r3d_process_assimp_mesh(R3D_Model* model, const Matrix* modelMatrix,
             vertex->color.y = aiMesh->mColors[0][i].g;
             vertex->color.z = aiMesh->mColors[0][i].b;
             vertex->color.w = aiMesh->mColors[0][i].a;
-        } else {
+        }
+        else {
             vertex->color = (Vector4) { 1.0f, 1.0f, 1.0f, 1.0f };
         }
     }
@@ -2177,13 +2183,15 @@ static bool r3d_process_assimp_mesh(R3D_Model* model, const Matrix* modelMatrix,
                 for (int j = 0; j < 4; j++) {
                     boneVertex->weights[j] /= totalWeight;
                 }
-            } else {
+            }
+            else {
                 // If no bone weights, assign to first bone with weight 1.0
                 boneVertex->weights[0] = 1.0f;
                 boneVertex->boneIds[0] = 0;
             }
         }
-    } else {
+    }
+    else {
         // No bones found for this mesh
         for (size_t i = 0; i < mesh->vertexCount; i++) {
             mesh->vertices[i].weights[0] = 1.0f;
@@ -2452,7 +2460,8 @@ static Texture2D r3d_load_assimp_orm_texture(
     if (aiGetMaterialTexture(aiMat, aiTextureType_DIFFUSE_ROUGHNESS, 0, &roughnessPath, NULL, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
         roughnessImage = r3d_load_assimp_image(scene, aiMat, aiTextureType_DIFFUSE_ROUGHNESS, 0, basePath, &roughnessAllocated);
         *hasRoughness = (roughnessImage.data != NULL);
-    } else if (aiGetMaterialTexture(aiMat, aiTextureType_SHININESS, 0, &roughnessPath, NULL, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+    }
+    else if (aiGetMaterialTexture(aiMat, aiTextureType_SHININESS, 0, &roughnessPath, NULL, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
         roughnessImage = r3d_load_assimp_image(scene, aiMat, aiTextureType_SHININESS, 0, basePath, &roughnessAllocated);
         if (roughnessImage.data) {
             *hasRoughness = true;
@@ -3220,7 +3229,8 @@ static R3D_ModelAnimation* r3d_process_animations_from_scene(const struct aiScen
         const struct aiAnimation* aiAnim = scene->mAnimations[i];
         if (r3d_process_animation(&animations[successCount], scene, aiAnim, targetFrameRate)) {
             successCount++;
-        } else {
+        }
+        else {
             TraceLog(LOG_ERROR, "R3D: Failed to process animation %d", i);
         }
     }
