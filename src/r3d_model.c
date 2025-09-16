@@ -2562,6 +2562,10 @@ bool process_assimp_materials(const struct aiScene* scene, R3D_Material** materi
             mat->normal.texture = R3D_GetNormalTexture();
         }
 
+        if (aiGetMaterialFloat(aiMat, AI_MATKEY_BUMPSCALING, &mat->normal.scale) != AI_SUCCESS) {
+            mat->normal.scale = 1.0f;
+        }
+
         /* --- Load emission map --- */
 
         struct aiColor4D emissionColor;
