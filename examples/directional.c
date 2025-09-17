@@ -50,8 +50,11 @@ const char* Init(void)
     {
         R3D_SetLightDirection(light, (Vector3) { 0, -1, -1 });
         R3D_SetShadowUpdateMode(light, R3D_SHADOW_UPDATE_MANUAL);
-        R3D_EnableShadow(light, 4096);
         R3D_SetLightActive(light, true);
+
+        R3D_EnableShadow(light, 4096);
+        R3D_SetShadowDepthBias(light, 0.01f);
+        R3D_SetShadowSoftness(light, 2.0f);
     }
 
     /* --- Setup the camera --- */
