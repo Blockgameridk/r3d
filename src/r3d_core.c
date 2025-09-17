@@ -1605,7 +1605,6 @@ void r3d_pass_deferred_lights(void)
         r3d_shader_bind_sampler2D(screen.lighting, uTexNormal, R3D.target.normal);
         r3d_shader_bind_sampler2D(screen.lighting, uTexDepth, R3D.target.depthStencil);
         r3d_shader_bind_sampler2D(screen.lighting, uTexORM, R3D.target.orm);
-        r3d_shader_bind_sampler2D(screen.lighting, uTexNoise, R3D.texture.blueNoise);
 
         /* --- Defines constant uniforms --- */
 
@@ -1726,7 +1725,6 @@ void r3d_pass_deferred_lights(void)
         r3d_shader_unbind_sampler2D(screen.lighting, uTexNormal);
         r3d_shader_unbind_sampler2D(screen.lighting, uTexDepth);
         r3d_shader_unbind_sampler2D(screen.lighting, uTexORM);
-        r3d_shader_unbind_sampler2D(screen.lighting, uTexNoise);
 
         r3d_shader_unbind_samplerCube(screen.lighting, uLight.shadowCubemap);
         r3d_shader_unbind_sampler2D(screen.lighting, uLight.shadowMap);
@@ -2066,8 +2064,6 @@ void r3d_pass_scene_forward(void)
         if (R3D.container.aDrawForwardInst.count > 0) {
             r3d_shader_enable(raster.forwardInst);
             {
-                r3d_shader_bind_sampler2D(raster.forwardInst, uTexNoise, R3D.texture.blueNoise);
-
                 if (R3D.env.useSky) {
                     r3d_shader_bind_samplerCube(raster.forwardInst, uCubeIrradiance, R3D.env.sky.irradiance.id);
                     r3d_shader_bind_samplerCube(raster.forwardInst, uCubePrefilter, R3D.env.sky.prefilter.id);
@@ -2091,8 +2087,6 @@ void r3d_pass_scene_forward(void)
                     r3d_drawcall_raster_forward_inst(call, &R3D.state.transform.viewProj);
                 }
 
-                r3d_shader_unbind_sampler2D(raster.forwardInst, uTexNoise);
-
                 if (R3D.env.useSky) {
                     r3d_shader_unbind_samplerCube(raster.forwardInst, uCubeIrradiance);
                     r3d_shader_unbind_samplerCube(raster.forwardInst, uCubePrefilter);
@@ -2106,7 +2100,6 @@ void r3d_pass_scene_forward(void)
 
                 // NOTE: The storage texture of the matrices may have been bind during drawcalls
                 r3d_shader_unbind_sampler1D(raster.forwardInst, uTexBoneMatrices);
-                r3d_shader_unbind_sampler2D(raster.forwardInst, uTexNoise);
             }
             r3d_shader_disable();
         }
@@ -2115,8 +2108,6 @@ void r3d_pass_scene_forward(void)
         if (R3D.container.aDrawForward.count > 0) {
             r3d_shader_enable(raster.forward);
             {
-                r3d_shader_bind_sampler2D(raster.forward, uTexNoise, R3D.texture.blueNoise);
-
                 if (R3D.env.useSky) {
                     r3d_shader_bind_samplerCube(raster.forward, uCubeIrradiance, R3D.env.sky.irradiance.id);
                     r3d_shader_bind_samplerCube(raster.forward, uCubePrefilter, R3D.env.sky.prefilter.id);
@@ -2140,8 +2131,6 @@ void r3d_pass_scene_forward(void)
                     r3d_drawcall_raster_forward(call, &R3D.state.transform.viewProj);
                 }
 
-                r3d_shader_unbind_sampler2D(raster.forward, uTexNoise);
-
                 if (R3D.env.useSky) {
                     r3d_shader_unbind_samplerCube(raster.forward, uCubeIrradiance);
                     r3d_shader_unbind_samplerCube(raster.forward, uCubePrefilter);
@@ -2155,7 +2144,6 @@ void r3d_pass_scene_forward(void)
 
                 // NOTE: The storage texture of the matrices may have been bind during drawcalls
                 r3d_shader_unbind_sampler1D(raster.forward, uTexBoneMatrices);
-                r3d_shader_unbind_sampler2D(raster.forward, uTexNoise);
             }
             r3d_shader_disable();
         }

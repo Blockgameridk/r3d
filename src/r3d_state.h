@@ -272,7 +272,6 @@ extern struct R3D_State {
         GLuint white;
         GLuint black;
         GLuint normal;
-        GLuint blueNoise;
         GLuint ssaoNoise;
         GLuint ssaoKernel;
         GLuint iblBrdfLut;
@@ -418,7 +417,6 @@ void r3d_shader_load_screen_fxaa(void);
 void r3d_texture_load_white(void);
 void r3d_texture_load_black(void);
 void r3d_texture_load_normal(void);
-void r3d_texture_load_blue_noise(void);
 void r3d_texture_load_ssao_noise(void);
 void r3d_texture_load_ssao_kernel(void);
 void r3d_texture_load_ibl_brdf_lut(void);

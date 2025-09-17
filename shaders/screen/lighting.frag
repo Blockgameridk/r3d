@@ -63,8 +63,6 @@ uniform sampler2D uTexNormal;
 uniform sampler2D uTexDepth;
 uniform sampler2D uTexORM;
 
-uniform sampler2D uTexNoise;   //< Noise texture (used for soft shadows)
-
 uniform Light uLight;
 
 uniform vec3 uViewPosition;
@@ -78,24 +76,34 @@ layout(location = 1) out vec4 FragSpecular;
 
 /* === Constants === */
 
-#define TEX_NOISE_SIZE 64
-#define SHADOW_SAMPLES 12
+#define SHADOW_SAMPLES 16
 
-const vec2 POISSON_DISK[SHADOW_SAMPLES] = vec2[]
-(
-    vec2(-0.94201624, -0.39906216), vec2(0.94558609, -0.76890725),
-    vec2(-0.094184101, -0.92938870), vec2(0.34495938, 0.29387760),
-    vec2(-0.91588581, 0.45771432), vec2(-0.81544232, -0.87912464),
-    vec2(-0.38277543, 0.27676845), vec2(0.97484398, 0.75648379),
-    vec2(0.44323325, -0.97511554), vec2(0.53742981, -0.47373420),
-    vec2(-0.26496911, -0.41893023), vec2(0.79197514, 0.19090188)
+const vec2 POISSON_DISK[16] = vec2[](
+    vec2(-0.94201624, -0.39906216),
+    vec2(0.94558609, -0.76890725),
+    vec2(-0.094184101, -0.92938870),
+    vec2(0.34495938, 0.29387760),
+    vec2(-0.91588581, 0.45771432),
+    vec2(-0.81544232, -0.87912464),
+    vec2(-0.38277543, 0.27676845),
+    vec2(0.97484398, 0.75648379),
+    vec2(0.44323325, -0.97511554),
+    vec2(0.53742981, -0.47373420),
+    vec2(-0.26496911, -0.41893023),
+    vec2(0.79197514, 0.19090188),
+    vec2(-0.24188840, 0.99706507),
+    vec2(-0.81409955, 0.91437590),
+    vec2(0.19984126, 0.78641367),
+    vec2(0.14383161, -0.14100790)
 );
 
 /* === Shadow functions === */
 
-vec2 Rotate2D(vec2 v, float c, float s)
+float InterleavedGradientNoise(vec2 pos)
 {
-    return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+    // http://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare
+	const vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
+	return fract(magic.z * fract(dot(pos, magic.xy)));
 }
 
 float ShadowOmni(vec3 position, float cNdotL)
@@ -112,28 +120,23 @@ float ShadowOmni(vec3 position, float cNdotL)
     bias = max(bias, uLight.shadowDepthBias * currentDepth);
     currentDepth -= bias;
 
-    /* --- Adaptive Softness Based on Distance --- */
+    /* --- Build orthonormal basis for perturbation --- */
 
-    float adaptiveRadius = uLight.shadowSoftness * sqrt(currentDepth / uLight.far);
+    mat3 TBN = M_OrthonormalBasis(direction);
 
-    /* --- Tangent Space Construction for Sampling --- */
+    /* --- Generate an additional debanding rotation for the poisson disk --- */
 
-    vec3 up = abs(direction.y) > 0.99 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0);
-    vec3 tangent = normalize(cross(up, direction));
-    vec3 bitangent = cross(direction, tangent);
-
-    /* --- Blue Noise Rotation for Sample Distribution --- */
-
-    float rotationAngle = texture(uTexNoise, gl_FragCoord.xy * (1.0/float(TEX_NOISE_SIZE))).r * M_TAU;
-    float rc = cos(rotationAngle);
-    float rs = sin(rotationAngle);
+    float r = M_TAU * InterleavedGradientNoise(gl_FragCoord.xy);
+    float sr = sin(r);
+    float cr = cos(r);
+    mat2 diskRot = mat2(vec2(cr, -sr), vec2(sr, cr));
 
     /* --- Poisson Disk PCF Sampling --- */
 
     float shadow = 0.0;
     for (int i = 0; i < SHADOW_SAMPLES; ++i) {
-        vec2 rotatedOffset = Rotate2D(POISSON_DISK[i], rc, rs);
-        vec3 sampleDir = normalize(direction + (tangent * rotatedOffset.x + bitangent * rotatedOffset.y) * adaptiveRadius);
+        vec2 diskOffset = diskRot * POISSON_DISK[i] * uLight.shadowSoftness;
+        vec3 sampleDir = normalize(TBN * vec3(diskOffset.xy, 1.0));
         float sampleDepth = texture(uLight.shadowCubemap, sampleDir).r * uLight.far;
         shadow += step(currentDepth, sampleDepth);
     }
@@ -163,21 +166,18 @@ float Shadow(vec3 position, float cNdotL)
     bias = max(bias, uLight.shadowDepthBias * projCoords.z);
     float currentDepth = projCoords.z - bias;
 
-    /* --- Distance-Based Adaptive Softness --- */
+    /* --- Generate an additional debanding rotation for the poisson disk --- */
 
-    float adaptiveRadius = uLight.shadowSoftness * sqrt(projCoords.z);
-
-    /* --- Blue Noise Rotation for Sample Distribution --- */
-
-    float rotationAngle = texture(uTexNoise, gl_FragCoord.xy * (1.0/float(TEX_NOISE_SIZE))).r * M_TAU;
-    float rc = cos(rotationAngle);
-    float rs = sin(rotationAngle);
+    float r = M_TAU * InterleavedGradientNoise(gl_FragCoord.xy);
+    float sr = sin(r);
+    float cr = cos(r);
+    mat2 diskRot = mat2(vec2(cr, -sr), vec2(sr, cr));
 
     /* --- Poisson Disk PCF Sampling --- */
 
     float shadow = 0.0;
     for (int i = 0; i < SHADOW_SAMPLES; ++i) {
-        vec2 offset = Rotate2D(POISSON_DISK[i], rc, rs) * adaptiveRadius;
+        vec2 offset = diskRot * POISSON_DISK[i] * uLight.shadowSoftness;
         shadow += step(currentDepth, texture(uLight.shadowMap, projCoords.xy + offset).r);
     }
 

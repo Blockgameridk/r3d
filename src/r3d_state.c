@@ -547,7 +547,6 @@ void r3d_textures_load(void)
     r3d_texture_load_white();
     r3d_texture_load_black();
     r3d_texture_load_normal();
-    r3d_texture_load_blue_noise();
     r3d_texture_load_ibl_brdf_lut();
 
     if (R3D.env.ssaoEnabled) {
@@ -561,7 +560,6 @@ void r3d_textures_unload(void)
     rlUnloadTexture(R3D.texture.white);
     rlUnloadTexture(R3D.texture.black);
     rlUnloadTexture(R3D.texture.normal);
-    rlUnloadTexture(R3D.texture.blueNoise);
     rlUnloadTexture(R3D.texture.iblBrdfLut);
 
     if (R3D.texture.ssaoNoise != 0) {
@@ -1327,7 +1325,6 @@ void r3d_shader_load_raster_forward(void)
     r3d_shader_get_location(raster.forward, uTexEmission);
     r3d_shader_get_location(raster.forward, uTexNormal);
     r3d_shader_get_location(raster.forward, uTexORM);
-    r3d_shader_get_location(raster.forward, uTexNoise);
     r3d_shader_get_location(raster.forward, uEmissionEnergy);
     r3d_shader_get_location(raster.forward, uNormalScale);
     r3d_shader_get_location(raster.forward, uOcclusion);
@@ -1353,10 +1350,9 @@ void r3d_shader_load_raster_forward(void)
     r3d_shader_set_sampler2D_slot(raster.forward, uTexEmission, 2);
     r3d_shader_set_sampler2D_slot(raster.forward, uTexNormal, 3);
     r3d_shader_set_sampler2D_slot(raster.forward, uTexORM, 4);
-    r3d_shader_set_sampler2D_slot(raster.forward, uTexNoise, 5);
-    r3d_shader_set_samplerCube_slot(raster.forward, uCubeIrradiance, 6);
-    r3d_shader_set_samplerCube_slot(raster.forward, uCubePrefilter, 7);
-    r3d_shader_set_sampler2D_slot(raster.forward, uTexBrdfLut, 8);
+    r3d_shader_set_samplerCube_slot(raster.forward, uCubeIrradiance, 5);
+    r3d_shader_set_samplerCube_slot(raster.forward, uCubePrefilter, 6);
+    r3d_shader_set_sampler2D_slot(raster.forward, uTexBrdfLut, 7);
 
     int shadowMapSlot = 10;
     for (int i = 0; i < R3D_SHADER_FORWARD_NUM_LIGHTS; i++) {
@@ -1411,7 +1407,6 @@ void r3d_shader_load_raster_forward_inst(void)
     r3d_shader_get_location(raster.forwardInst, uTexEmission);
     r3d_shader_get_location(raster.forwardInst, uTexNormal);
     r3d_shader_get_location(raster.forwardInst, uTexORM);
-    r3d_shader_get_location(raster.forwardInst, uTexNoise);
     r3d_shader_get_location(raster.forwardInst, uEmissionEnergy);
     r3d_shader_get_location(raster.forwardInst, uNormalScale);
     r3d_shader_get_location(raster.forwardInst, uOcclusion);
@@ -1437,10 +1432,9 @@ void r3d_shader_load_raster_forward_inst(void)
     r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexEmission, 2);
     r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexNormal, 3);
     r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexORM, 4);
-    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexNoise, 5);
-    r3d_shader_set_samplerCube_slot(raster.forwardInst, uCubeIrradiance, 6);
-    r3d_shader_set_samplerCube_slot(raster.forwardInst, uCubePrefilter, 7);
-    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexBrdfLut, 8);
+    r3d_shader_set_samplerCube_slot(raster.forwardInst, uCubeIrradiance, 5);
+    r3d_shader_set_samplerCube_slot(raster.forwardInst, uCubePrefilter, 6);
+    r3d_shader_set_sampler2D_slot(raster.forwardInst, uTexBrdfLut, 7);
 
     int shadowMapSlot = 10;
     for (int i = 0; i < R3D_SHADER_FORWARD_NUM_LIGHTS; i++) {
@@ -1713,7 +1707,6 @@ void r3d_shader_load_screen_lighting(void)
     r3d_shader_get_location(screen.lighting, uTexNormal);
     r3d_shader_get_location(screen.lighting, uTexDepth);
     r3d_shader_get_location(screen.lighting, uTexORM);
-    r3d_shader_get_location(screen.lighting, uTexNoise);
     r3d_shader_get_location(screen.lighting, uViewPosition);
     r3d_shader_get_location(screen.lighting, uMatInvProj);
     r3d_shader_get_location(screen.lighting, uMatInvView);
@@ -1745,10 +1738,9 @@ void r3d_shader_load_screen_lighting(void)
     r3d_shader_set_sampler2D_slot(screen.lighting, uTexNormal, 1);
     r3d_shader_set_sampler2D_slot(screen.lighting, uTexDepth, 2);
     r3d_shader_set_sampler2D_slot(screen.lighting, uTexORM, 3);
-    r3d_shader_set_sampler2D_slot(screen.lighting, uTexNoise, 4);
 
-    r3d_shader_set_sampler2D_slot(screen.lighting, uLight.shadowMap, 5);
-    r3d_shader_set_samplerCube_slot(screen.lighting, uLight.shadowCubemap, 6);
+    r3d_shader_set_sampler2D_slot(screen.lighting, uLight.shadowMap, 4);
+    r3d_shader_set_samplerCube_slot(screen.lighting, uLight.shadowCubemap, 5);
 
     r3d_shader_disable();
 }
@@ -1921,18 +1913,6 @@ void r3d_texture_load_normal(void)
 {
     static const unsigned char DATA[3] = { 127, 127, 255 };
     R3D.texture.normal = rlLoadTexture(&DATA, 1, 1, PIXELFORMAT_UNCOMPRESSED_R8G8B8, 1);
-}
-
-void r3d_texture_load_blue_noise(void)
-{
-    glGenTextures(1, &R3D.texture.blueNoise);
-    glBindTexture(GL_TEXTURE_2D, R3D.texture.blueNoise);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, 64, 64, 0, GL_RED, GL_UNSIGNED_BYTE, BLUE_NOISE_64_R8_UNORM_RAW);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
 void r3d_texture_load_ssao_noise(void)

@@ -239,7 +239,6 @@ embed_shaders(${PROJECT_NAME}
 
 embed_assets(${PROJECT_NAME}
     "${R3D_ROOT_PATH}/assets/brdf_lut_512_rg16_float.raw"
-    "${R3D_ROOT_PATH}/assets/blue_noise_64_r8_unorm.raw"
 )
 
 # Link project dependencies
