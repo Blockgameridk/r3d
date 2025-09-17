@@ -29,7 +29,6 @@
 
 /* === Assets === */
 
-#include <assets/blue_noise_64_r8_unorm.raw.h>
 #include <assets/brdf_lut_512_rg16_float.raw.h>
 
 /* === Shaders === */
