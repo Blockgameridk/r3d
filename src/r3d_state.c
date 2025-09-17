@@ -1084,11 +1084,20 @@ void r3d_framebuffer_load_scene(int width, int height)
 
 /* === Shader loading functions === */
 
+#define R3D_SHADER_VALIDATION(program) do { \
+    if (R3D.shader.program.id == 0) { \
+        TraceLog(LOG_ERROR, "R3D: Failed to validate '" #program "'"); \
+        return; \
+    } \
+} while(0) \
+    
 void r3d_shader_load_generate_gaussian_blur_dual_pass(void)
 {
     R3D.shader.generate.gaussianBlurDualPass.id = rlLoadShaderCode(
         SCREEN_VERT, GAUSSIAN_BLUR_DUAL_PASS_FRAG
     );
+
+    R3D_SHADER_VALIDATION(generate.gaussianBlurDualPass);
 
     r3d_shader_get_location(generate.gaussianBlurDualPass, uTexture);
     r3d_shader_get_location(generate.gaussianBlurDualPass, uTexelDir);
@@ -1103,6 +1112,8 @@ void r3d_shader_load_generate_downsampling(void)
     R3D.shader.generate.downsampling.id = rlLoadShaderCode(
         SCREEN_VERT, DOWNSAMPLING_FRAG
     );
+
+    R3D_SHADER_VALIDATION(generate.downsampling);
 
     r3d_shader_get_location(generate.downsampling, uTexture);
     r3d_shader_get_location(generate.downsampling, uTexelSize);
@@ -1120,6 +1131,8 @@ void r3d_shader_load_generate_upsampling(void)
         SCREEN_VERT, UPSAMPLING_FRAG
     );
 
+    R3D_SHADER_VALIDATION(generate.upsampling);
+
     r3d_shader_get_location(generate.upsampling, uTexture);
     r3d_shader_get_location(generate.upsampling, uFilterRadius);
 
@@ -1133,6 +1146,8 @@ void r3d_shader_load_generate_cubemap_from_equirectangular(void)
     R3D.shader.generate.cubemapFromEquirectangular.id = rlLoadShaderCode(
         CUBEMAP_VERT, CUBEMAP_FROM_EQUIRECTANGULAR_FRAG
     );
+
+    R3D_SHADER_VALIDATION(generate.cubemapFromEquirectangular);
 
     r3d_shader_get_location(generate.cubemapFromEquirectangular, uMatProj);
     r3d_shader_get_location(generate.cubemapFromEquirectangular, uMatView);
@@ -1149,6 +1164,8 @@ void r3d_shader_load_generate_irradiance_convolution(void)
         CUBEMAP_VERT, IRRADIANCE_CONVOLUTION_FRAG
     );
 
+    R3D_SHADER_VALIDATION(generate.irradianceConvolution);
+
     r3d_shader_get_location(generate.irradianceConvolution, uMatProj);
     r3d_shader_get_location(generate.irradianceConvolution, uMatView);
     r3d_shader_get_location(generate.irradianceConvolution, uCubemap);
@@ -1163,6 +1180,8 @@ void r3d_shader_load_generate_prefilter(void)
     R3D.shader.generate.prefilter.id = rlLoadShaderCode(
         CUBEMAP_VERT, PREFILTER_FRAG
     );
+
+    R3D_SHADER_VALIDATION(generate.prefilter);
 
     r3d_shader_get_location(generate.prefilter, uMatProj);
     r3d_shader_get_location(generate.prefilter, uMatView);
@@ -1180,6 +1199,8 @@ void r3d_shader_load_raster_geometry(void)
     R3D.shader.raster.geometry.id = rlLoadShaderCode(
         GEOMETRY_VERT, GEOMETRY_FRAG
     );
+
+    R3D_SHADER_VALIDATION(raster.geometry);
 
     r3d_shader_get_location(raster.geometry, uTexBoneMatrices);
     r3d_shader_get_location(raster.geometry, uUseSkinning);
@@ -1215,6 +1236,8 @@ void r3d_shader_load_raster_geometry_inst(void)
         GEOMETRY_INSTANCED_VERT, GEOMETRY_FRAG
     );
 
+    R3D_SHADER_VALIDATION(raster.geometryInst);
+
     r3d_shader_get_location(raster.geometryInst, uTexBoneMatrices);
     r3d_shader_get_location(raster.geometryInst, uUseSkinning);
     r3d_shader_get_location(raster.geometryInst, uMatInvView);
@@ -1249,6 +1272,8 @@ void r3d_shader_load_raster_forward(void)
     R3D.shader.raster.forward.id = rlLoadShaderCode(
         FORWARD_VERT, FORWARD_FRAG
     );
+
+    R3D_SHADER_VALIDATION(raster.forward);
 
     r3d_shader_raster_forward_t* shader = &R3D.shader.raster.forward;
 
@@ -1330,6 +1355,8 @@ void r3d_shader_load_raster_forward_inst(void)
     R3D.shader.raster.forwardInst.id = rlLoadShaderCode(
         FORWARD_INSTANCED_VERT, FORWARD_FRAG
     );
+
+    R3D_SHADER_VALIDATION(raster.forwardInst);
 
     r3d_shader_raster_forward_inst_t* shader = &R3D.shader.raster.forwardInst;
 
@@ -1413,6 +1440,8 @@ void r3d_shader_load_raster_skybox(void)
         SKYBOX_VERT, SKYBOX_FRAG
     );
 
+    R3D_SHADER_VALIDATION(raster.skybox);
+
     r3d_shader_get_location(raster.skybox, uMatProj);
     r3d_shader_get_location(raster.skybox, uMatView);
     r3d_shader_get_location(raster.skybox, uRotation);
@@ -1430,6 +1459,8 @@ void r3d_shader_load_raster_depth_volume(void)
         DEPTH_VOLUME_VERT, DEPTH_VOLUME_FRAG
     );
 
+    R3D_SHADER_VALIDATION(raster.depthVolume);
+
     r3d_shader_get_location(raster.depthVolume, uMatMVP);
 }
 
@@ -1438,6 +1469,8 @@ void r3d_shader_load_raster_depth(void)
     R3D.shader.raster.depth.id = rlLoadShaderCode(
         DEPTH_VERT, DEPTH_FRAG
     );
+
+    R3D_SHADER_VALIDATION(raster.depth);
 
     r3d_shader_get_location(raster.depth, uTexBoneMatrices);
     r3d_shader_get_location(raster.depth, uUseSkinning);
@@ -1459,6 +1492,8 @@ void r3d_shader_load_raster_depth_inst(void)
     R3D.shader.raster.depthInst.id = rlLoadShaderCode(
         DEPTH_INSTANCED_VERT, DEPTH_FRAG
     );
+
+    R3D_SHADER_VALIDATION(raster.depthInst);
 
     r3d_shader_get_location(raster.depthInst, uTexBoneMatrices);
     r3d_shader_get_location(raster.depthInst, uUseSkinning);
@@ -1484,6 +1519,8 @@ void r3d_shader_load_raster_depth_cube(void)
         DEPTH_CUBE_VERT, DEPTH_CUBE_FRAG
     );
 
+    R3D_SHADER_VALIDATION(raster.depthCube);
+
     r3d_shader_get_location(raster.depthCube, uTexBoneMatrices);
     r3d_shader_get_location(raster.depthCube, uUseSkinning);
     r3d_shader_get_location(raster.depthCube, uViewPosition);
@@ -1507,6 +1544,8 @@ void r3d_shader_load_raster_depth_cube_inst(void)
     R3D.shader.raster.depthCubeInst.id = rlLoadShaderCode(
         DEPTH_CUBE_INSTANCED_VERT, DEPTH_CUBE_FRAG
     );
+
+    R3D_SHADER_VALIDATION(raster.depthCubeInst);
 
     r3d_shader_get_location(raster.depthCubeInst, uTexBoneMatrices);
     r3d_shader_get_location(raster.depthCubeInst, uUseSkinning);
@@ -1533,6 +1572,8 @@ void r3d_shader_load_screen_ssao(void)
     R3D.shader.screen.ssao.id = rlLoadShaderCode(
         SCREEN_VERT, SSAO_FRAG
     );
+
+    R3D_SHADER_VALIDATION(screen.ssao);
 
     r3d_shader_get_location(screen.ssao, uTexDepth);
     r3d_shader_get_location(screen.ssao, uTexNormal);
@@ -1562,6 +1603,8 @@ void r3d_shader_load_screen_ambient_ibl(void)
     const char* defines[] = { "#define IBL" };
     char* fsCode = r3d_shader_inject_defines(AMBIENT_FRAG, defines, 1);
     R3D.shader.screen.ambientIbl.id = rlLoadShaderCode(SCREEN_VERT, fsCode);
+
+    R3D_SHADER_VALIDATION(screen.ambientIbl);
 
     RL_FREE(fsCode);
 
@@ -1604,6 +1647,8 @@ void r3d_shader_load_screen_ambient(void)
         SCREEN_VERT, AMBIENT_FRAG
     );
 
+    R3D_SHADER_VALIDATION(screen.ambient);
+
     r3d_shader_get_location(screen.ambient, uTexAlbedo);
     r3d_shader_get_location(screen.ambient, uTexSSAO);
     r3d_shader_get_location(screen.ambient, uTexORM);
@@ -1620,6 +1665,9 @@ void r3d_shader_load_screen_ambient(void)
 void r3d_shader_load_screen_lighting(void)
 {
     R3D.shader.screen.lighting.id = rlLoadShaderCode(SCREEN_VERT, LIGHTING_FRAG);
+
+    R3D_SHADER_VALIDATION(screen.lighting);
+
     r3d_shader_screen_lighting_t* shader = &R3D.shader.screen.lighting;
 
     r3d_shader_get_location(screen.lighting, uTexAlbedo);
@@ -1669,6 +1717,9 @@ void r3d_shader_load_screen_lighting(void)
 void r3d_shader_load_screen_scene(void)
 {
     R3D.shader.screen.scene.id = rlLoadShaderCode(SCREEN_VERT, SCENE_FRAG);
+
+    R3D_SHADER_VALIDATION(screen.scene);
+
     r3d_shader_screen_scene_t* shader = &R3D.shader.screen.scene;
 
     r3d_shader_get_location(screen.scene, uTexAlbedo);
@@ -1697,6 +1748,8 @@ void r3d_shader_load_screen_bloom(void)
         SCREEN_VERT, BLOOM_FRAG
     );
 
+    R3D_SHADER_VALIDATION(screen.bloom);
+
     r3d_shader_get_location(screen.bloom, uTexColor);
     r3d_shader_get_location(screen.bloom, uTexBloomBlur);
     r3d_shader_get_location(screen.bloom, uBloomMode);
@@ -1713,6 +1766,8 @@ void r3d_shader_load_screen_ssr(void)
     R3D.shader.screen.ssr.id = rlLoadShaderCode(
         SCREEN_VERT, SSR_FRAG
     );
+
+    R3D_SHADER_VALIDATION(screen.ssr);
 
     r3d_shader_get_location(screen.ssr, uTexColor);
     r3d_shader_get_location(screen.ssr, uTexAlbedo);
@@ -1747,6 +1802,8 @@ void r3d_shader_load_screen_fog(void)
         SCREEN_VERT, FOG_FRAG
     );
 
+    R3D_SHADER_VALIDATION(screen.fog);
+
     r3d_shader_get_location(screen.fog, uTexColor);
     r3d_shader_get_location(screen.fog, uTexDepth);
     r3d_shader_get_location(screen.fog, uNear);
@@ -1775,6 +1832,8 @@ void r3d_shader_load_screen_output(R3D_Tonemap tonemap)
     char* fsCode = r3d_shader_inject_defines(OUTPUT_FRAG, defines, 1);
     R3D.shader.screen.output[tonemap].id = rlLoadShaderCode(SCREEN_VERT, fsCode);
 
+    R3D_SHADER_VALIDATION(screen.output[tonemap]);
+
     RL_FREE(fsCode);
 
     r3d_shader_get_location(screen.output[tonemap], uTexColor);
@@ -1794,6 +1853,8 @@ void r3d_shader_load_screen_fxaa(void)
     R3D.shader.screen.fxaa.id = rlLoadShaderCode(
         SCREEN_VERT, FXAA_FRAG
     );
+
+    R3D_SHADER_VALIDATION(screen.fxaa);
 
     r3d_shader_get_location(screen.fxaa, uTexture);
     r3d_shader_get_location(screen.fxaa, uTexelSize);
