@@ -1845,25 +1845,25 @@ R3DAPI void R3D_SetShadowUpdateFrequency(R3D_Light id, int msec);
 R3DAPI void R3D_UpdateShadowMap(R3D_Light id);
 
 /**
- * @brief Retrieves the softness factor used to simulate penumbra in shadows.
+ * @brief Retrieves the softness radius used to simulate penumbra in shadows.
  *
- * This function returns the current softness factor for the specified light's shadow map.
- * A higher softness value will produce softer shadow edges, simulating a broader penumbra,
- * while a lower value results in sharper shadows.
+ * The softness is expressed as a sampling radius in texels within the shadow map.
  *
  * @param id The ID of the light.
- * @return The softness factor currently set for the shadow (typically in the range [0.0, 1.0]).
+ * @return The softness radius in texels currently set for the shadow.
  */
 R3DAPI float R3D_GetShadowSoftness(R3D_Light id);
 
 /**
- * @brief Sets the softness factor used to simulate penumbra in shadows.
+ * @brief Sets the softness radius used to simulate penumbra in shadows.
  *
  * This function adjusts the softness of the shadow edges for the specified light.
- * Increasing the softness value creates more diffuse, penumbra-like shadows.
+ * The softness value corresponds to a number of texels in the shadow map, independent
+ * of its resolution. Larger values increase the blur radius, resulting in softer,
+ * more diffuse shadows, while smaller values yield sharper shadows.
  *
  * @param id The ID of the light.
- * @param softness The softness factor to apply (typically in the range [0.0, 1.0]).
+ * @param softness The softness radius in texels to apply (must be >= 0).
  */
 R3DAPI void R3D_SetShadowSoftness(R3D_Light id, float softness);
 

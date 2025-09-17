@@ -333,7 +333,7 @@ float R3D_GetShadowSoftness(R3D_Light id)
 void R3D_SetShadowSoftness(R3D_Light id, float softness)
 {
     r3d_get_and_check_light(light, id);
-    light->shadow.softness = softness;
+    light->shadow.softness = softness * light->shadow.map.texelSize;
 }
 
 float R3D_GetShadowDepthBias(R3D_Light id)
