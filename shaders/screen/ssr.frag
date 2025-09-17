@@ -1,5 +1,10 @@
 #version 330 core
 
+/* === Includes === */
+
+#include "../include/math.glsl"
+#include "../include/pbr.glsl"
+
 /* === Varyings === */
 
 noperspective in vec2 vTexCoord;
@@ -25,10 +30,6 @@ uniform mat4 uMatInvProj;
 uniform mat4 uMatInvView;
 uniform mat4 uMatViewProj;
 uniform vec3 uViewPosition;
-
-/* === Constants === */
-
-const float PI = 3.14159265359;
 
 /* === Output === */
 
@@ -82,24 +83,6 @@ float ScreenEdgeFade(vec2 uv)
     fade = fade / (uEdgeFadeEnd - uEdgeFadeStart);
 
     return 1.0 - clamp(max(fade.x, fade.y), 0.0, 1.0);
-}
-
-/* === PBR Functions === */
-
-vec3 ComputeF0(float metallic, float specular, vec3 albedo)
-{
-    float dielectric = 0.16 * specular * specular;
-    // use (albedo * metallic) as colored specular reflectance at 0 angle for metallic materials
-    // SEE: https://google.github.io/filament/Filament.md.html
-    return mix(vec3(dielectric), albedo, vec3(metallic));
-}
-
-vec3 SchlickFresnel(float cNdotV, vec3 F0)
-{
-    float m = 1.0 - cNdotV, m2 = m * m;
-    float fresnel = m2 * m2 * m;
-
-    return F0 + (1.0 - F0) * fresnel;
 }
 
 /* === Raymarching === */
@@ -216,9 +199,9 @@ void main()
     /* --- Calculate specular reflection --- */
 
     float cNdotV = max(0.0, dot(worldNormal, -viewDir));
-    vec3 F0 = ComputeF0(metallic, 0.5, albedo);
+    vec3 F0 = PBR_ComputeF0(metallic, 0.5, albedo);
 
-    vec3 F = SchlickFresnel(cNdotV, F0);
+    vec3 F = F0 + (1.0 - F0) * PBR_SchlickFresnel(cNdotV);
     vec3 specular = reflectionColor * F;
 
     // NOTE: Ideally, we should blur according to the roughness, but this

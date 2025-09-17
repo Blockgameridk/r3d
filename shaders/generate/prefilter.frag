@@ -19,17 +19,25 @@
 
 #version 330 core
 
-#define PI 3.14159265359
+/* === Includes === */
+
+#include "../include/math.glsl"
+
+/* === Varyings === */
 
 in vec3 vPosition;
+
+/* === Uniforms === */
 
 uniform samplerCube uTexCubemap;    //< Source cubemap
 uniform float uResolution;          //< Resolution of the source cubemap
 uniform float uRoughness;           //< Roughness (relative to mip level)
 
+/* === Fragments === */
+
 out vec4 FragColor;
 
-/* Helper functions */
+/* === Helper Functions === */
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
@@ -40,7 +48,7 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
 
     float nom   = a2;
     float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
+    denom = M_PI * denom * denom;
 
     return nom / denom;
 }
@@ -49,12 +57,12 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
 // efficient VanDerCorpus calculation.
 float RadicalInverse_VdC(uint bits) 
 {
-     bits = (bits << 16u) | (bits >> 16u);
-     bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
-     bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
-     bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
-     bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
-     return float(bits) * 2.3283064365386963e-10; // / 0x100000000
+    bits = (bits << 16u) | (bits >> 16u);
+    bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+    bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+    bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+    bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+    return float(bits) * 2.3283064365386963e-10; // / 0x100000000
 }
 
 vec2 Hammersley(uint i, uint N)
@@ -66,7 +74,7 @@ vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
 {
 	float a = roughness*roughness;
 	
-	float phi = 2.0 * PI * Xi.x;
+	float phi = 2.0 * M_PI * Xi.x;
 	float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a*a - 1.0) * Xi.y));
 	float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
 	
@@ -85,7 +93,7 @@ vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
 	return normalize(sampleVec);
 }
 
-/* Main program */
+/* === Program === */
 
 void main()
 {		
@@ -111,12 +119,12 @@ void main()
         if (NdotL > 0.0)
         {
             // sample from the environment's mip level based on roughness/pdf
-            float D   = DistributionGGX(N, H, uRoughness);
+            float D = DistributionGGX(N, H, uRoughness);
             float NdotH = max(dot(N, H), 0.0);
             float HdotV = max(dot(H, V), 0.0);
             float pdf = D * NdotH / (4.0 * HdotV) + 0.0001; 
 
-            float saTexel  = 4.0 * PI / (6.0 * uResolution * uResolution);
+            float saTexel  = 4.0 * M_PI / (6.0 * uResolution * uResolution);
             float saSample = 1.0 / (float(SAMPLE_COUNT) * pdf + 0.0001);
 
             float mipLevel = (uRoughness == 0.0) ? 0.0 : 0.5 * log2(saSample / saTexel); 

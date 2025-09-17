@@ -19,16 +19,12 @@
 
 #version 330 core
 
-/* === Defines === */
+/* === Includes === */
 
-#define PI  3.1415926535897931
-#define TAU 6.2831853071795862
-
-#define NUM_LIGHTS  8
-
-#define DIRLIGHT    0
-#define SPOTLIGHT   1
-#define OMNILIGHT   2
+#include "../include/light.glsl"
+#include "../include/math.glsl"
+#include "../include/pbr.glsl"
+#include "../include/ibl.glsl"
 
 /* === Structs === */
 
@@ -61,7 +57,7 @@ in vec2 vTexCoord;
 in vec4 vColor;
 in mat3 vTBN;
 
-in vec4 vPosLightSpace[NUM_LIGHTS];
+in vec4 vPosLightSpace[FORWARD_LIGHT_COUNT];
 
 /* === Uniforms === */
 
@@ -72,8 +68,8 @@ uniform sampler2D uTexORM;
 
 uniform sampler2D uTexNoise;   //< Noise texture (used for soft shadows)
 
-uniform samplerCube uShadowMapCube[NUM_LIGHTS];
-uniform sampler2D uShadowMap2D[NUM_LIGHTS];
+uniform samplerCube uShadowMapCube[FORWARD_LIGHT_COUNT];
+uniform sampler2D uShadowMap2D[FORWARD_LIGHT_COUNT];
 
 uniform float uEmissionEnergy;
 uniform float uNormalScale;
@@ -92,7 +88,7 @@ uniform bool uHasSkybox;
 uniform float uSkyboxAmbientIntensity;
 uniform float uSkyboxReflectIntensity;
 
-uniform Light uLights[NUM_LIGHTS];
+uniform Light uLights[FORWARD_LIGHT_COUNT];
 
 uniform float uAlphaCutoff;
 uniform vec3 uViewPosition;
@@ -119,118 +115,6 @@ layout(location = 0) out vec4 FragColor;
 layout(location = 1) out vec4 FragAlbedo;
 layout(location = 2) out vec4 FragNormal;
 layout(location = 3) out vec4 FragORM;
-
-/* === PBR functions === */
-
-float DistributionGGX(float cosTheta, float alpha)
-{
-    // Standard GGX/Trowbridge-Reitz distribution - optimized form
-    float a = cosTheta * alpha;
-    float k = alpha / (1.0 - cosTheta * cosTheta + a * a);
-    return k * k * (1.0 / PI);
-}
-
-float GeometryGGX(float NdotL, float NdotV, float roughness)
-{
-    // Hammon's optimized approximation for GGX Smith geometry term
-    // This version is an efficient approximation that:
-    // 1. Avoids expensive square root calculations
-    // 2. Combines both G1 terms into a single expression
-    // 3. Provides very close results to the exact version at a much lower cost
-    // SEE: https://www.gdcvault.com/play/1024478/PBR-Diffuse-Lighting-for-GGX
-    return 0.5 / mix(2.0 * NdotL * NdotV, NdotL + NdotV, roughness);
-}
-
-float SchlickFresnel(float u)
-{
-    float m = 1.0 - u;
-    float m2 = m * m;
-    return m2 * m2 * m; // pow(m,5)
-}
-
-vec3 ComputeF0(float metallic, float specular, vec3 albedo)
-{
-    float dielectric = 0.16 * specular * specular;
-    // use (albedo * metallic) as colored specular reflectance at 0 angle for metallic materials
-    // SEE: https://google.github.io/filament/Filament.md.html
-    return mix(vec3(dielectric), albedo, vec3(metallic));
-}
-
-/* === IBL Specific === */
-
-vec3 IBL_FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
-{
-    // TODO: See approximations, but this version seems to introduce less bias for grazing angles
-    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
-}
-
-float IBL_GetSpecularMipLevel(float roughness, float numMips)
-{
-    return roughness * roughness * (numMips - 1.0);
-}
-
-float IBL_GetSpecularOcclusion(float NdotV, float ao, float roughness)
-{
-    // Lagarde method: https://seblagarde.wordpress.com/wp-content/uploads/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
-    return clamp(pow(NdotV + ao, exp2(-16.0 * roughness - 1.0)) - 1.0 + ao, 0.0, 1.0);
-}
-
-vec3 IBL_GetMultiScatterBRDF(float NdotV, float roughness, vec3 F0, float metalness)
-{
-    // Adapted from: https://blog.selfshadow.com/publications/turquin/ms_comp_final.pdf
-    // TODO: Maybe need a review
-
-    vec2 brdf = texture(uTexBrdfLut, vec2(NdotV, roughness)).rg;
-
-    // Energy compensation for multiple scattering
-    vec3 FssEss = F0 * brdf.x + brdf.y;
-    float Ess = brdf.x + brdf.y;
-    float Ems = 1.0 - Ess;
-
-    // Calculation of Favg adapted to metalness
-    // For dielectrics: classical approximation
-    // For metals: direct use of F0
-    vec3 Favg = mix(
-        F0 + (1.0 - F0) / 21.0,  // Dielectric: approximation of the Fresnel integral
-        F0,                      // Metal: F0 already colored and raised
-        metalness
-    );
-
-    // Adapted energy compensation
-    vec3 Fms = FssEss * Favg / (1.0 - Favg * Ems + 1e-5); // +epsilon to avoid division by 0
-
-    // For metals, slightly reduce the multiple scattering
-    // effect as they absorb more energy with each bounce
-    float msStrength = mix(1.0, 0.8, metalness);
-
-    return FssEss + Fms * Ems * msStrength;
-}
-
-/* === Lighting functions === */
-
-float Diffuse(float cLdotH, float cNdotV, float cNdotL, float roughness)
-{
-    float FD90_minus_1 = 2.0 * cLdotH * cLdotH * roughness - 0.5;
-    float FdV = 1.0 + FD90_minus_1 * SchlickFresnel(cNdotV);
-    float FdL = 1.0 + FD90_minus_1 * SchlickFresnel(cNdotL);
-
-    return (1.0 / PI) * (FdV * FdL * cNdotL); // Diffuse BRDF (Burley)
-}
-
-vec3 Specular(vec3 F0, float cLdotH, float cNdotH, float cNdotV, float cNdotL, float roughness)
-{
-    roughness = max(roughness, 1e-3);
-
-    float alphaGGX = roughness * roughness;
-    float D = DistributionGGX(cNdotH, alphaGGX);
-    float G = GeometryGGX(cNdotL, cNdotV, alphaGGX);
-
-    float cLdotH5 = SchlickFresnel(cLdotH);
-    float F90 = clamp(50.0 * F0.g, 0.0, 1.0);
-    vec3 F = F0 + (F90 - F0) * cLdotH5;
-
-    return cNdotL * D * F * G; // Specular BRDF (Schlick GGX)
-}
 
 /* === Shadow functions === */
 
@@ -259,15 +143,13 @@ float ShadowOmni(int i, float cNdotL)
 
     float adaptiveRadius = light.shadowSoftness * sqrt(currentDepth / light.far);
 
-    /* --- Tangent Space Construction for Sampling --- */
+    /* --- Build orthonormal basis for perturbation --- */
 
-    vec3 up = abs(direction.y) > 0.99 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0);
-    vec3 tangent = normalize(cross(up, direction));
-    vec3 bitangent = cross(direction, tangent);
+    mat3 TBN = M_OrthonormalBasis(direction);
 
     /* --- Blue Noise Rotation for Sample Distribution --- */
 
-    float rotationAngle = texture(uTexNoise, gl_FragCoord.xy * (1.0/float(TEX_NOISE_SIZE))).r * TAU;
+    float rotationAngle = texture(uTexNoise, gl_FragCoord.xy * (1.0/float(TEX_NOISE_SIZE))).r * M_TAU;
     float rc = cos(rotationAngle);
     float rs = sin(rotationAngle);
 
@@ -275,8 +157,8 @@ float ShadowOmni(int i, float cNdotL)
 
     float shadow = 0.0;
     for (int j = 0; j < SHADOW_SAMPLES; ++j) {
-        vec2 rotatedOffset = Rotate2D(POISSON_DISK[j], rc, rs);
-        vec3 sampleDir = normalize(direction + (tangent * rotatedOffset.x + bitangent * rotatedOffset.y) * adaptiveRadius);
+        vec2 diskOffset = Rotate2D(POISSON_DISK[j], rc, rs) * adaptiveRadius;
+        vec3 sampleDir = normalize(TBN * vec3(diskOffset.xy, 1.0));
         float sampleDepth = texture(uShadowMapCube[i], sampleDir).r * light.far;
         shadow += step(currentDepth, sampleDepth);
     }
@@ -315,7 +197,7 @@ float Shadow(int i, float cNdotL)
 
     /* --- Blue Noise Rotation for Sample Distribution --- */
 
-    float rotationAngle = texture(uTexNoise, gl_FragCoord.xy * (1.0/float(TEX_NOISE_SIZE))).r * TAU;
+    float rotationAngle = texture(uTexNoise, gl_FragCoord.xy * (1.0/float(TEX_NOISE_SIZE))).r * M_TAU;
     float rc = cos(rotationAngle);
     float rs = sin(rotationAngle);
 
@@ -357,12 +239,6 @@ vec3 NormalScale(vec3 normal, float scale)
     return normal;
 }
 
-vec3 RotateWithQuat(vec3 v, vec4 q)
-{
-    vec3 t = 2.0 * cross(q.xyz, v);
-    return v + q.w * t + cross(q.xyz, t);
-}
-
 /* === Main === */
 
 void main()
@@ -388,7 +264,7 @@ void main()
 
     /* Compute F0 (reflectance at normal incidence) based on the metallic factor */
 
-    vec3 F0 = ComputeF0(metalness, 0.5, albedo.rgb);
+    vec3 F0 = PBR_ComputeF0(metalness, 0.5, albedo.rgb);
 
     /* Sample normal and compute view direction vector */
 
@@ -405,7 +281,7 @@ void main()
     vec3 diffuse = vec3(0.0);
     vec3 specular = vec3(0.0);
 
-    for (int i = 0; i < NUM_LIGHTS; i++)
+    for (int i = 0; i < FORWARD_LIGHT_COUNT; i++)
     {
         if (!uLights[i].enabled) {
             continue;
@@ -416,7 +292,7 @@ void main()
         /* Compute light direction */
 
         vec3 L = vec3(0.0);
-        if (light.type == DIRLIGHT) L = -light.direction;
+        if (light.type == LIGHT_DIR) L = -light.direction;
         else L = normalize(light.position - vPosition);
 
         /* Compute the dot product of the normal and light direction */
@@ -440,19 +316,19 @@ void main()
 
         /* Compute diffuse lighting */
 
-        float diffuseStrength = 1.0 - metalness;  // 0.0 for pure metal, 1.0 for dielectric
-        vec3 diffLight = lightColE * Diffuse(cLdotH, cNdotV, cNdotL, roughness) * diffuseStrength;
+        vec3 diffLight = L_Diffuse(cLdotH, cNdotV, cNdotL, roughness);
+        diffLight *= lightColE * (1.0 - metalness); // 0.0 for pure metal, 1.0 for dielectric
 
         /* Compute specular lighting */
 
-        vec3 specLight =  Specular(F0, cLdotH, cNdotH, cNdotV, cNdotL, roughness);
+        vec3 specLight =  L_Specular(F0, cLdotH, cNdotH, cNdotV, cNdotL, roughness);
         specLight *= lightColE * light.specular;
 
         /* Apply shadow factor if the light casts shadows */
 
         float shadow = 1.0;
         if (light.shadow) {
-            if (light.type == OMNILIGHT) {
+            if (light.type == LIGHT_OMNI) {
                 shadow = ShadowOmni(i, cNdotL);
             }
             else {
@@ -462,7 +338,7 @@ void main()
 
         /* Apply attenuation based on the distance from the light */
 
-        if (light.type != DIRLIGHT)
+        if (light.type != LIGHT_DIR)
         {
             float dist = length(light.position - vPosition);
             float atten = 1.0 - clamp(dist / light.range, 0.0, 1.0);
@@ -471,7 +347,7 @@ void main()
 
         /* Apply spotlight effect if the light is a spotlight */
 
-        if (light.type == SPOTLIGHT)
+        if (light.type == LIGHT_SPOT)
         {
             float theta = dot(L, -light.direction);
             float epsilon = (light.innerCutOff - light.outerCutOff);
@@ -493,7 +369,7 @@ void main()
         vec3 kS = IBL_FresnelSchlickRoughness(cNdotV, F0, roughness);
         vec3 kD = (1.0 - kS) * (1.0 - metalness);
 
-        vec3 Nr = RotateWithQuat(N, uQuatSkybox);
+        vec3 Nr = M_Rotate3D(N, uQuatSkybox);
         ambient = kD * texture(uCubeIrradiance, Nr).rgb;
         ambient *= uSkyboxAmbientIntensity;
     }
@@ -520,14 +396,14 @@ void main()
 
     if (uHasSkybox)
     {
-        vec3 R = RotateWithQuat(reflect(-V, N), uQuatSkybox);
+        vec3 R = M_Rotate3D(reflect(-V, N), uQuatSkybox);
 
         const float MAX_REFLECTION_LOD = 7.0;
         float mipLevel = IBL_GetSpecularMipLevel(roughness, MAX_REFLECTION_LOD + 1.0);
         vec3 prefilteredColor = textureLod(uCubePrefilter, R, mipLevel).rgb;
 
         float specularOcclusion = IBL_GetSpecularOcclusion(cNdotV, occlusion, roughness);
-        vec3 specBRDF = IBL_GetMultiScatterBRDF(cNdotV, roughness, F0, metalness);
+        vec3 specBRDF = IBL_GetMultiScatterBRDF(uTexBrdfLut, cNdotV, roughness, F0, metalness);
         vec3 spec = prefilteredColor * specBRDF * specularOcclusion;
 
         // Soft falloff hack at low angles to avoid overly bright effect

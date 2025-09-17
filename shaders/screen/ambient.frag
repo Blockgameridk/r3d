@@ -19,11 +19,16 @@
 
 #version 330 core
 
+/* === Common Includes === */
+
+#include "../include/pbr.glsl"
+
 #ifdef IBL
 
-/* === Defines === */
+/* === Includes === */
 
-#define PI 3.1415926535897932384626433832795028
+#include "../include/math.glsl"
+#include "../include/ibl.glsl"
 
 /* === Varyings === */
 
@@ -54,64 +59,6 @@ uniform mat4 uMatInvView;
 layout(location = 0) out vec3 FragDiffuse;
 layout(location = 1) out vec3 FragSpecular;
 
-/* === PBR functions === */
-
-vec3 ComputeF0(float metallic, float specular, vec3 albedo)
-{
-    float dielectric = 0.16 * specular * specular;
-    // use (albedo * metallic) as colored specular reflectance at 0 angle for metallic materials
-    // SEE: https://google.github.io/filament/Filament.md.html
-    return mix(vec3(dielectric), albedo, vec3(metallic));
-}
-
-vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
-{
-    // TODO: See approximations, but this version seems to introduce less bias for grazing angles
-    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
-}
-
-float GetSpecularMipLevel(float roughness, float numMips)
-{
-    return roughness * roughness * (numMips - 1.0);
-}
-
-float GetSpecularOcclusion(float NdotV, float ao, float roughness)
-{
-    // Lagarde method: https://seblagarde.wordpress.com/wp-content/uploads/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
-    return clamp(pow(NdotV + ao, exp2(-16.0 * roughness - 1.0)) - 1.0 + ao, 0.0, 1.0);
-}
-
-vec3 GetMultiScatterBRDF(float NdotV, float roughness, vec3 F0, float metalness)
-{
-    // Adapted from: https://blog.selfshadow.com/publications/turquin/ms_comp_final.pdf
-    // TODO: Maybe need a review
-
-    vec2 brdf = texture(uTexBrdfLut, vec2(NdotV, roughness)).rg;
-
-    // Energy compensation for multiple scattering
-    vec3 FssEss = F0 * brdf.x + brdf.y;
-    float Ess = brdf.x + brdf.y;
-    float Ems = 1.0 - Ess;
-
-    // Calculation of Favg adapted to metalness
-    // For dielectrics: classical approximation
-    // For metals: direct use of F0
-    vec3 Favg = mix(
-        F0 + (1.0 - F0) / 21.0,  // Dielectric: approximation of the Fresnel integral
-        F0,                      // Metal: F0 already colored and raised
-        metalness
-    );
-
-    // Adapted energy compensation
-    vec3 Fms = FssEss * Favg / (1.0 - Favg * Ems + 1e-5); // +epsilon to avoid division by 0
-
-    // For metals, slightly reduce the multiple scattering
-    // effect as they absorb more energy with each bounce
-    float msStrength = mix(1.0, 0.8, metalness);
-
-    return FssEss + Fms * Ems * msStrength;
-}
-
 /* === Misc functions === */
 
 vec3 GetPositionFromDepth(float depth)
@@ -141,12 +88,6 @@ vec3 DecodeOctahedral(vec2 encoded)
     return normalize(normal);
 }
 
-vec3 RotateWithQuat(vec3 v, vec4 q)
-{
-    vec3 t = 2.0 * cross(q.xyz, v);
-    return v + q.w * t + cross(q.xyz, t);
-}
-
 /* === Main === */
 
 void main()
@@ -171,7 +112,7 @@ void main()
 
     /* Compute F0 (reflectance at normal incidence) based on the metallic factor */
 
-    vec3 F0 = ComputeF0(metalness, 0.5, albedo);
+    vec3 F0 = PBR_ComputeF0(metalness, 0.5, albedo);
 
     /* Sample world depth and reconstruct world position */
 
@@ -189,23 +130,23 @@ void main()
 
     /* Compute ambient - IBL diffuse avec Fresnel amélioré */
 
-    vec3 kS = FresnelSchlickRoughness(NdotV, F0, roughness);
+    vec3 kS = IBL_FresnelSchlickRoughness(NdotV, F0, roughness);
     vec3 kD = (1.0 - kS) * (1.0 - metalness);
 
-    vec3 Nr = RotateWithQuat(N, uQuatSkybox);
+    vec3 Nr = M_Rotate3D(N, uQuatSkybox);
     FragDiffuse = kD * texture(uCubeIrradiance, Nr).rgb;
     FragDiffuse *= occlusion * uSkyboxAmbientIntensity;
 
     /* Skybox reflection - IBL specular amélioré */
 
-    vec3 R = RotateWithQuat(reflect(-V, N), uQuatSkybox);
+    vec3 R = M_Rotate3D(reflect(-V, N), uQuatSkybox);
 
     const float MAX_REFLECTION_LOD = 7.0;
-    float mipLevel = GetSpecularMipLevel(roughness, MAX_REFLECTION_LOD + 1.0);
+    float mipLevel = IBL_GetSpecularMipLevel(roughness, MAX_REFLECTION_LOD + 1.0);
     vec3 prefilteredColor = textureLod(uCubePrefilter, R, mipLevel).rgb;
 
-    float specularOcclusion = GetSpecularOcclusion(NdotV, occlusion, roughness);
-    vec3 specularBRDF = GetMultiScatterBRDF(NdotV, roughness, F0, metalness);
+    float specularOcclusion = IBL_GetSpecularOcclusion(NdotV, occlusion, roughness);
+    vec3 specularBRDF = IBL_GetMultiScatterBRDF(uTexBrdfLut, NdotV, roughness, F0, metalness);
     vec3 specular = prefilteredColor * specularBRDF * specularOcclusion;
 
     // Soft falloff hack at low angles to avoid overly bright effect
@@ -232,23 +173,6 @@ uniform float uSSAOPower;
 /* === Fragments === */
 
 layout(location = 0) out vec4 FragDiffuse;
-
-/* === Helper Functions === */
-
-vec3 ComputeF0(float metallic, float specular, vec3 albedo)
-{
-    float dielectric = 0.16 * specular * specular;
-    // use (albedo * metallic) as colored specular reflectance at 0 angle for metallic materials
-    // SEE: https://google.github.io/filament/Filament.md.html
-    return mix(vec3(dielectric), albedo, vec3(metallic));
-}
-
-float SchlickFresnel(float u)
-{
-    float m = 1.0 - u;
-    float m2 = m * m;
-    return m2 * m2 * m; // pow(m,5)
-}
 
 /* === Main === */
 
@@ -280,7 +204,7 @@ void main()
     //       but it's to at least simulate some specularity, otherwise the 
     //       result would look poor for metals...
 
-    vec3 F0 = ComputeF0(metalness, 0.5, albedo);
+    vec3 F0 = PBR_ComputeF0(metalness, 0.5, albedo);
     vec3 kD = (1.0 - F0) * (1.0 - metalness);
     vec3 ambient = kD * uAmbientColor;
     ambient += F0 * uAmbientColor;

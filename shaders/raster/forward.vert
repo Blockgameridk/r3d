@@ -21,7 +21,7 @@
 
 /* === Defines === */
 
-#define NUM_LIGHTS 8
+#define FORWARD_LIGHT_COUNT 8
 
 /* === Attributes === */
 
@@ -39,7 +39,7 @@ uniform mat4 uMatNormal;
 uniform mat4 uMatModel;
 uniform mat4 uMatMVP;
 
-uniform mat4 uMatLightVP[NUM_LIGHTS];
+uniform mat4 uMatLightVP[FORWARD_LIGHT_COUNT];
 
 uniform vec4 uAlbedoColor;
 
@@ -56,7 +56,7 @@ out vec2 vTexCoord;
 out vec4 vColor;
 out mat3 vTBN;
 
-out vec4 vPosLightSpace[NUM_LIGHTS];
+out vec4 vPosLightSpace[FORWARD_LIGHT_COUNT];
 
 /* === Helper Functions === */
 
@@ -103,7 +103,7 @@ void main()
     vec3 B = normalize(cross(N, T)) * aTangent.w;
     vTBN = mat3(T, B, N);
 
-    for (int i = 0; i < NUM_LIGHTS; i++)
+    for (int i = 0; i < FORWARD_LIGHT_COUNT; i++)
     {
         vPosLightSpace[i] = uMatLightVP[i] * worldPosition;
     }

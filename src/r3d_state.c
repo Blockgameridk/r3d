@@ -27,8 +27,47 @@
 
 #include "./details/misc/r3d_half.h"
 
-#include "shaders.h"
-#include "assets.h"
+/* === Assets === */
+
+#include <assets/blue_noise_64_r8_unorm.raw.h>
+#include <assets/brdf_lut_512_rg16_float.raw.h>
+
+/* === Shaders === */
+
+#include <shaders/ambient.frag.h>
+#include <shaders/bloom.frag.h>
+#include <shaders/cubemap_from_equirectangular.frag.h>
+#include <shaders/cubemap.vert.h>
+#include <shaders/depth_cube.frag.h>
+#include <shaders/depth_cube_instanced.vert.h>
+#include <shaders/depth_cube.vert.h>
+#include <shaders/depth.frag.h>
+#include <shaders/depth_instanced.vert.h>
+#include <shaders/depth.vert.h>
+#include <shaders/depth_volume.frag.h>
+#include <shaders/depth_volume.vert.h>
+#include <shaders/dof.frag.h>
+#include <shaders/downsampling.frag.h>
+#include <shaders/fog.frag.h>
+#include <shaders/forward.frag.h>
+#include <shaders/forward_instanced.vert.h>
+#include <shaders/forward.vert.h>
+#include <shaders/fxaa.frag.h>
+#include <shaders/gaussian_blur_dual_pass.frag.h>
+#include <shaders/geometry.frag.h>
+#include <shaders/geometry_instanced.vert.h>
+#include <shaders/geometry.vert.h>
+#include <shaders/irradiance_convolution.frag.h>
+#include <shaders/lighting.frag.h>
+#include <shaders/output.frag.h>
+#include <shaders/prefilter.frag.h>
+#include <shaders/scene.frag.h>
+#include <shaders/screen.vert.h>
+#include <shaders/skybox.frag.h>
+#include <shaders/skybox.vert.h>
+#include <shaders/ssao.frag.h>
+#include <shaders/ssr.frag.h>
+#include <shaders/upsampling.frag.h>
 
 /* === Global state definition === */
 

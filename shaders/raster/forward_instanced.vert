@@ -21,7 +21,7 @@
 
 /* === Defines === */
 
-#define NUM_LIGHTS 8
+#define FORWARD_LIGHT_COUNT 8
 
 #define BILLBOARD_FRONT 1
 #define BILLBOARD_Y_AXIS 2
@@ -43,7 +43,7 @@ layout(location = 14) in vec4 iColor;
 
 /* === Uniforms === */
 
-uniform mat4 uMatLightVP[NUM_LIGHTS];
+uniform mat4 uMatLightVP[FORWARD_LIGHT_COUNT];
 
 uniform mat4 uMatInvView;       ///< Only for billboard modes
 uniform mat4 uMatModel;
@@ -66,7 +66,7 @@ out vec2 vTexCoord;
 out vec4 vColor;
 out mat3 vTBN;
 
-out vec4 vPosLightSpace[NUM_LIGHTS];
+out vec4 vPosLightSpace[FORWARD_LIGHT_COUNT];
 
 /* === Helper functions === */
 
@@ -175,7 +175,7 @@ void main()
     vec3 B = normalize(cross(N, T)) * aTangent.w;
     vTBN = mat3(T, B, N);
 
-    for (int i = 0; i < NUM_LIGHTS; i++)
+    for (int i = 0; i < FORWARD_LIGHT_COUNT; i++)
     {
         vPosLightSpace[i] = uMatLightVP[i] * worldPosition;
     }

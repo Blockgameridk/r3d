@@ -22,13 +22,23 @@
 
 #version 330 core
 
-#define PI 3.14159265359
+/* === Inlcudes === */
+
+#include "../include/math.glsl"
+
+/* === Varyings === */
 
 in vec3 vPosition;
 
+/* === Uniforms === */
+
 uniform samplerCube uTexCubemap;
 
+/* === Fragments === */
+
 out vec4 FragColor;
+
+/* === Program === */
 
 void main()
 {
@@ -49,9 +59,9 @@ void main()
     float sampleDelta = 0.025;
     float nrSamples = 0.0;
 
-    for (float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
+    for (float phi = 0.0; phi < 2.0 * M_PI; phi += sampleDelta)
     {
-        for (float theta = 0.0; theta < 0.5 * PI; theta += sampleDelta)
+        for (float theta = 0.0; theta < 0.5 * M_PI; theta += sampleDelta)
         {
             // spherical to cartesian (in tangent space)
             vec3 tangentSample = vec3(sin(theta) * cos(phi),  sin(theta) * sin(phi), cos(theta));
@@ -64,6 +74,6 @@ void main()
         }
     }
 
-    irradiance = PI * irradiance * (1.0 / float(nrSamples));
+    irradiance = M_PI * irradiance * (1.0 / float(nrSamples));
     FragColor = vec4(irradiance, 1.0);
 }

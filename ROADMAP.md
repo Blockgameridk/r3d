@@ -2,7 +2,7 @@
 
 ## **v0.5**
 
-* [ ] **Create Shader Include System**
+* [x] **Create Shader Include System**
   Implement an internal shader include system to reduce code duplication in built-in shaders. This could be integrated during the compilation phase, either in `glsl_minifier` or a dedicated pre-processing script.
 
 * [ ] **Revamp Forward Rendering**

@@ -200,7 +200,7 @@ add_library(${PROJECT_NAME}
     "${R3D_ROOT_PATH}/src/r3d_core.c"
 )
 
-EmbedShaders(${PROJECT_NAME}
+embed_shaders(${PROJECT_NAME}
     "${R3D_ROOT_PATH}/shaders/common/screen.vert"
     "${R3D_ROOT_PATH}/shaders/common/cubemap.vert"
     "${R3D_ROOT_PATH}/shaders/generate/gaussian_blur_dual_pass.frag"
@@ -237,7 +237,7 @@ EmbedShaders(${PROJECT_NAME}
     "${R3D_ROOT_PATH}/shaders/screen/fxaa.frag"
 )
 
-EmbedAssets(${PROJECT_NAME}
+embed_assets(${PROJECT_NAME}
     "${R3D_ROOT_PATH}/assets/brdf_lut_512_rg16_float.raw"
     "${R3D_ROOT_PATH}/assets/blue_noise_64_r8_unorm.raw"
 )

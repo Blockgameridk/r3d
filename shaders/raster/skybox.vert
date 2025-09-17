@@ -19,23 +19,29 @@
 
 #version 330 core
 
+/* === Includes === */
+
+#include "../include/math.glsl"
+
+/* === Attributes === */
+
 layout (location = 0) in vec3 aPosition;
+
+/* === Uniforms === */
 
 uniform mat4 uMatProj;
 uniform mat4 uMatView;
 uniform vec4 uRotation;
 
+/* === Varyings === */
+
 out vec3 vPosition;
 
-vec3 RotateWithQuat(vec3 v, vec4 q)
-{
-    vec3 t = 2.0 * cross(q.xyz, v);
-    return v + q.w * t + cross(q.xyz, t);
-}
+/* === Program === */
 
 void main()
 {
-    vPosition = RotateWithQuat(aPosition, uRotation);
+    vPosition = M_Rotate3D(aPosition, uRotation);
 
     mat4 rotView = mat4(mat3(uMatView));
     gl_Position = uMatProj * rotView * vec4(aPosition, 1.0);
