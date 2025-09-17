@@ -1864,6 +1864,9 @@ R3DAPI float R3D_GetShadowSoftness(R3D_Light id);
  *
  * @param id The ID of the light.
  * @param softness The softness radius in texels to apply (must be >= 0).
+ *
+ * @note The softness must be set only after shadows have been enabled for the light,
+ *       since the shadow map resolution must be known before the softness can be applied.
  */
 R3DAPI void R3D_SetShadowSoftness(R3D_Light id, float softness);
 
