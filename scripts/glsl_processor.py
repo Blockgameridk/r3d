@@ -198,11 +198,32 @@ class IncludeProcessor:
         self.file_dependencies[file_path] = dependencies
         return dependencies
 
+    def get_used_functions_recursively(self, initial_functions, definitions):
+        """Get all functions needed recursively, including only actually used ones"""
+        used_functions = set(initial_functions)
+        to_process = list(initial_functions)
+        
+        while to_process:
+            current_func = to_process.pop(0)
+            if current_func in definitions['functions']:
+                # Get direct dependencies of this function
+                calls = definitions['functions'][current_func]['calls']
+                for called_func in calls:
+                    if called_func in definitions['functions'] and called_func not in used_functions:
+                        used_functions.add(called_func)
+                        to_process.append(called_func)
+        
+        return used_functions
+
     def get_transitive_dependencies(self, used, source_files):
         """Get all transitive dependencies including those needed by included files"""
         all_used = {category: set(items) for category, items in used.items()}
         
-        # For each source file that contributes to the current usage
+        # Process functions with dependency resolution
+        all_used_functions = self.get_used_functions_recursively(used['functions'], self.global_definitions)
+        all_used['functions'] = all_used_functions
+        
+        # For non-function categories, include dependencies from contributing files
         for source_file in source_files:
             if source_file in self.file_dependencies:
                 file_deps = self.file_dependencies[source_file]
@@ -211,14 +232,15 @@ class IncludeProcessor:
                 contributes = False
                 if source_file in self.file_definitions:
                     file_defs = self.file_definitions[source_file]
+                    # Check if any of the used items come from this file
                     for category in ['functions', 'defines', 'constants', 'structs']:
-                        if any(item in file_defs[category] for item in used[category]):
+                        if any(item in file_defs[category] for item in all_used[category]):
                             contributes = True
                             break
                 
-                # If this file contributes, include its dependencies
+                # If this file contributes, include its non-function dependencies
                 if contributes:
-                    for category in ['functions', 'defines', 'constants', 'structs']:
+                    for category in ['defines', 'constants', 'structs']:  # Exclude functions
                         # Add dependencies that exist in global definitions
                         valid_deps = {dep for dep in file_deps[category] 
                                      if dep in self.global_definitions[category]}
@@ -236,26 +258,38 @@ class IncludeProcessor:
                 if name in definitions[category]:
                     result_parts.append(definitions[category][name])
 
-        # Add functions in dependency order
-        resolved_functions = self.resolve_dependencies(used['functions'], definitions)
+        # Add functions in proper dependency order (topological sort)
+        functions_to_add = used['functions'].copy()
         added_functions = set()
-
-        def add_function_with_deps(func_name):
-            if func_name in added_functions or func_name not in definitions['functions']:
-                return
-
-            # Add dependencies first
-            for called_func in definitions['functions'][func_name]['calls']:
-                if called_func in resolved_functions:
-                    add_function_with_deps(called_func)
-
-            # Then add the function itself
-            if func_name not in added_functions:
-                result_parts.append(definitions['functions'][func_name]['body'])
-                added_functions.add(func_name)
-
-        for func_name in resolved_functions:
-            add_function_with_deps(func_name)
+        
+        def can_add_function(func_name):
+            """Check if all dependencies of a function have been added"""
+            if func_name not in definitions['functions']:
+                return True
+            calls = definitions['functions'][func_name]['calls']
+            for called_func in calls:
+                if called_func in functions_to_add and called_func not in added_functions:
+                    return False
+            return True
+        
+        # Add functions in dependency order
+        while functions_to_add:
+            added_any = False
+            for func_name in list(functions_to_add):
+                if can_add_function(func_name):
+                    if func_name in definitions['functions']:
+                        result_parts.append(definitions['functions'][func_name]['body'])
+                    added_functions.add(func_name)
+                    functions_to_add.remove(func_name)
+                    added_any = True
+            
+            # Safety check to avoid infinite loops
+            if not added_any:
+                # Add remaining functions (this handles circular dependencies or missing functions)
+                for func_name in functions_to_add:
+                    if func_name in definitions['functions']:
+                        result_parts.append(definitions['functions'][func_name]['body'])
+                break
 
         return '\n\n'.join(result_parts)
 
