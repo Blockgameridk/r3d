@@ -1284,7 +1284,6 @@ R3DAPI R3D_Model R3D_LoadModel(const char* filePath);
  * Loads a 3D model from a memory buffer containing the file data.
  * Useful for loading models from embedded resources or network streams.
  *
- * @param fileType String indicating the file format (e.g., "obj", "fbx", "gltf").
  * @param data Pointer to the memory buffer containing the model data.
  * @param size Size of the data buffer in bytes.
  *
@@ -1293,7 +1292,7 @@ R3DAPI R3D_Model R3D_LoadModel(const char* filePath);
  * @note External dependencies (e.g., textures or linked resources) are not supported.
  *       The model data must be fully self-contained. Use embedded formats like .glb to ensure compatibility.
  */
-R3DAPI R3D_Model R3D_LoadModelFromMemory(const char* fileType, const void* data, unsigned int size);
+R3DAPI R3D_Model R3D_LoadModelFromMemory(const void* data, unsigned int size);
 
 /**
  * @brief Create a model from a single mesh.
@@ -1357,14 +1356,13 @@ R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimations(const char* filePath, int* an
  * of R3D_ModelAnimation structs. The caller is responsible for freeing the returned data
  * using R3D_UnloadModelAnimations().
  *
- * @param fileType File format hint (e.g., "gltf", "iqm", ".gltf"). The leading dot is optional.
  * @param data Pointer to the model data in memory.
  * @param size Size of the data buffer in bytes.
  * @param animCount Pointer to an integer that will receive the number of animations loaded.
  * @param targetFrameRate Desired frame rate (FPS) to sample the animation at. For example, 30 or 60.
  * @return Pointer to a dynamically allocated array of R3D_ModelAnimation. NULL on failure.
  */
-R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimationsFromMemory(const char* fileType, const void* data, unsigned int size, int* animCount, int targetFrameRate);
+R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimationsFromMemory(const void* data, unsigned int size, int* animCount, int targetFrameRate);
 
 /**
  * @brief Frees memory allocated for model animations.

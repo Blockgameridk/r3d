@@ -3136,15 +3136,10 @@ static const struct aiScene* r3d_load_scene_from_file(const char* filePath)
     return scene;
 }
 
-static const struct aiScene* r3d_load_scene_from_memory(const char* fileType, const void* data, unsigned int size)
+static const struct aiScene* r3d_load_scene_from_memory(const void* data, unsigned int size)
 {
-    if (fileType != NULL && fileType[0] == '.') {
-        // pHint takes the format without the point, unlike raylib
-        fileType++;
-    }
-
     const struct aiScene* scene = aiImportFileFromMemoryWithProperties(
-        data, size, R3D_ASSIMP_FLAGS, fileType, R3D.state.loading.aiProps);
+        data, size, R3D_ASSIMP_FLAGS, NULL, R3D.state.loading.aiProps);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         TraceLog(LOG_ERROR, "R3D: Assimp error; %s", aiGetErrorString());
@@ -3280,13 +3275,13 @@ R3D_Model R3D_LoadModel(const char* filePath)
     return model;
 }
 
-R3D_Model R3D_LoadModelFromMemory(const char* fileType, const void* data, unsigned int size)
+R3D_Model R3D_LoadModelFromMemory(const void* data, unsigned int size)
 {
     R3D_Model model = { 0 };
 
     /* --- Import scene using Assimp --- */
 
-    const struct aiScene* scene = r3d_load_scene_from_memory(fileType, data, size);
+    const struct aiScene* scene = r3d_load_scene_from_memory(data, size);
     if (!scene) {
         return model;
     }
@@ -3393,11 +3388,11 @@ R3D_ModelAnimation* R3D_LoadModelAnimations(const char* filePath, int* animCount
     return animations;
 }
 
-R3D_ModelAnimation* R3D_LoadModelAnimationsFromMemory(const char* fileType, const void* data, unsigned int size, int* animCount, int targetFrameRate)
+R3D_ModelAnimation* R3D_LoadModelAnimationsFromMemory(const void* data, unsigned int size, int* animCount, int targetFrameRate)
 {
     /* --- Import scene using Assimp --- */
 
-    const struct aiScene* scene = r3d_load_scene_from_memory(fileType, data, size);
+    const struct aiScene* scene = r3d_load_scene_from_memory(data, size);
     if (!scene) {
         *animCount = 0;
         return NULL;
