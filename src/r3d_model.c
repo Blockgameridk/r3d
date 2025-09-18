@@ -2750,8 +2750,7 @@ bool r3d_process_bones_and_offsets(R3D_Model* model, const struct aiScene* scene
             const struct aiBone* bone = mesh->mBones[b]; // Add bone if it's unique.
             if (find_bone_index(bone->mName.data, model->bones, uniqueBoneCount) == -1) {
                 model->boneOffsets[uniqueBoneCount] = r3d_matrix_from_ai_matrix(&bone->mOffsetMatrix);
-                strncpy(model->bones[uniqueBoneCount].name, bone->mName.data, 31);
-                model->bones[uniqueBoneCount].name[31] = '\0';
+                strncpy(model->bones[uniqueBoneCount].name, bone->mName.data, 32);
                 model->bones[uniqueBoneCount].parent = -1;
                 uniqueBoneCount++;
             }
@@ -2981,8 +2980,7 @@ bool r3d_process_animation(R3D_ModelAnimation* animation,
 
     /* --- Initialize animation name --- */
     
-    strncpy(animation->name, aiAnim->mName.data, 31);
-    animation->name[31] = '\0';
+    strncpy(animation->name, aiAnim->mName.data, 32);
 
     /* --- Compute frame count --- */
     
@@ -3056,8 +3054,7 @@ bool r3d_process_animation(R3D_ModelAnimation* animation,
             }
             
             if (!exists) {
-                strncpy(animation->bones[boneCounter].name, bone->mName.data, 31);
-                animation->bones[boneCounter].name[31] = '\0';
+                strncpy(animation->bones[boneCounter].name, bone->mName.data, 32);
                 animation->bones[boneCounter].parent = -1;
                 boneCounter++;
             }
