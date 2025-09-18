@@ -3372,11 +3372,11 @@ void R3D_UpdateModelBoundingBox(R3D_Model* model, bool updateMeshBoundingBoxes)
     model->aabb.max = maxVertex;
 }
 
-R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount, int targetFrameRate)
+R3D_ModelAnimation* R3D_LoadModelAnimations(const char* filePath, int* animCount, int targetFrameRate)
 {
     /* --- Import scene using Assimp --- */
 
-    const struct aiScene* scene = r3d_load_scene_from_file(fileName);
+    const struct aiScene* scene = r3d_load_scene_from_file(filePath);
     if (!scene) {
         *animCount = 0;
         return NULL;
@@ -3384,7 +3384,7 @@ R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount
 
     /* --- Process animations from scene --- */
 
-    R3D_ModelAnimation* animations = r3d_process_animations_from_scene(scene, animCount, targetFrameRate, fileName);
+    R3D_ModelAnimation* animations = r3d_process_animations_from_scene(scene, animCount, targetFrameRate, filePath);
 
     /* --- Clean up and return --- */
 

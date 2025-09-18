@@ -1343,12 +1343,12 @@ R3DAPI void R3D_UpdateModelBoundingBox(R3D_Model* model, bool updateMeshBounding
  * of R3D_ModelAnimation structs. The caller is responsible for freeing the returned data
  * using R3D_UnloadModelAnimations().
  *
- * @param fileName Path to the model file containing animation(s).
+ * @param filePath Path to the model file containing animation(s).
  * @param animCount Pointer to an integer that will receive the number of animations loaded.
  * @param targetFrameRate Desired frame rate (FPS) to sample the animation at. For example, 30 or 60.
  * @return Pointer to a dynamically allocated array of R3D_ModelAnimation. NULL on failure.
  */
-R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimations(const char* fileName, int* animCount, int targetFrameRate);
+R3DAPI R3D_ModelAnimation* R3D_LoadModelAnimations(const char* filePath, int* animCount, int targetFrameRate);
 
 /**
  * @brief Loads model animations from memory data in a supported format (e.g., GLTF, IQM).
@@ -3055,11 +3055,11 @@ R3DAPI float R3D_GetSaturation(void);
  * This function loads a skybox cubemap from a texture file using a specified cubemap layout.
  * The layout defines how the six faces of the cubemap are arranged within the texture.
  *
- * @param fileName The path to the texture file.
+ * @param filePath The path to the texture file.
  * @param layout The cubemap layout format.
  * @return The loaded skybox object.
  */
-R3DAPI R3D_Skybox R3D_LoadSkybox(const char* fileName, CubemapLayout layout);
+R3DAPI R3D_Skybox R3D_LoadSkybox(const char* filePath, CubemapLayout layout);
 
 /**
  * @brief Loads a skybox from an image in memory.
@@ -3079,11 +3079,11 @@ R3DAPI R3D_Skybox R3D_LoadSkyboxFromMemory(Image image, CubemapLayout layout);
  * This function loads a skybox from a panorama (equirectangular) texture file,
  * and converts it into a cubemap with the specified resolution.
  *
- * @param fileName The path to the panorama texture file.
+ * @param filePath The path to the panorama texture file.
  * @param size The resolution of the generated cubemap (e.g., 512, 1024).
  * @return The loaded skybox object.
  */
-R3DAPI R3D_Skybox R3D_LoadSkyboxPanorama(const char* fileName, int size);
+R3DAPI R3D_Skybox R3D_LoadSkyboxPanorama(const char* filePath, int size);
 
 /**
  * @brief Loads a skybox from a panorama image in memory.

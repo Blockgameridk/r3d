@@ -416,9 +416,9 @@ static TextureCubemap r3d_skybox_generate_prefilter(TextureCubemap sky)
 
 /* === Public functions === */
 
-R3D_Skybox R3D_LoadSkybox(const char* fileName, CubemapLayout layout)
+R3D_Skybox R3D_LoadSkybox(const char* filePath, CubemapLayout layout)
 {
-    Image image = LoadImage(fileName);
+    Image image = LoadImage(filePath);
     R3D_Skybox skybox = R3D_LoadSkyboxFromMemory(image, layout);
     UnloadImage(image);
     return skybox;
@@ -433,9 +433,9 @@ R3D_Skybox R3D_LoadSkyboxFromMemory(Image image, CubemapLayout layout)
     return skybox;
 }
 
-R3D_Skybox R3D_LoadSkyboxPanorama(const char* fileName, int size)
+R3D_Skybox R3D_LoadSkyboxPanorama(const char* filePath, int size)
 {
-    Image image = LoadImage(fileName);
+    Image image = LoadImage(filePath);
     R3D_Skybox skybox = R3D_LoadSkyboxPanoramaFromMemory(image, size);
     UnloadImage(image);
     return skybox;
