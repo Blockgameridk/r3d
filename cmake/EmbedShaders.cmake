@@ -8,9 +8,11 @@ function(process_shader shader_file output_file_var)
     add_custom_command(
         OUTPUT "${output_file}"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/generated/include/shaders"
-        COMMAND "${PYTHON_EXECUTABLE}" "${R3D_ROOT_PATH}/scripts/glsl_processor.py" "${shader_file}" | 
-                "${PYTHON_EXECUTABLE}" "${R3D_ROOT_PATH}/scripts/bin2c.py" 
-                --stdin --name "${shader_name}" --mode text "${output_file}"
+        COMMAND "${PYTHON_EXECUTABLE}" "${R3D_ROOT_PATH}/scripts/glsl_processor.py" 
+                "${shader_file}" > "${R3D_ROOT_PATH}/scripts/shader.tmp"
+        COMMAND "${PYTHON_EXECUTABLE}" "${R3D_ROOT_PATH}/scripts/bin2c.py" 
+                --stdin --name "${shader_name}" --mode text "${output_file}" < "${R3D_ROOT_PATH}/scripts/shader.tmp"
+        COMMAND ${CMAKE_COMMAND} -E remove "${R3D_ROOT_PATH}/scripts/shader.tmp"
         DEPENDS "${shader_file}"
         COMMENT "Processing shader: ${shader_file}"
         VERBATIM
