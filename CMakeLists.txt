@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.8)
 project(r3d VERSION 0.4.0 LANGUAGES C CXX)
 
 # This section configures MSVC (Visual Studio) to enable "Edit and Continue" debugging
@@ -23,8 +23,8 @@ endif()
 option(R3D_BUILD_DOCS "Build the doxygen doc" ${R3D_IS_MAIN})
 option(R3D_BUILD_EXAMPLES "Build the examples" ${R3D_IS_MAIN})
 
-option(R3D_RAYLIB_VENDORED "Use vendored raylib from submodule" OFF)
-option(R3D_ASSIMP_VENDORED "Use vendored assimp from submodule" OFF)
+option(R3D_RAYLIB_VENDORED "Use vendored raylib from submodule" ON)
+option(R3D_ASSIMP_VENDORED "Use vendored assimp from submodule" ON)
 
 # Set the cmake module path
 
@@ -103,6 +103,7 @@ if(R3D_ASSIMP_VENDORED)
         set(ASSIMP_BUILD_3MF_IMPORTER       OFF CACHE BOOL "")
         set(ASSIMP_BUILD_MMD_IMPORTER       OFF CACHE BOOL "")
 
+set(BUILD_SHARED_LIBS OFF)
         add_subdirectory("${R3D_ASSIMP_SUBMODULE_PATH}")
 
         set(R3D_ASSIMP_INC_PATH "${R3D_ASSIMP_SUBMODULE_PATH}/include" CACHE STRING "Path to assimp includes" FORCE)
@@ -244,7 +245,7 @@ embed_assets(${PROJECT_NAME}
 # Link project dependencies
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE
+    PUBLIC
         raylib assimp
 )
 
@@ -257,7 +258,7 @@ endif()
 # Specify the include directories needed for the project
 
 target_include_directories(${PROJECT_NAME}
-    PRIVATE
+    PUBLIC
         "${R3D_ROOT_PATH}/external/glad"
         "${R3D_ROOT_PATH}/include"
         "${R3D_RAYLIB_INC_PATH}"
