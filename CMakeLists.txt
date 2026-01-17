@@ -269,7 +269,7 @@ target_sources(${PROJECT_NAME}
 # Link project dependencies
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE
+    PUBLIC
         raylib assimp
 )
 
@@ -282,7 +282,7 @@ endif()
 # Specify the include directories needed for the project
 
 target_include_directories(${PROJECT_NAME}
-    PRIVATE
+    PUBLIC
         "${R3D_ROOT_PATH}/external/tinycthread"
         "${R3D_ROOT_PATH}/external/uthash"
         "${R3D_ROOT_PATH}/external/glad"
